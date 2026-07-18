@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GlossaPop - Settings Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <div class="glass-card">
+      <div class="logo-area">
+        <div class="logo-icon">G</div>
+        <div>
+          <h1>GlossaPop</h1>
+          <p class="subtitle">Word Translation Popup Options</p>
+        </div>
+      </div>
+
+      <div class="settings-form">
+        <!-- Default Target Language -->
+        <div class="setting-section">
+          <h2>Default Target Language</h2>
+          <p class="section-desc">The default source language when looking up words.</p>
+          <div class="segmented-control">
+            <input type="radio" id="target-en" name="defaultTargetLang" value="en" checked>
+            <label for="target-en">English</label>
+            
+            <input type="radio" id="target-fr" name="defaultTargetLang" value="fr">
+            <label for="target-fr">Français (French)</label>
+            
+            <div class="segmented-slider"></div>
+          </div>
+        </div>
+        <!-- Default Explanation Language -->
+        <div class="setting-section">
+          <h2>Default Explanation Language</h2>
+          <p class="section-desc">The target language used for translations and definitions.</p>
+          <div class="segmented-control">
+            <input type="radio" id="explain-zh" name="defaultExplainLang" value="zh">
+            <label for="explain-zh">Chinese</label>
+            
+            <input type="radio" id="explain-en" name="defaultExplainLang" value="en" checked>
+            <label for="explain-en">English</label>
+            
+            <div class="segmented-slider"></div>
+          </div>
+        </div>
+
+        <!-- Mouse Trigger Mechanism -->
+        <div class="setting-section">
+          <h2>Mouse Trigger Mode</h2>
+          <p class="section-desc">How to invoke the floating translation popup window.</p>
+          <div class="radio-card-group">
+            <label class="radio-card">
+              <input type="radio" name="triggerMode" value="dblclick">
+              <div class="card-content">
+                <span class="card-title">Double Click</span>
+                <span class="card-desc">Pop up explanations immediately below double-clicked words.</span>
+              </div>
+            </label>
+            
+            <label class="radio-card">
+              <input type="radio" name="triggerMode" value="icon" checked>
+              <div class="card-content">
+                <span class="card-title">Select Text to Show Icon</span>
+                <span class="card-desc">Show a floating magnifying glass icon near selected text; click it to open the lookup card.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer & Status Notification -->
+      <div class="footer">
+        <div id="status" class="status-toast">Settings saved automatically</div>
+        <p class="version">GlossaPop Version 1.0.0 | Manifest V3</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

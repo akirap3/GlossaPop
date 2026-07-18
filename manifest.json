@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "GlossaPop",
+  "version": "1.0.2",
+  "description": "Floating popup word translation window (English/French) supporting phonetics, audio pronunciation, and bilingual explanation switching.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://api.dictionaryapi.dev/api/v2/entries/en/*",
+    "https://lingva.ml/api/v1/*",
+    "https://translate.googleapis.com/*"
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}
