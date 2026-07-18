@@ -95,7 +95,7 @@
       /* Floating Popup Card - High-Contrast Light Glassmorphism Style */
       .glossapop-card {
         position: absolute;
-        width: 280px;
+        width: 320px;
         background: rgba(255, 255, 255, 0.75);
         backdrop-filter: blur(24px) saturate(200%);
         -webkit-backdrop-filter: blur(24px) saturate(200%);
@@ -246,7 +246,7 @@
         padding: 8px 10px;
         border-radius: 8px;
         margin-top: 10px;
-        border-left: 2px solid #ff9500;
+        border-left: 2px solid #b84a00;
       }
       .glossapop-example-header {
         display: flex;
@@ -256,7 +256,7 @@
         text-transform: uppercase;
         font-size: 9px;
         letter-spacing: 0.5px;
-        color: #ff9500;
+        color: #b84a00;
         margin-bottom: 4px;
       }
       .glossapop-example-text {
@@ -272,7 +272,7 @@
         line-height: 1.35;
       }
       .glossapop-example-speak-btn {
-        background: rgba(255, 149, 0, 0.1);
+        background: rgba(184, 74, 0, 0.1);
         border: none;
         border-radius: 50%;
         width: 18px;
@@ -281,13 +281,13 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        color: #ff9500;
+        color: #b84a00;
         transition: background-color 0.2s, transform 0.1s;
         padding: 0;
         flex-shrink: 0;
       }
       .glossapop-example-speak-btn:hover {
-        background: rgba(255, 149, 0, 0.2);
+        background: rgba(184, 74, 0, 0.2);
         transform: scale(1.05);
       }
       .glossapop-example-speak-btn svg {
@@ -295,6 +295,34 @@
         height: 9px;
         fill: currentColor;
       }
+
+      /* External Reference Links Styles */
+      .glossapop-external-links {
+        font-size: 10px;
+        color: #8e8e93;
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+      }
+      .glossapop-external-links span {
+        font-weight: 600;
+      }
+      .glossapop-external-links a {
+        color: #0066cc;
+        text-decoration: none;
+        transition: color 0.2s;
+        font-weight: 500;
+      }
+      .glossapop-external-links a:hover {
+        color: #004499;
+        text-decoration: underline;
+      }
+
       /* Root Lemma & Derivation Styles */
       .glossapop-lemma-row {
         font-size: 11px;
@@ -549,6 +577,7 @@
         </div>
       </div>
       <div class="glossapop-example-box" style="display:none;"></div>
+      <div class="glossapop-external-links" style="display:none;"></div>
     `;
 
     // Close button action
@@ -586,6 +615,7 @@
     const lemmaRow = shadowRoot.querySelector('.glossapop-lemma-row');
     const conjBox = shadowRoot.querySelector('.glossapop-conjugation-box');
     const exampleBox = shadowRoot.querySelector('.glossapop-example-box');
+    const externalLinksBox = shadowRoot.querySelector('.glossapop-external-links');
 
     // Show loading spinner
     contentDiv.innerHTML = `
@@ -597,6 +627,7 @@
     if (lemmaRow) lemmaRow.style.display = 'none';
     if (conjBox) conjBox.style.display = 'none';
     if (exampleBox) exampleBox.style.display = 'none';
+    if (externalLinksBox) externalLinksBox.style.display = 'none';
 
     // Determine query source language (use 'auto' for initial queries)
     const sourceLangQuery = isInitial ? 'auto' : activeTargetLang;
@@ -633,10 +664,10 @@
 
         // 0. Render lemma/root word derivation info if available
         if (lemmaRow) {
-          if (data.lemmaInfo && data.lemmaInfo.lemma) {
+          if (data.lemmaInfo && data.lemmaInfo.lemma && !(activeTargetLang === 'fr' && data.isVerb)) {
             const lemma = data.lemmaInfo.lemma;
             const description = data.lemmaInfo.description || '';
-            const femForm = (activeTargetLang === 'fr') ? getFrenchFeminineForm(lemma) : null;
+            const femForm = (activeTargetLang === 'fr' && !data.isVerb) ? getFrenchFeminineForm(lemma) : null;
             
             if (femForm) {
               lemmaRow.innerHTML = `
@@ -751,6 +782,34 @@
             exampleBox.style.display = 'block';
           } else {
             exampleBox.style.display = 'none';
+          }
+        }
+
+        // 5. Render external dictionary reference links
+        if (externalLinksBox) {
+          const lookupWord = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || word);
+          const encoded = encodeURIComponent(lookupWord);
+          
+          if (activeTargetLang === 'en') {
+            externalLinksBox.innerHTML = `
+              <span>Read more:</span>
+              <a href="https://dictionary.cambridge.org/dictionary/english/${encoded}" target="_blank">Cambridge</a>
+              <span style="color:rgba(0,0,0,0.15)">|</span>
+              <a href="https://www.merriam-webster.com/dictionary/${encoded}" target="_blank">Merriam-Webster</a>
+            `;
+            externalLinksBox.style.display = 'flex';
+          } else if (activeTargetLang === 'fr') {
+            externalLinksBox.innerHTML = `
+              <span>Read more:</span>
+              <a href="https://www.larousse.fr/dictionnaires/francais/${encoded}" target="_blank">Larousse</a>
+              <span style="color:rgba(0,0,0,0.15)">|</span>
+              <a href="https://www.wordreference.com/fren/${encoded}" target="_blank">WordReference</a>
+              <span style="color:rgba(0,0,0,0.15)">|</span>
+              <a href="https://www.frdic.com/dicts/fr/${encoded}" target="_blank">法語助手</a>
+            `;
+            externalLinksBox.style.display = 'flex';
+          } else {
+            externalLinksBox.style.display = 'none';
           }
         }
       } else {

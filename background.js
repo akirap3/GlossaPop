@@ -53,7 +53,30 @@ function parseWiktionaryDefinitions(entries) {
   return definitions;
 }
 
-// Fetch a fallback example sentence using Google Translate's public examples API
+// Fetch a fallback example sentence from Tatoeba open sentence database
+async function fetchTatoebaExample(word, sourceLang, targetLang) {
+  const tatoebaLang = sourceLang === 'fr' ? 'fra' : 'eng';
+  const url = `https://api.tatoeba.org/v1/sentences?q=${encodeURIComponent(word)}&lang=${tatoebaLang}&sort=relevance`;
+  
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
+        const sentence = data.data[0].text;
+        if (sentence) {
+          const translation = await translateWord(sentence, sourceLang, targetLang);
+          return { text: sentence, translation: translation };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Tatoeba example fetch failed:', e);
+  }
+  return null;
+}
+
+// Fetch a fallback example sentence using Google Translate's public examples API, falling back to Tatoeba
 async function fetchFallbackExample(word, sourceLang, targetLang) {
   const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=ex&q=${encodeURIComponent(word)}`;
   
@@ -88,9 +111,11 @@ async function fetchFallbackExample(word, sourceLang, targetLang) {
       }
     }
   } catch (error) {
-    console.warn('Google Translate fallback example retrieval failed:', error);
+    console.warn('Google Translate fallback example retrieval failed, trying Tatoeba:', error);
   }
-  return null;
+  
+  // Tertiary Fallback: Query Tatoeba
+  return await fetchTatoebaExample(word, sourceLang, targetLang);
 }
 
 // Query Wiktionary to check for lemma (root word), derivation info, and parts of speech
@@ -240,10 +265,11 @@ async function autoDetectAndTranslate(word, target) {
         result.example = example;
       }
       
-      // Fetch fallback example sentence if still null
+      // Fetch fallback example sentence if still null (try lemma form first if available)
       if (!result.example) {
+        const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : word;
         try {
-          result.example = await fetchFallbackExample(word, targetSourceLang, target);
+          result.example = await fetchFallbackExample(exampleWord, targetSourceLang, target);
         } catch (e) {
           console.warn('Fallback example fetch failed:', e);
         }
@@ -269,8 +295,9 @@ async function autoDetectAndTranslate(word, target) {
     
     let resultExample = example;
     if (!resultExample) {
+      const exampleWord = lemmaInfo ? lemmaInfo.lemma : word;
       try {
-        resultExample = await fetchFallbackExample(word, guessedLang, target);
+        resultExample = await fetchFallbackExample(exampleWord, guessedLang, target);
       } catch (e) {
         console.warn('Fallback example fetch failed:', e);
       }
@@ -340,8 +367,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
           
           if (!result.example) {
+            const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : word;
             try {
-              result.example = await fetchFallbackExample(word, 'en', 'en');
+              result.example = await fetchFallbackExample(exampleWord, 'en', 'en');
             } catch (e) {
               console.warn('Fallback example fetch failed:', e);
             }
@@ -398,8 +426,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             };
             
             if (!result.example) {
+              const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : word;
               try {
-                result.example = await fetchFallbackExample(word, source, target);
+                result.example = await fetchFallbackExample(exampleWord, source, target);
               } catch (e) {
                 console.warn('Fallback example fetch failed:', e);
               }
