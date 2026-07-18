@@ -2,6 +2,8 @@
 
 A modern, high-performance Chrome Extension built with Manifest V3 for floating translation popups. Select any word on a page to look up its definition in English or French instantly, complete with phonetics, audio pronunciations, grammatical conjugations, example sentences, and layout isolation.
 
+![GlossaPop Screenshot](assets/promo-screenshot.jpg)
+
 ---
 
 ## Key Features
@@ -38,6 +40,7 @@ The project follows a clean, single-responsibility modular structure:
 
 ```
 GlossaPop/
+├── assets/            # Project promotional screenshots and mockups
 ├── manifest.json      # Manifest V3 configuration settings & permissions
 ├── background.js      # Background router that dynamically imports service worker modules
 ├── bg-api.js          # Direct external API queries (Lingva, Google Translate, Tatoeba)
@@ -53,6 +56,8 @@ GlossaPop/
 ├── options.css        # Premium dark glassmorphic styling for settings panel
 ├── options.js         # Settings manager linking inputs with chrome.storage.sync
 ├── icons/             # Contains extension icons and circular logo-cat.png mascot
+├── CHROMEWEBSTORE.md  # Chrome Web Store submission metadata, descriptions & justifications
+├── PRIVACY.md         # Privacy Policy declaration complying with developer guidelines
 └── README.md          # Extension overview, file structure, and installation guide
 ```
 
