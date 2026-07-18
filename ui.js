@@ -18,6 +18,7 @@ const POPUP_CSS = `
     opacity: 0;
     transform: scale(0.8);
     pointer-events: none;
+    -webkit-user-select: none;
     user-select: none;
   }
   .glossapop-trigger-icon.visible {
@@ -52,6 +53,7 @@ const POPUP_CSS = `
     transform: scale(0.95) translateY(8px);
     transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
+    -webkit-user-select: none;
     user-select: none;
   }
   .glossapop-card.visible {

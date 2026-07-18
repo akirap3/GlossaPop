@@ -1,5 +1,34 @@
 // bg-dictionary.js - Orchestrates dictionary lookups, root words, and conjugations
 
+// Fetch French phonetic IPA from Wiktionary HTML
+async function fetchFrenchPhonetic(word) {
+  try {
+    const res = await fetch(`https://en.wiktionary.org/api/rest_v1/page/html/${encodeURIComponent(word)}`);
+    if (res.ok) {
+      const html = await res.text();
+      
+      // Pattern 1: French pronunciation key
+      const match = html.match(/Appendix:French_pronunciation.*?class="IPA[^"]*"[^>]*>\/(.*?)\//s);
+      if (match && match[1]) {
+        return `/${match[1]}/`;
+      }
+      
+      // Pattern 2: Near French section
+      const frenchIdx = html.indexOf('id="French"');
+      if (frenchIdx !== -1) {
+        const substring = html.substring(frenchIdx, frenchIdx + 3000);
+        const ipaMatch = substring.match(/class="IPA[^"]*"[^>]*>\/(.*?)\//);
+        if (ipaMatch && ipaMatch[1]) {
+          return `/${ipaMatch[1]}/`;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to fetch French IPA phonetic:', e);
+  }
+  return '';
+}
+
 // Query Wiktionary to check for lemma (root word), derivation info, and parts of speech
 async function fetchLemmaInfo(word, lang) {
   try {
@@ -132,6 +161,14 @@ async function autoDetectAndTranslate(word, target) {
           console.log('Unable to fetch English dictionary info in auto-mode:', e);
         }
       }
+
+      if (targetSourceLang === 'fr') {
+        try {
+          result.phonetic = await fetchFrenchPhonetic(word);
+        } catch (e) {
+          console.log('Unable to fetch French phonetics in auto-mode:', e);
+        }
+      }
       
       const { lemmaInfo, isVerb, wiktionaryDefinitions, example } = await lemmaPromise;
       result.lemmaInfo = lemmaInfo;
@@ -180,10 +217,12 @@ async function autoDetectAndTranslate(word, target) {
       ? wiktionaryDefinitions 
       : [translation];
       
+    const phonetic = (guessedLang === 'fr') ? await fetchFrenchPhonetic(word) : '';
+      
     return {
       word,
       translation,
-      phonetic: '',
+      phonetic,
       audio: '',
       definitions,
       detectedLang: guessedLang,

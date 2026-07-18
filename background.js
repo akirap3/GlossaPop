@@ -86,6 +86,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               } catch (e) {
                 console.log('Unable to fetch English phonetics/audio:', e);
               }
+            } else if (source === 'fr') {
+              try {
+                phonetic = await fetchFrenchPhonetic(word);
+              } catch (e) {
+                console.log('Unable to fetch French phonetics:', e);
+              }
             }
             
             const { lemmaInfo, isVerb, wiktionaryDefinitions, example } = await lemmaPromise;

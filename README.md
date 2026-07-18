@@ -39,7 +39,6 @@ GlossaPop/
 ├── options.css        # Premium dark glassmorphism styling for settings panel
 ├── options.js         # Settings manager linking inputs with chrome.storage.sync
 ├── icons/             # Contains generated premium extension logo PNG icons (16, 32, 48, 128)
-├── generate_icons.py  # Python script utilizing Pillow to draw the custom logo icons
 └── README.md          # Extension overview and installation guide
 ```
 
