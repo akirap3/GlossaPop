@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GlossaPop",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Floating popup word translation window (English/French) supporting phonetics, audio pronunciation, and bilingual explanation switching.",
   "permissions": [
     "storage",
@@ -38,5 +38,15 @@
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/logo-cat.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
 }

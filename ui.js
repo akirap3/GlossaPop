@@ -69,6 +69,18 @@ const POPUP_CSS = `
     align-items: center;
     margin-bottom: 10px;
   }
+  .glossapop-brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .glossapop-brand-logo {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 6px rgba(0, 102, 204, 0.15);
+  }
   .glossapop-title {
     font-size: 11px;
     font-weight: 700;
@@ -423,7 +435,10 @@ function renderPopupFrame(shadowRoot, word, activeTargetLang, activeExplainLang,
   const card = shadowRoot.querySelector('.glossapop-card');
   card.innerHTML = `
     <div class="glossapop-header">
-      <span class="glossapop-title">GlossaPop</span>
+      <div class="glossapop-brand">
+        <img class="glossapop-brand-logo" src="${chrome.runtime.getURL('icons/logo-cat.png')}" alt="Logo">
+        <span class="glossapop-title">GlossaPop</span>
+      </div>
       <button class="glossapop-close-btn" title="Close Popup">&times;</button>
     </div>
     <div class="glossapop-toggles">

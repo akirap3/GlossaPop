@@ -60,18 +60,12 @@ body {
   margin-bottom: 35px;
 }
 
-.logo-icon {
+.logo-img {
   width: 52px;
   height: 52px;
-  border-radius: 14px;
-  background: var(--accent-gradient);
-  color: #ffffff;
-  font-size: 26px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+  border-radius: 50%;
+  box-shadow: 0 8px 20px rgba(0, 102, 204, 0.25);
+  object-fit: cover;
 }
 
 h1 {
