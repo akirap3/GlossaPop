@@ -2,6 +2,8 @@
 
 A modern, high-performance Chrome Extension built with Manifest V3 for floating translation popups. Select any word on a page to look up its definition in English or French instantly, complete with phonetics, audio pronunciations, grammatical conjugations, example sentences, and layout isolation.
 
+👉 **[Install GlossaPop on Chrome Web Store](https://chromewebstore.google.com/detail/kmamglgfhenmcomflbdmfjdnmnlkggad)**
+
 ![GlossaPop Screenshot](assets/promo-screenshot.jpg)
 
 ---
@@ -65,8 +67,10 @@ GlossaPop/
 
 ## Installation Guide
 
-Follow these steps to load GlossaPop on Google Chrome:
+### Option A: Install from Chrome Web Store (Recommended)
+Simply visit the official [GlossaPop Chrome Web Store Page](https://chromewebstore.google.com/detail/kmamglgfhenmcomflbdmfjdnmnlkggad) and click **Add to Chrome**.
 
+### Option B: Load Unpacked (Developer Mode)
 1. **Download/Clone** this repository directory to your local machine.
 2. Open Google Chrome and enter `chrome://extensions/` in the address bar.
 3. Toggle the **Developer mode** switch in the top-right corner to **ON**.
