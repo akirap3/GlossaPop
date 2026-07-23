@@ -586,7 +586,8 @@ function renderLemma(lemmaRow, data, activeTargetLang) {
   if (data.lemmaInfo && data.lemmaInfo.lemma && !(activeTargetLang === 'fr' && data.isVerb)) {
     const lemma = data.lemmaInfo.lemma;
     const description = data.lemmaInfo.description || '';
-    const femForm = (activeTargetLang === 'fr' && !data.isVerb) ? getFrenchFeminineForm(lemma) : null;
+    const isAdj = data.isAdjective || (data.definitions && data.definitions.some(d => d.includes('[Adjective]')));
+    const femForm = (activeTargetLang === 'fr' && !data.isVerb && isAdj) ? getFrenchFeminineForm(lemma) : null;
     
     if (femForm) {
       lemmaRow.innerHTML = `

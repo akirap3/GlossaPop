@@ -308,6 +308,13 @@ function getFallbackSynonyms(word) {
     'bon': { synonyms: ['excellent', 'agréable', 'favorable'], antonyms: ['mauvais'] },
     'susciter': { synonyms: ['provoquer', 'engendrer', 'susciter', 'entraîner'], antonyms: ['étouffer', 'calmer'] },
     'définitivement': { synonyms: ['pour de bon', 'irrévocablement', 'enfin'], antonyms: ['temporairement', 'provisoire'] },
+    'profit': { synonyms: ['bénéfice', 'gain', 'avantage', 'revenu'], antonyms: ['perte', 'déficit'] },
+    'profits': { synonyms: ['bénéfices', 'gains', 'avantages', 'revenus'], antonyms: ['pertes', 'déficits'] },
+    'flambée': { synonyms: ['hausse', 'explosion', 'augmentation'], antonyms: ['chute', 'baisse'] },
+    'libellé': { synonyms: ['intitulé', 'exprimé', 'rédigé'], antonyms: [] },
+    'libellés': { synonyms: ['intitulés', 'exprimés', 'rédigés'], antonyms: [] },
+    'colossal': { synonyms: ['gigantesque', 'immense', 'énorme'], antonyms: ['minime', 'insignifiant'] },
+    'colossaux': { synonyms: ['gigantesques', 'immenses', 'énormes'], antonyms: ['minimes', 'insignifiants'] },
 
     // English Core Words
     'be': { synonyms: ['exist', 'occur', 'remain', 'abide'], antonyms: ['disappear', 'cease'] },

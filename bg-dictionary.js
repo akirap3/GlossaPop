@@ -62,17 +62,24 @@ async function fetchLemmaInfo(word, lang) {
       const entries = data[langKey];
       
       let isVerb = false;
+      let isAdjective = false;
       if (langKey === 'fr' && entries && Array.isArray(entries)) {
         isVerb = entries.some(e => e.partOfSpeech === 'Verb');
+        isAdjective = entries.some(e => e.partOfSpeech === 'Adjective');
       }
       
       let lemmaInfo = null;
       let wiktionaryDefinitions = [];
+      let synonyms = [];
+      let antonyms = [];
       let example = null;
       
       if (entries && Array.isArray(entries)) {
-        // Parse definitions by part of speech
-        wiktionaryDefinitions = parseWiktionaryDefinitions(entries);
+        // Parse definitions, synonyms, and antonyms by part of speech
+        const parsedWik = parseWiktionaryDefinitions(entries);
+        wiktionaryDefinitions = parsedWik.definitions;
+        synonyms = parsedWik.synonyms;
+        antonyms = parsedWik.antonyms;
         
         // Find first available example sentence
         for (const entry of entries) {
@@ -132,7 +139,7 @@ async function fetchLemmaInfo(word, lang) {
           }
         }
       }
-      return { lemmaInfo, isVerb, wiktionaryDefinitions, example };
+      return { lemmaInfo, isVerb, isAdjective, wiktionaryDefinitions, synonyms, antonyms, example };
     }
   } catch (e) {
     console.warn('Wiktionary lemma fetch failed:', e);
@@ -198,9 +205,10 @@ async function autoDetectAndTranslate(word, target) {
         }
       }
 
-      const { lemmaInfo, isVerb, wiktionaryDefinitions, example } = lemmaRes || {};
+      const { lemmaInfo, isVerb, isAdjective, wiktionaryDefinitions, synonyms: wikSyn, antonyms: wikAnt, example } = lemmaRes || {};
       result.lemmaInfo = lemmaInfo || null;
       result.isVerb = isVerb || false;
+      result.isAdjective = isAdjective || false;
       
       if (example && !result.example) {
         result.example = example;
@@ -219,13 +227,23 @@ async function autoDetectAndTranslate(word, target) {
         result.definitions = wiktionaryDefinitions;
       }
       
-      // Fallback synonyms check for query word or root lemma
-      if (!result.synonyms || result.synonyms.length === 0) {
-        const wordFallback = getFallbackSynonyms(cleanWord);
-        const lemmaFallback = result.lemmaInfo ? getFallbackSynonyms(result.lemmaInfo.lemma) : { synonyms: [], antonyms: [] };
-        result.synonyms = Array.from(new Set([...(wordFallback.synonyms || []), ...(lemmaFallback.synonyms || [])]));
-        result.antonyms = Array.from(new Set([...(wordFallback.antonyms || []), ...(lemmaFallback.antonyms || [])]));
-      }
+      // Combine synonyms & antonyms from Wiktionary, extra dicts, and fallback dictionaries
+      const wordFallback = getFallbackSynonyms(cleanWord);
+      const lemmaFallback = result.lemmaInfo ? getFallbackSynonyms(result.lemmaInfo.lemma) : { synonyms: [], antonyms: [] };
+
+      result.synonyms = Array.from(new Set([
+        ...(result.synonyms || []),
+        ...(wikSyn || []),
+        ...(wordFallback.synonyms || []),
+        ...(lemmaFallback.synonyms || [])
+      ])).filter(Boolean).slice(0, 6);
+
+      result.antonyms = Array.from(new Set([
+        ...(result.antonyms || []),
+        ...(wikAnt || []),
+        ...(wordFallback.antonyms || []),
+        ...(lemmaFallback.antonyms || [])
+      ])).filter(Boolean).slice(0, 6);
 
       setCachedResult(cacheKey, result);
       return result;

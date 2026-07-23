@@ -109,12 +109,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             let synonyms = extraRes?.synonyms || [];
             let antonyms = extraRes?.antonyms || [];
             
-            const { lemmaInfo, isVerb, wiktionaryDefinitions, example } = lemmaRes || {};
+            const { lemmaInfo, isVerb, isAdjective, wiktionaryDefinitions, synonyms: wikSyn, antonyms: wikAnt, example } = lemmaRes || {};
             
             const definitions = (source === 'fr' && wiktionaryDefinitions && wiktionaryDefinitions.length > 0)
               ? wiktionaryDefinitions
               : [translation];
               
+            // Combine synonyms & antonyms from Wiktionary, extra dicts, and fallback dictionaries
+            const wordFallback = getFallbackSynonyms(cleanWord);
+            const lemmaFallback = lemmaInfo ? getFallbackSynonyms(lemmaInfo.lemma) : { synonyms: [], antonyms: [] };
+
+            synonyms = Array.from(new Set([
+              ...(synonyms || []),
+              ...(wikSyn || []),
+              ...(wordFallback.synonyms || []),
+              ...(lemmaFallback.synonyms || [])
+            ])).filter(Boolean).slice(0, 6);
+
+            antonyms = Array.from(new Set([
+              ...(antonyms || []),
+              ...(wikAnt || []),
+              ...(wordFallback.antonyms || []),
+              ...(lemmaFallback.antonyms || [])
+            ])).filter(Boolean).slice(0, 6);
+
             result = {
               word: cleanWord,
               translation: translation,
@@ -124,17 +142,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               detectedLang: source,
               lemmaInfo: lemmaInfo || null,
               isVerb: isVerb || false,
+              isAdjective: isAdjective || false,
               example: dictExample || example || null,
               synonyms,
               antonyms
             };
-            
-            if (!result.synonyms || result.synonyms.length === 0) {
-              const wordFallback = getFallbackSynonyms(cleanWord);
-              const lemmaFallback = result.lemmaInfo ? getFallbackSynonyms(result.lemmaInfo.lemma) : { synonyms: [], antonyms: [] };
-              result.synonyms = Array.from(new Set([...(wordFallback.synonyms || []), ...(lemmaFallback.synonyms || [])]));
-              result.antonyms = Array.from(new Set([...(wordFallback.antonyms || []), ...(lemmaFallback.antonyms || [])]));
-            }
 
             if (!result.example) {
               const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : cleanWord;
