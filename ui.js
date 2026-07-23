@@ -630,17 +630,26 @@ function renderLemma(lemmaRow, data, activeTargetLang) {
   }
 }
 
-// Renders French verb conjugation grids with 4 tense tabs
+// Renders French verb conjugation grids with 5 tense tabs (including Subjonctif)
 function renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = 'present') {
   if (activeTargetLang === 'fr' && data.isVerb) {
     const verbToConjugate = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || queryWord);
+    
+    // Auto-detect subjunctive queries (e.g., "soient", "fasse", "puisse") to default active tab
+    const isSubjunctiveQuery = (data.definitions && data.definitions.some(d => d.toLowerCase().includes('subjunctive'))) || 
+                              ['soient', 'sois', 'soit', 'soyons', 'soyez', 'fasse', 'fassent', 'puisse', 'puissent', 'aie', 'aies', 'ait', 'ayons', 'ayez', 'aient'].includes(queryWord.toLowerCase());
+    if (activeTense === 'present' && isSubjunctiveQuery) {
+      activeTense = 'subjonctif';
+    }
+
     const conj = getFrenchConjugations(verbToConjugate, activeTense);
     if (conj) {
       const tenses = [
         { id: 'present', label: 'Présent' },
         { id: 'passe_compose', label: 'Passé C.' },
         { id: 'imparfait', label: 'Imparfait' },
-        { id: 'futur_simple', label: 'Futur' }
+        { id: 'futur_simple', label: 'Futur' },
+        { id: 'subjonctif', label: 'Subjonctif' }
       ];
       const tabsHtml = tenses.map(t => `<button class="glossapop-tense-tab ${activeTense === t.id ? 'active' : ''}" data-tense="${t.id}">${t.label}</button>`).join('');
 

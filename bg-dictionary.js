@@ -219,6 +219,14 @@ async function autoDetectAndTranslate(word, target) {
         result.definitions = wiktionaryDefinitions;
       }
       
+      // Fallback synonyms check for query word or root lemma
+      if (!result.synonyms || result.synonyms.length === 0) {
+        const wordFallback = getFallbackSynonyms(cleanWord);
+        const lemmaFallback = result.lemmaInfo ? getFallbackSynonyms(result.lemmaInfo.lemma) : { synonyms: [], antonyms: [] };
+        result.synonyms = Array.from(new Set([...(wordFallback.synonyms || []), ...(lemmaFallback.synonyms || [])]));
+        result.antonyms = Array.from(new Set([...(wordFallback.antonyms || []), ...(lemmaFallback.antonyms || [])]));
+      }
+
       setCachedResult(cacheKey, result);
       return result;
     }

@@ -129,6 +129,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               antonyms
             };
             
+            if (!result.synonyms || result.synonyms.length === 0) {
+              const wordFallback = getFallbackSynonyms(cleanWord);
+              const lemmaFallback = result.lemmaInfo ? getFallbackSynonyms(result.lemmaInfo.lemma) : { synonyms: [], antonyms: [] };
+              result.synonyms = Array.from(new Set([...(wordFallback.synonyms || []), ...(lemmaFallback.synonyms || [])]));
+              result.antonyms = Array.from(new Set([...(wordFallback.antonyms || []), ...(lemmaFallback.antonyms || [])]));
+            }
+
             if (!result.example) {
               const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : cleanWord;
               try {

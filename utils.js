@@ -137,6 +137,41 @@ function getFrenchConjugations(verb, tense = 'present') {
     };
   }
 
+  // 4. Subjonctif (Subjunctive Present)
+  if (tense === 'subjonctif') {
+    const subjIrregulars = {
+      'être': { je: 'que je sois', tu: 'que tu sois', il: 'qu’il soit', nous: 'que nous soyons', vous: 'que vous soyez', ils: 'qu’ils soient' },
+      'avoir': { je: 'que j’aie', tu: 'que tu aies', il: 'qu’il ait', nous: 'que nous ayons', vous: 'que vous ayez', ils: 'qu’ils aient' },
+      'faire': { je: 'que je fasse', tu: 'que tu fasses', il: 'qu’il fasse', nous: 'que nous fassions', vous: 'que vous fassiez', ils: 'qu’ils fassent' },
+      'pouvoir': { je: 'que je puisse', tu: 'que tu puisses', il: 'qu’il puisse', nous: 'que nous puissions', vous: 'que vous puissiez', ils: 'qu’ils puissent' },
+      'vouloir': { je: 'que je veuille', tu: 'que tu veuilles', il: 'qu’il veuille', nous: 'que nous voulions', vous: 'que vous vouliez', ils: 'qu’ils veuillent' },
+      'savoir': { je: 'que je sache', tu: 'que tu saches', il: 'qu’il sache', nous: 'que nous sachions', vous: 'que vous sachiez', ils: 'qu’ils sachent' },
+      'aller': { je: 'que j’aille', tu: 'que tu ailles', il: 'qu’il aille', nous: 'que nous allions', vous: 'que vous alliez', ils: 'qu’ils aillent' },
+      'venir': { je: 'que je vienne', tu: 'que tu viennes', il: 'qu’il vienne', nous: 'que nous venions', vous: 'que vous veniez', ils: 'qu’ils viennent' },
+      'devenir': { je: 'que je devienne', tu: 'que tu deviennes', il: 'qu’il devienne', nous: 'que nous devenions', vous: 'que vous deviez', ils: 'qu’ils deviennent' },
+      'revenir': { je: 'que je revienne', tu: 'que tu reviennes', il: 'qu’il revienne', nous: 'que nous revenions', vous: 'que vous reviez', ils: 'qu’ils me reviennent' },
+      'prendre': { je: 'que je prenne', tu: 'que tu prennes', il: 'qu’il prenne', nous: 'que nous prenions', vous: 'que vous preniez', ils: 'qu’ils prennent' }
+    };
+    if (subjIrregulars[v]) return subjIrregulars[v];
+
+    const pres = getFrenchConjugations(v, 'present');
+    let stem = '';
+    if (pres && pres.ils) {
+      stem = pres.ils.replace(/ent$/, '');
+    } else {
+      stem = v.endsWith('er') ? v.slice(0, -2) : (v.endsWith('ir') ? v.slice(0, -2) + 'iss' : v.slice(0, -2));
+    }
+    const isVowel = stem[0] && stem[0].match(/[aeiouyhéèàùâêîôû]/i);
+    return {
+      je: (isVowel ? "que j’" : "que je ") + stem + 'e',
+      tu: "que tu " + stem + 'es',
+      il: (isVowel ? "qu’il " : "que il ") + stem + 'e',
+      nous: "que nous " + stem + 'ions',
+      vous: "que vous " + stem + 'iez',
+      ils: (isVowel ? "qu’ils " : "que ils ") + stem + 'ent'
+    };
+  }
+
   // 4. Présent (Default Present Tense)
   const irregulars = {
     'être': { je: 'suis', tu: 'es', il: 'est', nous: 'sommes', vous: 'êtes', ils: 'sont' },
@@ -248,4 +283,45 @@ function getCEFRLevel(word, lang) {
   };
   
   return colors[level] || colors['B1'];
+}
+
+// Fallback synonyms and antonyms generator for core words and base lemmas
+function getFallbackSynonyms(word) {
+  if (!word) return { synonyms: [], antonyms: [] };
+  const w = word.toLowerCase().trim();
+
+  const dict = {
+    // French Verbs & Words
+    'être': { synonyms: ['exister', 'se trouver', 'demeurer', 'constituer'], antonyms: ['disparaître', 'mourir'] },
+    'soient': { synonyms: ['exister', 'se trouver', 'demeurer', 'constituer'], antonyms: ['disparaître', 'mourir'] },
+    'avoir': { synonyms: ['posséder', 'disposer', 'obtenir', 'détenir'], antonyms: ['manquer', 'perdre'] },
+    'faire': { synonyms: ['réaliser', 'effectuer', 'produire', 'créer'], antonyms: ['détruire', 'défaire'] },
+    'manger': { synonyms: ['consommer', 'dévorer', 'déguster', 'nourrir'], antonyms: ['jeûner'] },
+    'aller': { synonyms: ['se rendre', 'marcher', 's’avancer', 'partir'], antonyms: ['revenir', 'rester'] },
+    'dire': { synonyms: ['déclarer', 'exprimer', 'affirmer', 'prononcer'], antonyms: ['taire', 'cacher'] },
+    'voir': { synonyms: ['observer', 'apercevoir', 'regarder', 'constater'], antonyms: ['ignorer'] },
+    'pouvoir': { synonyms: ['être en mesure', 'parvenir', 'capacité'], antonyms: ['échouer'] },
+    'vouloir': { synonyms: ['désirer', 'souhaiter', 'exiger'], antonyms: ['refuser'] },
+    'grand': { synonyms: ['immense', 'vaste', 'élevé', 'majeur'], antonyms: ['petit', 'minime'] },
+    'petit': { synonyms: ['minuscule', 'réduit', 'modeste', 'court'], antonyms: ['grand', 'immense'] },
+    'beau': { synonyms: ['magnifique', 'superbe', 'splendide', 'joli'], antonyms: ['laid', 'moche'] },
+    'bon': { synonyms: ['excellent', 'agréable', 'favorable'], antonyms: ['mauvais'] },
+    'susciter': { synonyms: ['provoquer', 'engendrer', 'susciter', 'entraîner'], antonyms: ['étouffer', 'calmer'] },
+    'définitivement': { synonyms: ['pour de bon', 'irrévocablement', 'enfin'], antonyms: ['temporairement', 'provisoire'] },
+
+    // English Core Words
+    'be': { synonyms: ['exist', 'occur', 'remain', 'abide'], antonyms: ['disappear', 'cease'] },
+    'have': { synonyms: ['possess', 'own', 'hold', 'acquire'], antonyms: ['lack', 'lose'] },
+    'do': { synonyms: ['perform', 'execute', 'achieve', 'conduct'], antonyms: ['neglect', 'undo'] },
+    'make': { synonyms: ['create', 'produce', 'construct', 'build'], antonyms: ['destroy', 'dismantle'] },
+    'say': { synonyms: ['state', 'declare', 'express', 'utter'], antonyms: ['conceal', 'suppress'] },
+    'go': { synonyms: ['proceed', 'travel', 'depart', 'move'], antonyms: ['stay', 'remain'] },
+    'good': { synonyms: ['excellent', 'great', 'fine', 'wonderful'], antonyms: ['bad', 'poor'] },
+    'bad': { synonyms: ['poor', 'terrible', 'awful', 'dreadful'], antonyms: ['good', 'excellent'] },
+    'important': { synonyms: ['crucial', 'essential', 'vital', 'significant'], antonyms: ['trivial', 'unimportant'] },
+    'beautiful': { synonyms: ['gorgeous', 'stunning', 'attractive', 'lovely'], antonyms: ['ugly', 'unattractive'] },
+    'definitely': { synonyms: ['certainly', 'surely', 'undoubtedly', 'absolutely'], antonyms: ['possibly', 'uncertainly'] }
+  };
+
+  return dict[w] || { synonyms: [], antonyms: [] };
 }
