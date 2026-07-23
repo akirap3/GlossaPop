@@ -16,8 +16,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         // Scenario 2: Source language is English and target is English
         else if (source === 'en' && target === 'en') {
-          const dictPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-          const lemmaPromise = fetchLemmaInfo(word, 'en');
+          const cleanWord = word.trim();
+          const cacheKey = `${source}:${target}:${cleanWord.toLowerCase()}`;
+          const cached = getCachedResult(cacheKey);
+          if (cached) {
+            sendResponse({ success: true, data: cached });
+            return;
+          }
+
+          const dictPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanWord)}`);
+          const lemmaPromise = fetchLemmaInfo(cleanWord, 'en');
           
           const response = await dictPromise;
           if (response.ok) {
@@ -25,9 +33,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             result = parseDictionaryData(data);
           } else {
             try {
-              const translation = await translateWord(word, 'en', 'en');
+              const translation = await translateWord(cleanWord, 'en', 'en');
               result = {
-                word,
+                word: cleanWord,
                 translation: translation,
                 phonetic: '',
                 definitions: [translation],
@@ -48,7 +56,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
           
           if (!result.example) {
-            const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : word;
+            const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : cleanWord;
             try {
               result.example = await fetchFallbackExample(exampleWord, 'en', 'en');
             } catch (e) {
@@ -60,66 +68,73 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           if ((!result.definitions || result.definitions.length === 0) && wiktionaryDefinitions && wiktionaryDefinitions.length > 0) {
             result.definitions = wiktionaryDefinitions;
           }
+
+          setCachedResult(cacheKey, result);
         } 
         // Scenario 3: Explicit source languages (EN or FR) and other target pairs
         else {
           try {
-            const translationPromise = translateWord(word, source, target);
-            const lemmaPromise = fetchLemmaInfo(word, source);
-            
-            const translation = await translationPromise;
-            
-            let phonetic = '';
-            let audio = '';
-            let dictExample = null;
-            if (source === 'en') {
-              try {
-                const dictUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`;
-                const dictRes = await fetch(dictUrl);
-                if (dictRes.ok) {
-                  const dictData = await dictRes.json();
-                  const parsed = parseDictionaryData(dictData);
-                  phonetic = parsed.phonetic;
-                  audio = parsed.audio;
-                  dictExample = parsed.example;
-                }
-              } catch (e) {
-                console.log('Unable to fetch English phonetics/audio:', e);
-              }
-            } else if (source === 'fr') {
-              try {
-                phonetic = await fetchFrenchPhonetic(word);
-              } catch (e) {
-                console.log('Unable to fetch French phonetics:', e);
-              }
+            const cleanWord = word.trim();
+            const cacheKey = `${source}:${target}:${cleanWord.toLowerCase()}`;
+            const cached = getCachedResult(cacheKey);
+            if (cached) {
+              sendResponse({ success: true, data: cached });
+              return;
             }
+
+            const translationPromise = translateWord(cleanWord, source, target);
+            const lemmaPromise = fetchLemmaInfo(cleanWord, source);
             
-            const { lemmaInfo, isVerb, wiktionaryDefinitions, example } = await lemmaPromise;
+            let extraPromise = Promise.resolve(null);
+            if (source === 'en') {
+              extraPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanWord)}`)
+                .then(res => res.ok ? res.json() : null)
+                .then(dictData => dictData ? parseDictionaryData(dictData) : null)
+                .catch(() => null);
+            } else if (source === 'fr') {
+              extraPromise = fetchFrenchPhonetic(cleanWord)
+                .then(phonetic => ({ phonetic }))
+                .catch(() => null);
+            }
+
+            const [translation, lemmaRes, extraRes] = await Promise.all([
+              translationPromise,
+              lemmaPromise,
+              extraPromise
+            ]);
+            
+            let phonetic = extraRes?.phonetic || '';
+            let audio = extraRes?.audio || '';
+            let dictExample = extraRes?.example || null;
+            
+            const { lemmaInfo, isVerb, wiktionaryDefinitions, example } = lemmaRes || {};
             
             const definitions = (source === 'fr' && wiktionaryDefinitions && wiktionaryDefinitions.length > 0)
               ? wiktionaryDefinitions
               : [translation];
               
             result = {
-              word,
+              word: cleanWord,
               translation: translation,
               phonetic,
               audio,
               definitions,
               detectedLang: source,
-              lemmaInfo,
-              isVerb,
-              example: dictExample || example
+              lemmaInfo: lemmaInfo || null,
+              isVerb: isVerb || false,
+              example: dictExample || example || null
             };
             
             if (!result.example) {
-              const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : word;
+              const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : cleanWord;
               try {
                 result.example = await fetchFallbackExample(exampleWord, source, target);
               } catch (e) {
                 console.warn('Fallback example fetch failed:', e);
               }
             }
+
+            setCachedResult(cacheKey, result);
           } catch (error) {
             throw new Error('Translation service is temporarily unavailable');
           }

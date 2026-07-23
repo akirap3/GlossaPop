@@ -1,5 +1,28 @@
 // bg-dictionary.js - Orchestrates dictionary lookups, root words, and conjugations
 
+// High-performance LRU in-memory cache to instantly return repeated translation queries (0ms latency)
+const translationCache = new Map();
+const MAX_CACHE_SIZE = 150;
+
+function getCachedResult(key) {
+  if (translationCache.has(key)) {
+    const val = translationCache.get(key);
+    // Refresh position for LRU eviction order
+    translationCache.delete(key);
+    translationCache.set(key, val);
+    return val;
+  }
+  return null;
+}
+
+function setCachedResult(key, value) {
+  if (translationCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = translationCache.keys().next().value;
+    translationCache.delete(firstKey);
+  }
+  translationCache.set(key, value);
+}
+
 // Fetch French phonetic IPA from Wiktionary HTML
 async function fetchFrenchPhonetic(word) {
   try {
@@ -119,7 +142,14 @@ async function fetchLemmaInfo(word, lang) {
 
 // Helper to perform translation with auto-detection of the source language
 async function autoDetectAndTranslate(word, target) {
-  const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(word)}`;
+  const cleanWord = word.trim();
+  const cacheKey = `auto:${target}:${cleanWord.toLowerCase()}`;
+  const cached = getCachedResult(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(cleanWord)}`;
   
   try {
     const response = await fetch(googleUrl);
@@ -131,7 +161,7 @@ async function autoDetectAndTranslate(word, target) {
       const targetSourceLang = (detectedLang === 'fr' || detectedLang === 'en') ? detectedLang : 'en';
       
       let result = {
-        word,
+        word: cleanWord,
         translation,
         phonetic: '',
         audio: '',
@@ -140,46 +170,42 @@ async function autoDetectAndTranslate(word, target) {
         example: null
       };
       
-      const lemmaPromise = fetchLemmaInfo(word, targetSourceLang);
+      // Kick off Lemma info and secondary details (EN dictionary / FR IPA) concurrently
+      const lemmaPromise = fetchLemmaInfo(cleanWord, targetSourceLang);
       
+      let extraPromise = Promise.resolve(null);
       if (targetSourceLang === 'en') {
-        try {
-          const dictUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`;
-          const dictRes = await fetch(dictUrl);
-          if (dictRes.ok) {
-            const dictData = await dictRes.json();
-            const parsed = parseDictionaryData(dictData);
-            result.phonetic = parsed.phonetic || '';
-            result.audio = parsed.audio || '';
-            result.example = parsed.example || null;
-            
-            if (target === 'en' && parsed.definitions && parsed.definitions.length > 0) {
-              result.definitions = parsed.definitions;
-            }
-          }
-        } catch (e) {
-          console.log('Unable to fetch English dictionary info in auto-mode:', e);
+        extraPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanWord)}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(dictData => dictData ? parseDictionaryData(dictData) : null)
+          .catch(e => null);
+      } else if (targetSourceLang === 'fr') {
+        extraPromise = fetchFrenchPhonetic(cleanWord)
+          .then(phonetic => ({ phonetic }))
+          .catch(e => null);
+      }
+
+      const [lemmaRes, extraRes] = await Promise.all([lemmaPromise, extraPromise]);
+
+      if (extraRes) {
+        if (extraRes.phonetic) result.phonetic = extraRes.phonetic;
+        if (extraRes.audio) result.audio = extraRes.audio;
+        if (extraRes.example) result.example = extraRes.example;
+        if (target === 'en' && extraRes.definitions && extraRes.definitions.length > 0) {
+          result.definitions = extraRes.definitions;
         }
       }
 
-      if (targetSourceLang === 'fr') {
-        try {
-          result.phonetic = await fetchFrenchPhonetic(word);
-        } catch (e) {
-          console.log('Unable to fetch French phonetics in auto-mode:', e);
-        }
-      }
-      
-      const { lemmaInfo, isVerb, wiktionaryDefinitions, example } = await lemmaPromise;
-      result.lemmaInfo = lemmaInfo;
-      result.isVerb = isVerb;
+      const { lemmaInfo, isVerb, wiktionaryDefinitions, example } = lemmaRes || {};
+      result.lemmaInfo = lemmaInfo || null;
+      result.isVerb = isVerb || false;
       
       if (example && !result.example) {
         result.example = example;
       }
       
       if (!result.example) {
-        const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : word;
+        const exampleWord = result.lemmaInfo ? result.lemmaInfo.lemma : cleanWord;
         try {
           result.example = await fetchFallbackExample(exampleWord, targetSourceLang, target);
         } catch (e) {
@@ -191,6 +217,7 @@ async function autoDetectAndTranslate(word, target) {
         result.definitions = wiktionaryDefinitions;
       }
       
+      setCachedResult(cacheKey, result);
       return result;
     }
     throw new Error('Google Translate detection failed');

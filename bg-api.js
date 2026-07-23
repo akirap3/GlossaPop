@@ -2,10 +2,13 @@
 
 // Helper function to translate using Lingva with a robust fallback to Google's official translate API
 async function translateWord(word, source, target) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 1200);
   const lingvaUrl = `https://lingva.ml/api/v1/${source}/${target}/${encodeURIComponent(word)}`;
   
   try {
-    const response = await fetch(lingvaUrl);
+    const response = await fetch(lingvaUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (response.ok) {
       const data = await response.json();
       if (data && data.translation) {
@@ -14,9 +17,10 @@ async function translateWord(word, source, target) {
     }
     throw new Error(`Lingva request returned status: ${response.status}`);
   } catch (error) {
-    console.warn('Lingva instance error, falling back to official Google Translate API:', error);
+    clearTimeout(timeoutId);
+    console.warn('Lingva instance error or timeout, falling back to official Google Translate API:', error);
     
-    // Fallback: Use Google Translate's public client API endpoint
+    // Fallback: Use Google Translate's public client API endpoint (ultra-fast ~100ms response)
     const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(word)}`;
     const response = await fetch(googleUrl);
     if (response.ok) {
