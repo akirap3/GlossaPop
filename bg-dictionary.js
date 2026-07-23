@@ -227,22 +227,15 @@ async function autoDetectAndTranslate(word, target) {
         result.definitions = wiktionaryDefinitions;
       }
       
-      // Combine synonyms & antonyms from Wiktionary, extra dicts, and fallback dictionaries
-      const wordFallback = getFallbackSynonyms(cleanWord);
-      const lemmaFallback = result.lemmaInfo ? getFallbackSynonyms(result.lemmaInfo.lemma) : { synonyms: [], antonyms: [] };
-
+      // Combine synonyms & antonyms dynamically from Wiktionary and API queries
       result.synonyms = Array.from(new Set([
         ...(result.synonyms || []),
-        ...(wikSyn || []),
-        ...(wordFallback.synonyms || []),
-        ...(lemmaFallback.synonyms || [])
+        ...(wikSyn || [])
       ])).filter(Boolean).slice(0, 6);
 
       result.antonyms = Array.from(new Set([
         ...(result.antonyms || []),
-        ...(wikAnt || []),
-        ...(wordFallback.antonyms || []),
-        ...(lemmaFallback.antonyms || [])
+        ...(wikAnt || [])
       ])).filter(Boolean).slice(0, 6);
 
       setCachedResult(cacheKey, result);

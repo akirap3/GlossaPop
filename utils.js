@@ -243,35 +243,18 @@ function getFrenchConjugations(verb, tense = 'present') {
   return null;
 }
 
-// Helper to estimate CEFR level (A1, A2, B1, B2, C1, C2) and badge colors
+// Helper to estimate CEFR level dynamically based on word length and complexity (No static word lists)
 function getCEFRLevel(word, lang) {
   if (!word) return null;
   const w = word.toLowerCase().trim();
   
-  const cefrDict = {
-    // English Core Dictionary
-    'a1': ['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us', 'house', 'book', 'cat', 'dog', 'apple', 'friend', 'family', 'water', 'food', 'car', 'school'],
-    'a2': ['achieve', 'activity', 'advantage', 'advice', 'always', 'amount', 'answer', 'appear', 'article', 'available', 'beautiful', 'become', 'beginning', 'believe', 'benefit', 'better', 'between', 'building', 'business', 'careful', 'century', 'change', 'choose', 'clear', 'clothes', 'complete', 'decide', 'description', 'difference', 'different', 'difficult', 'discover', 'discussion', 'distance', 'education', 'effect', 'effort', 'enjoy', 'example', 'experience', 'explain', 'famous', 'foreign', 'future', 'important', 'improve', 'industry', 'information', 'interest', 'language', 'learn', 'lesson', 'letter', 'listen', 'measure', 'memory', 'method', 'mind', 'modern', 'moment', 'morning', 'move', 'natural', 'necessary', 'neighbor', 'notice', 'number', 'offer', 'office', 'opinion', 'opportunity', 'order', 'original', 'parent', 'pattern', 'performance', 'person', 'picture', 'place', 'plan', 'position', 'possible', 'practice', 'prepare', 'present', 'problem', 'process', 'produce', 'product', 'program', 'protect', 'provide', 'quality', 'question', 'reason', 'receive', 'report', 'require', 'result', 'return', 'science', 'section', 'service', 'simple', 'society', 'special', 'student', 'success', 'system', 'teacher', 'today', 'travel', 'understand', 'university', 'value', 'village', 'visit', 'weather', 'window', 'writer', 'yesterday'],
-    'b1': ['accurate', 'adequate', 'advantageous', 'alternative', 'analyze', 'apparent', 'approach', 'appropriate', 'associate', 'assume', 'attribute', 'authority', 'capacity', 'category', 'circumstance', 'challenge', 'collaboration', 'complexity', 'component', 'concept', 'conclusion', 'conduct', 'consequence', 'considerable', 'consist', 'constant', 'constitute', 'constraint', 'context', 'contribution', 'convention', 'correspond', 'criteria', 'crucial', 'definition', 'demonstrate', 'derived', 'dimension', 'distinction', 'diversity', 'element', 'emphasis', 'empirical', 'ensure', 'environment', 'equivalent', 'establish', 'estimate', 'evidence', 'expansion', 'extension', 'factor', 'feature', 'framework', 'function', 'fundamental', 'generate', 'hypothesis', 'identify', 'illustration', 'impact', 'implication', 'indicate', 'individual', 'initial', 'insight', 'instance', 'integration', 'interaction', 'interpretation', 'investigation', 'item', 'journal', 'layer', 'mechanism', 'methodology', 'motivation', 'objective', 'outcome', 'parameter', 'perspective', 'phenomenon', 'potential', 'predict', 'principal', 'principle', 'priority', 'procedure', 'proportion', 'protocol', 'publication', 'reference', 'regional', 'regulation', 'relevant', 'reliability', 'requirement', 'research', 'resilience', 'resource', 'response', 'retention', 'scope', 'section', 'segment', 'significance', 'source', 'strategy', 'structure', 'subsequent', 'sufficient', 'sustainable', 'tendency', 'theory', 'transition', 'ultimate', 'underlying', 'validity', 'variable', 'version'],
-    // French Core Dictionary
-    'fr_a1': ['maison', 'manger', 'grand', 'petit', 'avec', 'pour', 'dans', 'sur', 'être', 'avoir', 'faire', 'aller', 'dire', 'voir', 'savoir', 'pouvoir', 'vouloir', 'venir', 'prendre', 'homme', 'femme', 'enfant', 'jour', 'temps', 'vie', 'chose', 'monde', 'nom', 'pays', 'eau', 'beau', 'bon', 'bien', 'oui', 'non', 'plus', 'ici', 'mon', 'ton', 'son', 'notre', 'votre', 'leur', 'qui', 'que', 'quoi', 'quand', 'comment', 'pourquoi'],
-    'fr_a2': ['attendre', 'choisir', 'comprendre', 'devenir', 'devoir', 'écrire', 'lire', 'mettre', 'partir', 'penser', 'répondre', 'sortir', 'trouver', 'vivre', 'besoin', 'cause', 'chemin', 'côté', 'exemple', 'fin', 'heure', 'idée', 'journée', 'lieu', 'main', 'moment', 'mot', 'nuit', 'œil', 'part', 'place', 'question', 'raison', 'soir', 'terre', 'travail', 'toujours', 'souvent', 'parfois', 'jamais', 'ensemble', 'nouveau', 'ancien', 'premier', 'dernier', 'jeune', 'vieux', 'meilleur', 'tout', 'chacun', 'plusieurs'],
-    'fr_b1': ['susciter', 'définitivement', 'développement', 'contrainte', 'épanouissement', 'démarche', 'exigence', 'enjeu', 'soutenir', 'reconnaître', 'maintenir', 'bénéficier', 'compétence', 'dispositif', 'équilibre', 'évaluation', 'évolution', 'perspective', 'priorité', 'processus', 'réflexion', 'stratégie', 'transformation', 'valeur']
-  };
-  
   let level = 'B1';
-  if (cefrDict.a1.includes(w) || cefrDict.fr_a1.includes(w)) level = 'A1';
-  else if (cefrDict.a2.includes(w) || cefrDict.fr_a2.includes(w)) level = 'A2';
-  else if (cefrDict.b1.includes(w) || cefrDict.fr_b1.includes(w)) level = 'B1';
-  else {
-    // Length & syllable complexity heuristics
-    if (w.length <= 4) level = 'A1';
-    else if (w.length <= 6) level = 'A2';
-    else if (w.length <= 8) level = 'B1';
-    else if (w.length <= 10) level = 'B2';
-    else if (w.length <= 12) level = 'C1';
-    else level = 'C2';
-  }
+  if (w.length <= 4) level = 'A1';
+  else if (w.length <= 6) level = 'A2';
+  else if (w.length <= 8) level = 'B1';
+  else if (w.length <= 10) level = 'B2';
+  else if (w.length <= 12) level = 'C1';
+  else level = 'C2';
   
   const colors = {
     'A1': { text: 'A1', color: '#2e7d32', bg: 'rgba(46, 125, 50, 0.12)', label: 'A1 Beginner' },
@@ -283,52 +266,4 @@ function getCEFRLevel(word, lang) {
   };
   
   return colors[level] || colors['B1'];
-}
-
-// Fallback synonyms and antonyms generator for core words and base lemmas
-function getFallbackSynonyms(word) {
-  if (!word) return { synonyms: [], antonyms: [] };
-  const w = word.toLowerCase().trim();
-
-  const dict = {
-    // French Verbs & Words
-    'être': { synonyms: ['exister', 'se trouver', 'demeurer', 'constituer'], antonyms: ['disparaître', 'mourir'] },
-    'soient': { synonyms: ['exister', 'se trouver', 'demeurer', 'constituer'], antonyms: ['disparaître', 'mourir'] },
-    'avoir': { synonyms: ['posséder', 'disposer', 'obtenir', 'détenir'], antonyms: ['manquer', 'perdre'] },
-    'faire': { synonyms: ['réaliser', 'effectuer', 'produire', 'créer'], antonyms: ['détruire', 'défaire'] },
-    'manger': { synonyms: ['consommer', 'dévorer', 'déguster', 'nourrir'], antonyms: ['jeûner'] },
-    'aller': { synonyms: ['se rendre', 'marcher', 's’avancer', 'partir'], antonyms: ['revenir', 'rester'] },
-    'dire': { synonyms: ['déclarer', 'exprimer', 'affirmer', 'prononcer'], antonyms: ['taire', 'cacher'] },
-    'voir': { synonyms: ['observer', 'apercevoir', 'regarder', 'constater'], antonyms: ['ignorer'] },
-    'pouvoir': { synonyms: ['être en mesure', 'parvenir', 'capacité'], antonyms: ['échouer'] },
-    'vouloir': { synonyms: ['désirer', 'souhaiter', 'exiger'], antonyms: ['refuser'] },
-    'grand': { synonyms: ['immense', 'vaste', 'élevé', 'majeur'], antonyms: ['petit', 'minime'] },
-    'petit': { synonyms: ['minuscule', 'réduit', 'modeste', 'court'], antonyms: ['grand', 'immense'] },
-    'beau': { synonyms: ['magnifique', 'superbe', 'splendide', 'joli'], antonyms: ['laid', 'moche'] },
-    'bon': { synonyms: ['excellent', 'agréable', 'favorable'], antonyms: ['mauvais'] },
-    'susciter': { synonyms: ['provoquer', 'engendrer', 'susciter', 'entraîner'], antonyms: ['étouffer', 'calmer'] },
-    'définitivement': { synonyms: ['pour de bon', 'irrévocablement', 'enfin'], antonyms: ['temporairement', 'provisoire'] },
-    'profit': { synonyms: ['bénéfice', 'gain', 'avantage', 'revenu'], antonyms: ['perte', 'déficit'] },
-    'profits': { synonyms: ['bénéfices', 'gains', 'avantages', 'revenus'], antonyms: ['pertes', 'déficits'] },
-    'flambée': { synonyms: ['hausse', 'explosion', 'augmentation'], antonyms: ['chute', 'baisse'] },
-    'libellé': { synonyms: ['intitulé', 'exprimé', 'rédigé'], antonyms: [] },
-    'libellés': { synonyms: ['intitulés', 'exprimés', 'rédigés'], antonyms: [] },
-    'colossal': { synonyms: ['gigantesque', 'immense', 'énorme'], antonyms: ['minime', 'insignifiant'] },
-    'colossaux': { synonyms: ['gigantesques', 'immenses', 'énormes'], antonyms: ['minimes', 'insignifiants'] },
-
-    // English Core Words
-    'be': { synonyms: ['exist', 'occur', 'remain', 'abide'], antonyms: ['disappear', 'cease'] },
-    'have': { synonyms: ['possess', 'own', 'hold', 'acquire'], antonyms: ['lack', 'lose'] },
-    'do': { synonyms: ['perform', 'execute', 'achieve', 'conduct'], antonyms: ['neglect', 'undo'] },
-    'make': { synonyms: ['create', 'produce', 'construct', 'build'], antonyms: ['destroy', 'dismantle'] },
-    'say': { synonyms: ['state', 'declare', 'express', 'utter'], antonyms: ['conceal', 'suppress'] },
-    'go': { synonyms: ['proceed', 'travel', 'depart', 'move'], antonyms: ['stay', 'remain'] },
-    'good': { synonyms: ['excellent', 'great', 'fine', 'wonderful'], antonyms: ['bad', 'poor'] },
-    'bad': { synonyms: ['poor', 'terrible', 'awful', 'dreadful'], antonyms: ['good', 'excellent'] },
-    'important': { synonyms: ['crucial', 'essential', 'vital', 'significant'], antonyms: ['trivial', 'unimportant'] },
-    'beautiful': { synonyms: ['gorgeous', 'stunning', 'attractive', 'lovely'], antonyms: ['ugly', 'unattractive'] },
-    'definitely': { synonyms: ['certainly', 'surely', 'undoubtedly', 'absolutely'], antonyms: ['possibly', 'uncertainly'] }
-  };
-
-  return dict[w] || { synonyms: [], antonyms: [] };
 }

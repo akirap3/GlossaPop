@@ -115,22 +115,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               ? wiktionaryDefinitions
               : [translation];
               
-            // Combine synonyms & antonyms from Wiktionary, extra dicts, and fallback dictionaries
-            const wordFallback = getFallbackSynonyms(cleanWord);
-            const lemmaFallback = lemmaInfo ? getFallbackSynonyms(lemmaInfo.lemma) : { synonyms: [], antonyms: [] };
-
+            // Combine synonyms & antonyms dynamically from Wiktionary and API queries
             synonyms = Array.from(new Set([
               ...(synonyms || []),
-              ...(wikSyn || []),
-              ...(wordFallback.synonyms || []),
-              ...(lemmaFallback.synonyms || [])
+              ...(wikSyn || [])
             ])).filter(Boolean).slice(0, 6);
 
             antonyms = Array.from(new Set([
               ...(antonyms || []),
-              ...(wikAnt || []),
-              ...(wordFallback.antonyms || []),
-              ...(lemmaFallback.antonyms || [])
+              ...(wikAnt || [])
             ])).filter(Boolean).slice(0, 6);
 
             result = {
