@@ -191,6 +191,8 @@ async function autoDetectAndTranslate(word, target) {
         if (extraRes.phonetic) result.phonetic = extraRes.phonetic;
         if (extraRes.audio) result.audio = extraRes.audio;
         if (extraRes.example) result.example = extraRes.example;
+        if (extraRes.synonyms) result.synonyms = extraRes.synonyms;
+        if (extraRes.antonyms) result.antonyms = extraRes.antonyms;
         if (target === 'en' && extraRes.definitions && extraRes.definitions.length > 0) {
           result.definitions = extraRes.definitions;
         }

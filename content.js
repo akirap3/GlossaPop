@@ -122,6 +122,7 @@ async function fetchAndDisplay(word, isInitial = false) {
   const speakBtn = shadowRoot.querySelector('.glossapop-speak-btn');
   const lemmaRow = shadowRoot.querySelector('.glossapop-lemma-row');
   const conjBox = shadowRoot.querySelector('.glossapop-conjugation-box');
+  const synonymsBox = shadowRoot.querySelector('.glossapop-synonyms-box');
   const exampleBox = shadowRoot.querySelector('.glossapop-example-box');
   const externalLinksBox = shadowRoot.querySelector('.glossapop-external-links');
 
@@ -134,6 +135,7 @@ async function fetchAndDisplay(word, isInitial = false) {
   if (audioGroup) audioGroup.style.display = 'none';
   if (lemmaRow) lemmaRow.style.display = 'none';
   if (conjBox) conjBox.style.display = 'none';
+  if (synonymsBox) synonymsBox.style.display = 'none';
   if (exampleBox) exampleBox.style.display = 'none';
   if (externalLinksBox) externalLinksBox.style.display = 'none';
 
@@ -170,9 +172,20 @@ async function fetchAndDisplay(word, isInitial = false) {
         }
       }
 
+      // Update card title heading for secondary in-card queries
+      if (!isInitial) {
+        const titleEl = shadowRoot.querySelector('.glossapop-word');
+        if (titleEl) {
+          const cefr = getCEFRLevel(word, activeTargetLang);
+          const cefrBadge = cefr ? `<span class="glossapop-cefr-badge" style="color:${cefr.color}; background:${cefr.bg};" title="${escapeHtml(cefr.label)}">${cefr.text}</span>` : '';
+          titleEl.innerHTML = `${escapeHtml(word)}${cefrBadge}`;
+        }
+      }
+
       // Render modular DOM elements (loaded from ui.js)
       renderLemma(lemmaRow, data, activeTargetLang);
       renderConjugations(conjBox, data, activeTargetLang, word);
+      if (synonymsBox) renderSynonyms(synonymsBox, data, (clickedChipWord) => fetchAndDisplay(clickedChipWord, false));
       renderExample(exampleBox, data, activeTargetLang);
       renderLinks(externalLinksBox, data, activeTargetLang, word);
 

@@ -428,10 +428,95 @@ const POPUP_CSS = `
     text-align: center;
     padding: 10px 0;
   }
+
+  /* CEFR Level Badge Styles */
+  .glossapop-cefr-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* French Tense Switcher Tabs Styles */
+  .glossapop-tense-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(0, 102, 204, 0.12);
+    padding-bottom: 4px;
+  }
+  .glossapop-tense-tab {
+    font-size: 9px;
+    font-weight: 600;
+    color: #8e8e93;
+    background: transparent;
+    border: none;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .glossapop-tense-tab.active {
+    color: #ffffff;
+    background: #0066cc;
+  }
+  .glossapop-tense-tab:hover:not(.active) {
+    background: rgba(0, 102, 204, 0.1);
+    color: #0066cc;
+  }
+
+  /* Synonyms & Antonyms Tag Chips Styles */
+  .glossapop-synonyms-box {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+  .glossapop-synonyms-title {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #8e8e93;
+    text-transform: uppercase;
+    margin-right: 2px;
+  }
+  .glossapop-chip {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    color: #0066cc;
+    background: rgba(0, 102, 204, 0.08);
+    padding: 2px 7px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .glossapop-chip:hover {
+    background: rgba(0, 102, 204, 0.18);
+    transform: translateY(-1px);
+  }
+  .glossapop-chip.antonym {
+    color: #d32f2f;
+    background: rgba(211, 47, 47, 0.08);
+  }
+  .glossapop-chip.antonym:hover {
+    background: rgba(211, 47, 47, 0.18);
+  }
 `;
 
 // Renders popup card's main frame
 function renderPopupFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange) {
+  const cefr = getCEFRLevel(word, activeTargetLang);
+  const cefrBadge = cefr ? `<span class="glossapop-cefr-badge" style="color:${cefr.color}; background:${cefr.bg};" title="${escapeHtml(cefr.label)}">${cefr.text}</span>` : '';
+
   const card = shadowRoot.querySelector('.glossapop-card');
   card.innerHTML = `
     <div class="glossapop-header">
@@ -452,7 +537,7 @@ function renderPopupFrame(shadowRoot, word, activeTargetLang, activeExplainLang,
       </div>
     </div>
     <div class="glossapop-word-info">
-      <h3 class="glossapop-word" title="${escapeHtml(word)}">${escapeHtml(word)}</h3>
+      <h3 class="glossapop-word" title="${escapeHtml(word)}">${escapeHtml(word)}${cefrBadge}</h3>
       <div class="glossapop-word-audio-group" style="display:none;">
         <span class="glossapop-phonetic"></span>
         <button class="glossapop-speak-btn" title="Pronounce">
@@ -467,6 +552,7 @@ function renderPopupFrame(shadowRoot, word, activeTargetLang, activeExplainLang,
         <div class="glossapop-spinner"></div>
       </div>
     </div>
+    <div class="glossapop-synonyms-box" style="display:none;"></div>
     <div class="glossapop-example-box" style="display:none;"></div>
     <div class="glossapop-external-links" style="display:none;"></div>
   `;
@@ -544,14 +630,23 @@ function renderLemma(lemmaRow, data, activeTargetLang) {
   }
 }
 
-// Renders French verb conjugation grids
-function renderConjugations(conjBox, data, activeTargetLang, queryWord) {
+// Renders French verb conjugation grids with 4 tense tabs
+function renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = 'present') {
   if (activeTargetLang === 'fr' && data.isVerb) {
     const verbToConjugate = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || queryWord);
-    const conj = getFrenchConjugations(verbToConjugate);
+    const conj = getFrenchConjugations(verbToConjugate, activeTense);
     if (conj) {
+      const tenses = [
+        { id: 'present', label: 'Présent' },
+        { id: 'passe_compose', label: 'Passé C.' },
+        { id: 'imparfait', label: 'Imparfait' },
+        { id: 'futur_simple', label: 'Futur' }
+      ];
+      const tabsHtml = tenses.map(t => `<button class="glossapop-tense-tab ${activeTense === t.id ? 'active' : ''}" data-tense="${t.id}">${t.label}</button>`).join('');
+
       conjBox.innerHTML = `
-        <div class="glossapop-conj-title">Conjugaison (Présent): ${escapeHtml(verbToConjugate)}</div>
+        <div class="glossapop-conj-title">Conjugaison: ${escapeHtml(verbToConjugate)}</div>
+        <div class="glossapop-tense-tabs">${tabsHtml}</div>
         <div class="glossapop-conj-grid">
           <div class="glossapop-conj-item"><span>je</span> <strong>${escapeHtml(conj.je)}</strong></div>
           <div class="glossapop-conj-item"><span>nous</span> <strong>${escapeHtml(conj.nous)}</strong></div>
@@ -561,13 +656,50 @@ function renderConjugations(conjBox, data, activeTargetLang, queryWord) {
           <div class="glossapop-conj-item"><span>ils/elles</span> <strong>${escapeHtml(conj.ils)}</strong></div>
         </div>
       `;
+
+      // Bind click event to tense tabs
+      conjBox.querySelectorAll('.glossapop-tense-tab').forEach(tab => {
+        tab.onclick = (e) => {
+          e.stopPropagation();
+          const selectedTense = tab.dataset.tense;
+          renderConjugations(conjBox, data, activeTargetLang, queryWord, selectedTense);
+        };
+      });
+
       conjBox.style.display = 'block';
-    } else {
-      conjBox.style.display = 'none';
+      return;
     }
-  } else {
-    conjBox.style.display = 'none';
   }
+  conjBox.style.display = 'none';
+}
+
+// Renders clickable synonyms and antonyms tag chips
+function renderSynonyms(synonymsBox, data, onChipClick) {
+  const synonyms = data.synonyms || [];
+  const antonyms = data.antonyms || [];
+  if (synonyms.length === 0 && antonyms.length === 0) {
+    synonymsBox.style.display = 'none';
+    return;
+  }
+  
+  let html = '';
+  if (synonyms.length > 0) {
+    html += `<span class="glossapop-synonyms-title">Synonyms:</span>`;
+    html += synonyms.map(s => `<span class="glossapop-chip" data-word="${escapeHtml(s)}">${escapeHtml(s)}</span>`).join('');
+  }
+  if (antonyms.length > 0) {
+    html += `<span class="glossapop-synonyms-title" style="margin-left:4px;">Antonyms:</span>`;
+    html += antonyms.map(a => `<span class="glossapop-chip antonym" data-word="${escapeHtml(a)}">${escapeHtml(a)}</span>`).join('');
+  }
+  
+  synonymsBox.innerHTML = html;
+  synonymsBox.querySelectorAll('.glossapop-chip').forEach(chip => {
+    chip.onclick = (e) => {
+      e.stopPropagation();
+      if (onChipClick) onChipClick(chip.dataset.word);
+    };
+  });
+  synonymsBox.style.display = 'flex';
 }
 
 // Renders example sentences

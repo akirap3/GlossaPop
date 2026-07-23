@@ -51,16 +51,26 @@ function parseDictionaryData(data) {
     }
   }
   
-  // Extract definitions and map by parts of speech
+  // Extract definitions, synonyms, and antonyms by parts of speech
   const definitions = [];
+  const synonyms = new Set();
+  const antonyms = new Set();
   let example = null;
   if (entry.meanings && Array.isArray(entry.meanings)) {
     entry.meanings.forEach(m => {
       const partOfSpeech = m.partOfSpeech || '';
+      if (m.synonyms && Array.isArray(m.synonyms)) {
+        m.synonyms.forEach(s => synonyms.add(s));
+      }
+      if (m.antonyms && Array.isArray(m.antonyms)) {
+        m.antonyms.forEach(a => antonyms.add(a));
+      }
       if (m.definitions && Array.isArray(m.definitions)) {
         // Retrieve up to 2 definitions per part of speech to keep layout clean
         m.definitions.slice(0, 2).forEach(d => {
           definitions.push(`[${partOfSpeech}] ${d.definition}`);
+          if (d.synonyms && Array.isArray(d.synonyms)) d.synonyms.forEach(s => synonyms.add(s));
+          if (d.antonyms && Array.isArray(d.antonyms)) d.antonyms.forEach(a => antonyms.add(a));
           if (d.example && !example) {
             example = { text: d.example, translation: '' };
           }
@@ -74,6 +84,8 @@ function parseDictionaryData(data) {
     phonetic,
     audio,
     definitions,
-    example
+    example,
+    synonyms: Array.from(synonyms).slice(0, 5),
+    antonyms: Array.from(antonyms).slice(0, 5)
   };
 }

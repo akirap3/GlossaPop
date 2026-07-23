@@ -106,6 +106,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             let phonetic = extraRes?.phonetic || '';
             let audio = extraRes?.audio || '';
             let dictExample = extraRes?.example || null;
+            let synonyms = extraRes?.synonyms || [];
+            let antonyms = extraRes?.antonyms || [];
             
             const { lemmaInfo, isVerb, wiktionaryDefinitions, example } = lemmaRes || {};
             
@@ -122,7 +124,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               detectedLang: source,
               lemmaInfo: lemmaInfo || null,
               isVerb: isVerb || false,
-              example: dictExample || example || null
+              example: dictExample || example || null,
+              synonyms,
+              antonyms
             };
             
             if (!result.example) {
