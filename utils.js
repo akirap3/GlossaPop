@@ -154,21 +154,32 @@ function getFrenchConjugations(verb, tense = 'present') {
     };
     if (subjIrregulars[v]) return subjIrregulars[v];
 
-    const pres = getFrenchConjugations(v, 'present');
     let stem = '';
-    if (pres && pres.ils) {
-      stem = pres.ils.replace(/ent$/, '');
+    if (v.endsWith('er')) {
+      stem = v.slice(0, -2);
+    } else if (v.endsWith('ir')) {
+      stem = v.slice(0, -2) + 'iss';
+    } else if (v.endsWith('re')) {
+      stem = v.slice(0, -2);
     } else {
-      stem = v.endsWith('er') ? v.slice(0, -2) : (v.endsWith('ir') ? v.slice(0, -2) + 'iss' : v.slice(0, -2));
+      const pres = getFrenchConjugations(v, 'present');
+      if (pres && pres.ils) {
+        stem = pres.ils.replace(/ent$/, '');
+      } else if (v.endsWith('e')) {
+        stem = v.slice(0, -1);
+      } else {
+        stem = v;
+      }
     }
+    
     const isVowel = stem[0] && stem[0].match(/[aeiouyhéèàùâêîôû]/i);
     return {
       je: (isVowel ? "que j’" : "que je ") + stem + 'e',
       tu: "que tu " + stem + 'es',
-      il: (isVowel ? "qu’il " : "que il ") + stem + 'e',
+      il: "qu’il " + stem + 'e',
       nous: "que nous " + stem + 'ions',
       vous: "que vous " + stem + 'iez',
-      ils: (isVowel ? "qu’ils " : "que ils ") + stem + 'ent'
+      ils: "qu’ils " + stem + 'ent'
     };
   }
 

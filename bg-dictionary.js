@@ -63,9 +63,10 @@ async function fetchLemmaInfo(word, lang) {
       
       let isVerb = false;
       let isAdjective = false;
-      if (langKey === 'fr' && entries && Array.isArray(entries)) {
-        isVerb = entries.some(e => e.partOfSpeech === 'Verb');
-        isAdjective = entries.some(e => e.partOfSpeech === 'Adjective');
+      if (langKey === 'fr' && entries && Array.isArray(entries) && entries.length > 0) {
+        const primaryPos = entries[0].partOfSpeech || '';
+        isVerb = (primaryPos === 'Verb');
+        isAdjective = (primaryPos === 'Adjective');
       }
       
       let lemmaInfo = null;
