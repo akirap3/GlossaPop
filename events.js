@@ -12,9 +12,9 @@ document.addEventListener('mouseup', (e) => {
 
   const wordCount = selectedText.split(/\s+/).filter(Boolean).length;
   const isSentence = wordCount > 4;
-  const maxLength = isSentence ? 350 : 50;
+  const maxLength = isSentence ? 2000 : 50;
 
-  // Check boundary sizes to avoid full paragraphs being processed
+  // Check boundary sizes (support paragraph selections up to 2000 chars)
   if (!selectedText || selectedText.length > maxLength || (!isSentence && /[\r\n]/.test(selectedText))) {
     hideAll();
     return;
@@ -30,8 +30,9 @@ document.addEventListener('mouseup', (e) => {
   if (settings.triggerMode === 'icon') {
     const triggerIcon = shadowRoot.querySelector('.glossapop-trigger-icon');
     
-    // Calculate float icon coordinates (at bottom-right of selection box)
-    const iconX = rect.right + window.scrollX + 6;
+    // Calculate float icon coordinates (bounded within visible viewport)
+    const viewportWidth = window.innerWidth;
+    const iconX = Math.min(rect.right + window.scrollX + 6, window.scrollX + viewportWidth - 36);
     const iconY = rect.bottom + window.scrollY + 6;
 
     triggerIcon.style.left = `${iconX}px`;
@@ -52,7 +53,7 @@ document.addEventListener('dblclick', (e) => {
 
   const wordCount = selectedText.split(/\s+/).filter(Boolean).length;
   const isSentence = wordCount > 4;
-  const maxLength = isSentence ? 350 : 50;
+  const maxLength = isSentence ? 2000 : 50;
 
   if (!selectedText || selectedText.length > maxLength || (!isSentence && /[\r\n]/.test(selectedText))) {
     return;

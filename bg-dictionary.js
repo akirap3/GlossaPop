@@ -252,7 +252,10 @@ async function autoDetectAndTranslate(word, target) {
     if (response.ok) {
       const googleData = await response.json();
       const detectedLang = (googleData && googleData[2]) ? googleData[2] : 'en';
-      const translation = (googleData && googleData[0] && googleData[0][0] && googleData[0][0][0]) ? googleData[0][0][0] : '';
+      let translation = '';
+      if (googleData && googleData[0] && Array.isArray(googleData[0])) {
+        translation = googleData[0].filter(item => item && item[0]).map(item => item[0]).join('');
+      }
       
       const targetSourceLang = (detectedLang === 'fr' || detectedLang === 'en') ? detectedLang : 'en';
       
@@ -266,16 +269,19 @@ async function autoDetectAndTranslate(word, target) {
         example: null
       };
       
-      // Kick off Lemma info and secondary details (EN dictionary / FR IPA) concurrently
-      const lemmaPromise = fetchLemmaInfo(cleanWord, targetSourceLang);
+      const wordCount = cleanWord.split(/\s+/).filter(Boolean).length;
+      const isSentence = wordCount > 4;
+
+      // Kick off Lemma info and secondary details (EN dictionary / FR IPA) concurrently for single words
+      const lemmaPromise = !isSentence ? fetchLemmaInfo(cleanWord, targetSourceLang) : Promise.resolve(null);
       
       let extraPromise = Promise.resolve(null);
-      if (targetSourceLang === 'en') {
+      if (!isSentence && targetSourceLang === 'en') {
         extraPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanWord)}`)
           .then(res => res.ok ? res.json() : null)
           .then(dictData => dictData ? parseDictionaryData(dictData) : null)
           .catch(e => null);
-      } else if (targetSourceLang === 'fr') {
+      } else if (!isSentence && targetSourceLang === 'fr') {
         extraPromise = fetchFrenchPhonetic(cleanWord)
           .then(phonetic => ({ phonetic }))
           .catch(e => null);

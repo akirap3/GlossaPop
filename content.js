@@ -233,7 +233,16 @@ async function fetchAndDisplay(word, isInitial = false) {
         if (synonymsBox) synonymsBox.style.display = 'none';
         if (exampleBox) exampleBox.style.display = 'none';
         if (externalLinksBox) externalLinksBox.style.display = 'none';
-        if (audioGroup) audioGroup.style.display = 'none';
+        
+        // Show TTS pronunciation audio button for sentence/paragraph mode
+        if (phoneticText) phoneticText.textContent = '';
+        if (audioGroup) audioGroup.style.display = 'flex';
+        if (speakBtn) {
+          speakBtn.title = "Pronounce selected text";
+          speakBtn.onclick = () => {
+            playPronunciation(word, activeTargetLang, null);
+          };
+        }
       } else {
         renderLemma(lemmaRow, data, activeTargetLang);
         renderConjugations(conjBox, data, activeTargetLang, word);
@@ -250,9 +259,12 @@ async function fetchAndDisplay(word, isInitial = false) {
         if (audioGroup) audioGroup.style.display = 'flex';
 
         // 2. Bind pronunciation playback (Multi-tier Audio Playback)
-        speakBtn.onclick = () => {
-          playPronunciation(data.word || word, activeTargetLang, data.audio);
-        };
+        if (speakBtn) {
+          speakBtn.title = "Pronounce";
+          speakBtn.onclick = () => {
+            playPronunciation(data.word || word, activeTargetLang, data.audio);
+          };
+        }
       }
 
       // 3. Render definition texts
@@ -276,6 +288,9 @@ async function fetchAndDisplay(word, isInitial = false) {
 
 // Dismiss popup and floating icons
 function hideAll() {
+  if (typeof stopAudio === 'function') {
+    stopAudio();
+  }
   if (!shadowRoot) return;
   const triggerIcon = shadowRoot.querySelector('.glossapop-trigger-icon');
   const card = shadowRoot.querySelector('.glossapop-card');

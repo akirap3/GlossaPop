@@ -29,8 +29,9 @@ async function translateWord(word, source, target) {
       const response = await fetch(googleUrl);
       if (response.ok) {
         const data = await response.json();
-        if (data && data[0] && data[0][0] && data[0][0][0]) {
-          return data[0][0][0]; // Extract translated text from the nested arrays
+        if (data && data[0] && Array.isArray(data[0])) {
+          const fullTranslation = data[0].filter(item => item && item[0]).map(item => item[0]).join('');
+          if (fullTranslation) return fullTranslation;
         }
       }
     } catch (gError) {
