@@ -633,17 +633,21 @@ const POPUP_CSS = `
   .glossapop-dark .glossapop-tense-tab { color: #c7c7cc; }
   .glossapop-dark .glossapop-tense-tab.active { background: #0a84ff; color: #ffffff; }
   .glossapop-dark .glossapop-tense-tab:hover:not(.active) { background: rgba(10, 132, 255, 0.15); color: #0a84ff; }
+  .glossapop-dark .glossapop-synonyms-title { color: #c7c7cc; }
   .glossapop-dark .glossapop-chip { color: #64d2ff; background: rgba(10, 132, 255, 0.15); }
   .glossapop-dark .glossapop-chip:hover { background: rgba(10, 132, 255, 0.3); }
   .glossapop-dark .glossapop-chip.antonym { color: #ff453a; background: rgba(255, 69, 58, 0.15); }
   .glossapop-dark .glossapop-chip.antonym:hover { background: rgba(255, 69, 58, 0.3); }
-  .glossapop-dark .glossapop-lemma-row { background: rgba(48, 209, 88, 0.1); border-left-color: #30d158; }
+  .glossapop-dark .glossapop-lemma-row { background: rgba(48, 209, 88, 0.15); color: #ffffff; border-left-color: #30d158; }
+  .glossapop-dark .glossapop-lemma-text { color: #e5e5ea; }
+  .glossapop-dark .glossapop-lemma-text strong { color: #30d158; }
   .glossapop-dark .glossapop-lemma-speak-btn { background: rgba(48, 209, 88, 0.15); color: #30d158; }
   .glossapop-dark .glossapop-lemma-speak-btn:hover { background: rgba(48, 209, 88, 0.3); }
-  .glossapop-dark .glossapop-conjugation-box { background: rgba(10, 132, 255, 0.08); border-left-color: #0a84ff; }
+  .glossapop-dark .glossapop-conjugation-box { background: rgba(10, 132, 255, 0.08); color: #ffffff; border-left-color: #0a84ff; }
   .glossapop-dark .glossapop-conj-title { color: #64d2ff; }
-  .glossapop-dark .glossapop-highlight { background-color: rgba(255, 159, 10, 0.2); color: #ff9f0a; }
+  .glossapop-dark .glossapop-highlight { background-color: rgba(255, 159, 10, 0.25); color: #ff9f0a; }
   .glossapop-dark .glossapop-french-tip { color: #c7c7cc; }
+  .glossapop-dark .glossapop-french-tip strong { color: #30d158; }
   .glossapop-dark .glossapop-separator { color: rgba(255, 255, 255, 0.35); }
   .glossapop-dark .glossapop-segment { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.05); }
 
@@ -681,7 +685,7 @@ const POPUP_CSS = `
     .glossapop-card:not(.glossapop-light) .glossapop-example-box { background: rgba(255, 255, 255, 0.04); color: #ffffff; border-left-color: #ff9f0a; }
     .glossapop-card:not(.glossapop-light) .glossapop-example-header { color: #ff9f0a; }
     .glossapop-card:not(.glossapop-light) .glossapop-example-speak-btn { background: rgba(255, 159, 10, 0.15); color: #ff9f0a; }
-    .glossapop-card:not(.glossapop-light) .glossapop-example-speak-btn:hover { background: rgba(255, 159, 10, 0.3); }
+    .glossapop-card:not(.glossapop-light) .glossapop-example-speak-btn:hover { background: rgba(10, 132, 255, 0.3); }
     .glossapop-card:not(.glossapop-light) .glossapop-example-text { color: #ffffff; }
     .glossapop-card:not(.glossapop-light) .glossapop-example-translation { color: #e5e5ea; }
     .glossapop-card:not(.glossapop-light) .glossapop-external-links { color: #e5e5ea; }
@@ -693,17 +697,21 @@ const POPUP_CSS = `
     .glossapop-card:not(.glossapop-light) .glossapop-tense-tab { color: #c7c7cc; }
     .glossapop-card:not(.glossapop-light) .glossapop-tense-tab.active { background: #0a84ff; color: #ffffff; }
     .glossapop-card:not(.glossapop-light) .glossapop-tense-tab:hover:not(.active) { background: rgba(10, 132, 255, 0.15); color: #0a84ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-synonyms-title { color: #c7c7cc; }
     .glossapop-card:not(.glossapop-light) .glossapop-chip { color: #64d2ff; background: rgba(10, 132, 255, 0.15); }
     .glossapop-card:not(.glossapop-light) .glossapop-chip:hover { background: rgba(10, 132, 255, 0.3); }
     .glossapop-card:not(.glossapop-light) .glossapop-chip.antonym { color: #ff453a; background: rgba(255, 69, 58, 0.15); }
     .glossapop-card:not(.glossapop-light) .glossapop-chip.antonym:hover { background: rgba(255, 69, 58, 0.3); }
-    .glossapop-card:not(.glossapop-light) .glossapop-lemma-row { background: rgba(48, 209, 88, 0.1); border-left-color: #30d158; }
+    .glossapop-card:not(.glossapop-light) .glossapop-lemma-row { background: rgba(48, 209, 88, 0.15); color: #ffffff; border-left-color: #30d158; }
+    .glossapop-card:not(.glossapop-light) .glossapop-lemma-text { color: #e5e5ea; }
+    .glossapop-card:not(.glossapop-light) .glossapop-lemma-text strong { color: #30d158; }
     .glossapop-card:not(.glossapop-light) .glossapop-lemma-speak-btn { background: rgba(48, 209, 88, 0.15); color: #30d158; }
     .glossapop-card:not(.glossapop-light) .glossapop-lemma-speak-btn:hover { background: rgba(48, 209, 88, 0.3); }
-    .glossapop-card:not(.glossapop-light) .glossapop-conjugation-box { background: rgba(10, 132, 255, 0.08); border-left-color: #0a84ff; }
-    .glossapop-card:not(.glossapop-light) .glossapop-conj-title { color: #64d2ff; }
-    .glossapop-card:not(.glossapop-light) .glossapop-highlight { background-color: rgba(255, 159, 10, 0.2); color: #ff9f0a; }
     .glossapop-card:not(.glossapop-light) .glossapop-french-tip { color: #c7c7cc; }
+    .glossapop-card:not(.glossapop-light) .glossapop-french-tip strong { color: #30d158; }
+    .glossapop-card:not(.glossapop-light) .glossapop-conjugation-box { background: rgba(10, 132, 255, 0.08); color: #ffffff; border-left-color: #0a84ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-conj-title { color: #64d2ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-highlight { background-color: rgba(255, 159, 10, 0.25); color: #ff9f0a; }
     .glossapop-card:not(.glossapop-light) .glossapop-separator { color: rgba(255, 255, 255, 0.35); }
     .glossapop-card:not(.glossapop-light) .glossapop-segment { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.05); }
   }
