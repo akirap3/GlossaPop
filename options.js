@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.sync.get({
     defaultTargetLang: 'en',
     defaultExplainLang: 'en',
-    triggerMode: 'icon'
+    triggerMode: 'icon',
+    themeMode: 'auto'
   }, (items) => {
     // Target Language Selection
     const targetRadio = document.querySelector(`input[name="defaultTargetLang"][value="${items.defaultTargetLang}"]`);
@@ -21,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Trigger Mode Selection
     const triggerRadio = document.querySelector(`input[name="triggerMode"][value="${items.triggerMode}"]`);
     if (triggerRadio) triggerRadio.checked = true;
+
+    // Theme Mode Selection
+    const themeRadio = document.querySelector(`input[name="themeMode"][value="${items.themeMode}"]`);
+    if (themeRadio) themeRadio.checked = true;
   });
 
   // 2. Trigger auto-save feedback via toast alert
@@ -44,11 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const defaultTargetLang = document.querySelector('input[name="defaultTargetLang"]:checked').value;
       const defaultExplainLang = document.querySelector('input[name="defaultExplainLang"]:checked').value;
       const triggerMode = document.querySelector('input[name="triggerMode"]:checked').value;
+      const themeMode = document.querySelector('input[name="themeMode"]:checked').value;
 
       chrome.storage.sync.set({
         defaultTargetLang,
         defaultExplainLang,
-        triggerMode
+        triggerMode,
+        themeMode
       }, () => {
         showStatusToast();
       });

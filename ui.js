@@ -4,6 +4,16 @@
  * Scoped Glassmorphic Component Styles
  */
 const POPUP_CSS = `
+  /* Dark Reader / Extension Isolation */
+  :host {
+    /* Block Dark Reader Dynamic mode from overriding our colors via CSS variables */
+    --darkreader-neutral-background: none !important;
+    --darkreader-neutral-text: none !important;
+    --darkreader-selection-background: none !important;
+    --darkreader-selection-text: none !important;
+    color-scheme: light dark !important;
+  }
+
   /* Floating Trigger Icon */
   .glossapop-trigger-icon {
     position: absolute;
@@ -42,12 +52,12 @@ const POPUP_CSS = `
   .glossapop-card {
     position: absolute;
     width: 320px;
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(24px) saturate(200%);
-    -webkit-backdrop-filter: blur(24px) saturate(200%);
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 16px;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
     color: #1c1c1e;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     padding: 14px;
@@ -101,6 +111,30 @@ const POPUP_CSS = `
     cursor: pointer;
     padding: 0 4px;
     transition: color 0.2s, transform 0.2s;
+  }
+
+  /* Theme Mode Toggle (in-card) */
+  .glossapop-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .glossapop-theme-toggle {
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 2px;
+    font-size: 13px;
+    line-height: 1;
+    opacity: 0.5;
+    transition: opacity 0.2s, transform 0.15s;
+    border-radius: 4px;
+  }
+  .glossapop-theme-toggle:hover {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  .glossapop-close-btn {
     line-height: 1;
   }
   .glossapop-close-btn:hover {
@@ -159,7 +193,7 @@ const POPUP_CSS = `
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 200px;
+    max-width: 260px;
   }
   
   .glossapop-word-audio-group {
@@ -281,6 +315,9 @@ const POPUP_CSS = `
     color: #004499;
     text-decoration: underline;
   }
+  .glossapop-separator {
+    color: rgba(0, 0, 0, 0.15);
+  }
 
   /* Root Lemma & Derivation Styles */
   .glossapop-lemma-row {
@@ -367,6 +404,13 @@ const POPUP_CSS = `
     display: flex;
     justify-content: space-between;
     line-height: 1.35;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+  }
+  .glossapop-conj-item:hover {
+    background-color: rgba(0, 102, 204, 0.08);
   }
   .glossapop-conj-item span {
     color: #8e8e93;
@@ -381,7 +425,7 @@ const POPUP_CSS = `
   .glossapop-content {
     font-size: 13px;
     line-height: 1.5;
-    max-height: 160px;
+    max-height: 180px;
     overflow-y: auto;
     color: #2c2c2e;
     padding-right: 4px;
@@ -443,7 +487,15 @@ const POPUP_CSS = `
     letter-spacing: 0.5px;
     margin-left: 6px;
     vertical-align: middle;
+    color: var(--cefr-color, #1565c0);
+    background-color: var(--cefr-bg, rgba(21, 101, 192, 0.12));
   }
+  .glossapop-cefr-badge.cefr-a1 { --cefr-color: #2e7d32; --cefr-bg: rgba(46, 125, 50, 0.12); }
+  .glossapop-cefr-badge.cefr-a2 { --cefr-color: #00796b; --cefr-bg: rgba(0, 121, 107, 0.12); }
+  .glossapop-cefr-badge.cefr-b1 { --cefr-color: #1565c0; --cefr-bg: rgba(21, 101, 192, 0.12); }
+  .glossapop-cefr-badge.cefr-b2 { --cefr-color: #4a148c; --cefr-bg: rgba(74, 20, 140, 0.12); }
+  .glossapop-cefr-badge.cefr-c1 { --cefr-color: #7b1fa2; --cefr-bg: rgba(123, 31, 162, 0.12); }
+  .glossapop-cefr-badge.cefr-c2 { --cefr-color: #c2185b; --cefr-bg: rgba(194, 24, 91, 0.12); }
 
   /* French Tense Switcher Tabs Styles */
   .glossapop-tense-tabs {
@@ -512,6 +564,149 @@ const POPUP_CSS = `
   .glossapop-chip.antonym:hover {
     background: rgba(211, 47, 47, 0.18);
   }
+
+  /* =============================================================
+   * Dark Glassmorphic Theme
+   * Dual strategy: .glossapop-dark forces dark, @media auto-detects
+   * .glossapop-light forces light (no dark overrides applied)
+   * ============================================================= */
+
+  /* --- Forced Dark Mode via class --- */
+  .glossapop-card.glossapop-dark,
+  /* --- Auto Dark Mode: apply when no forced class and system prefers dark --- */
+  .glossapop-card:not(.glossapop-light):not(.glossapop-dark) {
+    /* base dark styles set below via shared selector */
+  }
+
+  .glossapop-card.glossapop-dark .glossapop-word,
+  .glossapop-card.glossapop-dark .glossapop-close-btn,
+  .glossapop-card.glossapop-dark .glossapop-close-btn:hover,
+  .glossapop-card.glossapop-dark .glossapop-title,
+  .glossapop-card.glossapop-dark .glossapop-phonetic { /* placeholder for shared selector */ }
+
+  /* ---- Dark theme rules (class-driven) ---- */
+  .glossapop-dark {
+    background: rgba(25, 25, 30, 0.92) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+  }
+  .glossapop-dark .glossapop-word { color: #ffffff; }
+  .glossapop-dark .glossapop-close-btn { color: #e5e5ea; }
+  .glossapop-dark .glossapop-close-btn:hover { color: #ffffff; }
+  .glossapop-dark .glossapop-title {
+    background: linear-gradient(135deg, #0a84ff, #64d2ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .glossapop-dark .glossapop-cefr-badge.cefr-a1 { --cefr-color: #30d158; --cefr-bg: rgba(48, 209, 88, 0.15); }
+  .glossapop-dark .glossapop-cefr-badge.cefr-a2 { --cefr-color: #40e0d0; --cefr-bg: rgba(64, 224, 208, 0.15); }
+  .glossapop-dark .glossapop-cefr-badge.cefr-b1 { --cefr-color: #64d2ff; --cefr-bg: rgba(100, 210, 255, 0.15); }
+  .glossapop-dark .glossapop-cefr-badge.cefr-b2 { --cefr-color: #bf5af2; --cefr-bg: rgba(191, 90, 242, 0.15); }
+  .glossapop-dark .glossapop-cefr-badge.cefr-c1 { --cefr-color: #da8fff; --cefr-bg: rgba(218, 143, 255, 0.15); }
+  .glossapop-dark .glossapop-cefr-badge.cefr-c2 { --cefr-color: #ff375f; --cefr-bg: rgba(255, 55, 95, 0.15); }
+  .glossapop-dark .glossapop-phonetic { color: #64d2ff; }
+  .glossapop-dark .glossapop-segment-btn { color: #e5e5ea; }
+  .glossapop-dark .glossapop-segment-btn.active {
+    background: #0a84ff;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  .glossapop-dark .glossapop-content { color: #ffffff; }
+  .glossapop-dark .glossapop-meaning-item { color: #ffffff; border-left-color: #0a84ff; }
+  .glossapop-dark .glossapop-speak-btn { background: rgba(10, 132, 255, 0.15); color: #0a84ff; }
+  .glossapop-dark .glossapop-speak-btn:hover { background: rgba(10, 132, 255, 0.3); }
+  .glossapop-dark .glossapop-example-box { background: rgba(255, 255, 255, 0.04); color: #ffffff; border-left-color: #ff9f0a; }
+  .glossapop-dark .glossapop-example-header { color: #ff9f0a; }
+  .glossapop-dark .glossapop-example-speak-btn { background: rgba(255, 159, 10, 0.15); color: #ff9f0a; }
+  .glossapop-dark .glossapop-example-speak-btn:hover { background: rgba(255, 159, 10, 0.3); }
+  .glossapop-dark .glossapop-example-text { color: #ffffff; }
+  .glossapop-dark .glossapop-example-translation { color: #e5e5ea; }
+  .glossapop-dark .glossapop-external-links { color: #e5e5ea; }
+  .glossapop-dark .glossapop-external-links a { color: #64d2ff; }
+  .glossapop-dark .glossapop-external-links a:hover { color: #9cdbff; }
+  .glossapop-dark .glossapop-conj-item strong { color: #ffffff; }
+  .glossapop-dark .glossapop-conj-item span { color: #c7c7cc; }
+  .glossapop-dark .glossapop-conj-item:hover { background-color: rgba(10, 132, 255, 0.15); }
+  .glossapop-dark .glossapop-tense-tab { color: #c7c7cc; }
+  .glossapop-dark .glossapop-tense-tab.active { background: #0a84ff; color: #ffffff; }
+  .glossapop-dark .glossapop-tense-tab:hover:not(.active) { background: rgba(10, 132, 255, 0.15); color: #0a84ff; }
+  .glossapop-dark .glossapop-chip { color: #64d2ff; background: rgba(10, 132, 255, 0.15); }
+  .glossapop-dark .glossapop-chip:hover { background: rgba(10, 132, 255, 0.3); }
+  .glossapop-dark .glossapop-chip.antonym { color: #ff453a; background: rgba(255, 69, 58, 0.15); }
+  .glossapop-dark .glossapop-chip.antonym:hover { background: rgba(255, 69, 58, 0.3); }
+  .glossapop-dark .glossapop-lemma-row { background: rgba(48, 209, 88, 0.1); border-left-color: #30d158; }
+  .glossapop-dark .glossapop-lemma-speak-btn { background: rgba(48, 209, 88, 0.15); color: #30d158; }
+  .glossapop-dark .glossapop-lemma-speak-btn:hover { background: rgba(48, 209, 88, 0.3); }
+  .glossapop-dark .glossapop-conjugation-box { background: rgba(10, 132, 255, 0.08); border-left-color: #0a84ff; }
+  .glossapop-dark .glossapop-conj-title { color: #64d2ff; }
+  .glossapop-dark .glossapop-highlight { background-color: rgba(255, 159, 10, 0.2); color: #ff9f0a; }
+  .glossapop-dark .glossapop-french-tip { color: #c7c7cc; }
+  .glossapop-dark .glossapop-separator { color: rgba(255, 255, 255, 0.35); }
+  .glossapop-dark .glossapop-segment { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.05); }
+
+  /* ---- Auto mode: system dark preference, no forced class ---- */
+  @media (prefers-color-scheme: dark) {
+    .glossapop-card:not(.glossapop-light) {
+      background: rgba(25, 25, 30, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+    .glossapop-card:not(.glossapop-light) .glossapop-word { color: #ffffff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-close-btn { color: #e5e5ea; }
+    .glossapop-card:not(.glossapop-light) .glossapop-close-btn:hover { color: #ffffff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-title {
+      background: linear-gradient(135deg, #0a84ff, #64d2ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .glossapop-card:not(.glossapop-light) .glossapop-cefr-badge.cefr-a1 { --cefr-color: #30d158; --cefr-bg: rgba(48, 209, 88, 0.15); }
+    .glossapop-card:not(.glossapop-light) .glossapop-cefr-badge.cefr-a2 { --cefr-color: #40e0d0; --cefr-bg: rgba(64, 224, 208, 0.15); }
+    .glossapop-card:not(.glossapop-light) .glossapop-cefr-badge.cefr-b1 { --cefr-color: #64d2ff; --cefr-bg: rgba(100, 210, 255, 0.15); }
+    .glossapop-card:not(.glossapop-light) .glossapop-cefr-badge.cefr-b2 { --cefr-color: #bf5af2; --cefr-bg: rgba(191, 90, 242, 0.15); }
+    .glossapop-card:not(.glossapop-light) .glossapop-cefr-badge.cefr-c1 { --cefr-color: #da8fff; --cefr-bg: rgba(218, 143, 255, 0.15); }
+    .glossapop-card:not(.glossapop-light) .glossapop-cefr-badge.cefr-c2 { --cefr-color: #ff375f; --cefr-bg: rgba(255, 55, 95, 0.15); }
+    .glossapop-card:not(.glossapop-light) .glossapop-phonetic { color: #64d2ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-segment-btn { color: #e5e5ea; }
+    .glossapop-card:not(.glossapop-light) .glossapop-segment-btn.active { background: #0a84ff; color: #ffffff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); }
+    .glossapop-card:not(.glossapop-light) .glossapop-content { color: #ffffff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-meaning-item { color: #ffffff; border-left-color: #0a84ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-speak-btn { background: rgba(10, 132, 255, 0.15); color: #0a84ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-speak-btn:hover { background: rgba(10, 132, 255, 0.3); }
+    .glossapop-card:not(.glossapop-light) .glossapop-example-box { background: rgba(255, 255, 255, 0.04); color: #ffffff; border-left-color: #ff9f0a; }
+    .glossapop-card:not(.glossapop-light) .glossapop-example-header { color: #ff9f0a; }
+    .glossapop-card:not(.glossapop-light) .glossapop-example-speak-btn { background: rgba(255, 159, 10, 0.15); color: #ff9f0a; }
+    .glossapop-card:not(.glossapop-light) .glossapop-example-speak-btn:hover { background: rgba(255, 159, 10, 0.3); }
+    .glossapop-card:not(.glossapop-light) .glossapop-example-text { color: #ffffff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-example-translation { color: #e5e5ea; }
+    .glossapop-card:not(.glossapop-light) .glossapop-external-links { color: #e5e5ea; }
+    .glossapop-card:not(.glossapop-light) .glossapop-external-links a { color: #64d2ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-external-links a:hover { color: #9cdbff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-conj-item strong { color: #ffffff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-conj-item span { color: #c7c7cc; }
+    .glossapop-card:not(.glossapop-light) .glossapop-conj-item:hover { background-color: rgba(10, 132, 255, 0.15); }
+    .glossapop-card:not(.glossapop-light) .glossapop-tense-tab { color: #c7c7cc; }
+    .glossapop-card:not(.glossapop-light) .glossapop-tense-tab.active { background: #0a84ff; color: #ffffff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-tense-tab:hover:not(.active) { background: rgba(10, 132, 255, 0.15); color: #0a84ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-chip { color: #64d2ff; background: rgba(10, 132, 255, 0.15); }
+    .glossapop-card:not(.glossapop-light) .glossapop-chip:hover { background: rgba(10, 132, 255, 0.3); }
+    .glossapop-card:not(.glossapop-light) .glossapop-chip.antonym { color: #ff453a; background: rgba(255, 69, 58, 0.15); }
+    .glossapop-card:not(.glossapop-light) .glossapop-chip.antonym:hover { background: rgba(255, 69, 58, 0.3); }
+    .glossapop-card:not(.glossapop-light) .glossapop-lemma-row { background: rgba(48, 209, 88, 0.1); border-left-color: #30d158; }
+    .glossapop-card:not(.glossapop-light) .glossapop-lemma-speak-btn { background: rgba(48, 209, 88, 0.15); color: #30d158; }
+    .glossapop-card:not(.glossapop-light) .glossapop-lemma-speak-btn:hover { background: rgba(48, 209, 88, 0.3); }
+    .glossapop-card:not(.glossapop-light) .glossapop-conjugation-box { background: rgba(10, 132, 255, 0.08); border-left-color: #0a84ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-conj-title { color: #64d2ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-highlight { background-color: rgba(255, 159, 10, 0.2); color: #ff9f0a; }
+    .glossapop-card:not(.glossapop-light) .glossapop-french-tip { color: #c7c7cc; }
+    .glossapop-card:not(.glossapop-light) .glossapop-separator { color: rgba(255, 255, 255, 0.35); }
+    .glossapop-card:not(.glossapop-light) .glossapop-segment { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.05); }
+  }
 `;
 
 /**
@@ -522,8 +717,11 @@ const UIComponents = {
    * Renders the popup card's container frame and binds segmented toggle events
    */
   renderFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange) {
-    const cefr = getCEFRLevel(word, activeTargetLang);
-    const cefrBadge = cefr ? `<span class="glossapop-cefr-badge" style="color:${cefr.color}; background:${cefr.bg};" title="${escapeHtml(cefr.label)}">${cefr.text}</span>` : '';
+    const wordCount = word.split(/\s+/).filter(Boolean).length;
+    const isSentence = wordCount > 4;
+    const displayWord = isSentence ? (word.length > 30 ? word.substring(0, 27) + '...' : word) : word;
+    const cefr = isSentence ? null : getCEFRLevel(word, activeTargetLang);
+    const cefrBadge = cefr ? `<span class="glossapop-cefr-badge cefr-${cefr.text.toLowerCase()}" title="${escapeHtml(cefr.label)}">${cefr.text}</span>` : '';
 
     const card = shadowRoot.querySelector('.glossapop-card');
     card.innerHTML = `
@@ -532,7 +730,10 @@ const UIComponents = {
           <img class="glossapop-brand-logo" src="${chrome.runtime.getURL('icons/logo-cat.png')}" alt="Logo">
           <span class="glossapop-title">GlossaPop</span>
         </div>
-        <button class="glossapop-close-btn" title="Close Popup">&times;</button>
+        <div class="glossapop-header-actions">
+          <button class="glossapop-theme-toggle" id="glossapop-theme-cycle" title="Toggle theme: Auto / Light / Dark">🌗</button>
+          <button class="glossapop-close-btn" title="Close Popup">&times;</button>
+        </div>
       </div>
       <div class="glossapop-toggles">
         <div class="glossapop-segment" id="target-lang-group">
@@ -545,7 +746,7 @@ const UIComponents = {
         </div>
       </div>
       <div class="glossapop-word-info">
-        <h3 class="glossapop-word" title="${escapeHtml(word)}">${escapeHtml(word)}${cefrBadge}</h3>
+        <h3 class="glossapop-word" title="${escapeHtml(word)}">${escapeHtml(displayWord)}${cefrBadge}</h3>
         <div class="glossapop-word-audio-group" style="display:none;">
           <span class="glossapop-phonetic"></span>
           <button class="glossapop-speak-btn" title="Pronounce">
@@ -567,6 +768,34 @@ const UIComponents = {
 
     // Bind Event Handlers via Delegation
     card.querySelector('.glossapop-close-btn').addEventListener('click', hideAll);
+
+    // Theme Mode Cycle Toggle: auto → light → dark → auto
+    const themeBtn = card.querySelector('#glossapop-theme-cycle');
+    const themeIcons = { auto: '🌗', light: '☀️', dark: '🌙' };
+    const themeCycle = ['auto', 'light', 'dark'];
+    // Set initial icon from current settings
+    themeBtn.textContent = themeIcons[settings.themeMode] || '🌗';
+    themeBtn.addEventListener('click', () => {
+      const currentIndex = themeCycle.indexOf(settings.themeMode);
+      const nextMode = themeCycle[(currentIndex + 1) % 3];
+      settings.themeMode = nextMode;
+      themeBtn.textContent = themeIcons[nextMode];
+      // Apply theme class on card
+      card.classList.remove('glossapop-dark', 'glossapop-light');
+      if (nextMode === 'dark') {
+        card.classList.add('glossapop-dark');
+      } else if (nextMode === 'light') {
+        card.classList.add('glossapop-light');
+      } else {
+        // Auto: detect Dark Reader or defer to OS
+        const isDarkReaderActive = document.documentElement.hasAttribute('data-darkreader-mode')
+          || document.documentElement.hasAttribute('data-darkreader-scheme')
+          || !!document.querySelector('meta[name="darkreader"]');
+        if (isDarkReaderActive) card.classList.add('glossapop-dark');
+      }
+      // Persist to chrome.storage.sync
+      chrome.storage.sync.set({ themeMode: nextMode });
+    });
 
     card.querySelector('#target-lang-group').addEventListener('click', (e) => {
       const btn = e.target.closest('.glossapop-segment-btn');
@@ -665,12 +894,12 @@ const UIComponents = {
           <div class="glossapop-conj-title">Conjugaison: ${escapeHtml(verbToConjugate)}</div>
           <div class="glossapop-tense-tabs">${tabsHtml}</div>
           <div class="glossapop-conj-grid">
-            <div class="glossapop-conj-item"><span>je</span> <strong>${escapeHtml(conj.je)}</strong></div>
-            <div class="glossapop-conj-item"><span>nous</span> <strong>${escapeHtml(conj.nous)}</strong></div>
-            <div class="glossapop-conj-item"><span>tu</span> <strong>${escapeHtml(conj.tu)}</strong></div>
-            <div class="glossapop-conj-item"><span>vous</span> <strong>${escapeHtml(conj.vous)}</strong></div>
-            <div class="glossapop-conj-item"><span>il/elle</span> <strong>${escapeHtml(conj.il)}</strong></div>
-            <div class="glossapop-conj-item"><span>ils/elles</span> <strong>${escapeHtml(conj.ils)}</strong></div>
+            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.je)}"><span>je</span> <strong>${escapeHtml(conj.je)}</strong></div>
+            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.nous)}"><span>nous</span> <strong>${escapeHtml(conj.nous)}</strong></div>
+            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.tu)}"><span>tu</span> <strong>${escapeHtml(conj.tu)}</strong></div>
+            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.vous)}"><span>vous</span> <strong>${escapeHtml(conj.vous)}</strong></div>
+            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.il)}"><span>il/elle</span> <strong>${escapeHtml(conj.il)}</strong></div>
+            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.ils)}"><span>ils/elles</span> <strong>${escapeHtml(conj.ils)}</strong></div>
           </div>
         `;
 
@@ -678,6 +907,14 @@ const UIComponents = {
           tab.onclick = (e) => {
             e.stopPropagation();
             this.renderConjugations(conjBox, data, activeTargetLang, queryWord, tab.dataset.tense);
+          };
+        });
+
+        // Click to play pronunciation for any person
+        conjBox.querySelectorAll('.glossapop-conj-item').forEach(item => {
+          item.onclick = (e) => {
+            e.stopPropagation();
+            playPronunciation(item.dataset.speak, activeTargetLang, null);
           };
         });
 
@@ -720,10 +957,27 @@ const UIComponents = {
   },
 
   /**
-   * Renders Example Sentence & Pronunciation Button
+   * Renders Example Sentence & Highlight Target Word context
    */
   renderExample(exampleBox, data, activeTargetLang) {
     if (data.example && data.example.text) {
+      // Highlight target word context case-insensitively
+      const wordToHighlight = data.word || (data.lemmaInfo ? data.lemmaInfo.lemma : "");
+      let textHtml = escapeHtml(data.example.text);
+      if (wordToHighlight) {
+        const stem = wordToHighlight.length > 4 ? wordToHighlight.slice(0, -2) : wordToHighlight;
+        const regexStr = `\\b(${wordToHighlight}|${stem}[a-z]{0,4})\\b`;
+        try {
+          const regex = new RegExp(regexStr, 'gi');
+          textHtml = textHtml.replace(regex, (match) => `<mark class="glossapop-highlight">${match}</mark>`);
+        } catch (e) {
+          const index = textHtml.toLowerCase().indexOf(wordToHighlight.toLowerCase());
+          if (index !== -1) {
+            textHtml = textHtml.substring(0, index) + `<mark class="glossapop-highlight">` + textHtml.substring(index, index + wordToHighlight.length) + `</mark>` + textHtml.substring(index + wordToHighlight.length);
+          }
+        }
+      }
+
       exampleBox.innerHTML = `
         <div class="glossapop-example-header">
           <span>Example Sentence</span>
@@ -731,7 +985,7 @@ const UIComponents = {
             <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
           </button>
         </div>
-        <div class="glossapop-example-text">"${escapeHtml(data.example.text)}"</div>
+        <div class="glossapop-example-text">"${textHtml}"</div>
         ${data.example.translation ? `<div class="glossapop-example-translation">${escapeHtml(data.example.translation)}</div>` : ''}
       `;
       exampleBox.querySelector('.glossapop-example-speak-btn').onclick = () => {
@@ -754,7 +1008,7 @@ const UIComponents = {
       externalLinksBox.innerHTML = `
         <span>Read more:</span>
         <a href="https://dictionary.cambridge.org/dictionary/english/${encoded}" target="_blank">Cambridge</a>
-        <span style="color:rgba(0,0,0,0.15)">|</span>
+        <span class="glossapop-separator">|</span>
         <a href="https://www.merriam-webster.com/dictionary/${encoded}" target="_blank">Merriam-Webster</a>
       `;
       externalLinksBox.style.display = 'flex';
@@ -762,9 +1016,9 @@ const UIComponents = {
       externalLinksBox.innerHTML = `
         <span>Read more:</span>
         <a href="https://www.larousse.fr/dictionnaires/francais/${encoded}" target="_blank">Larousse</a>
-        <span style="color:rgba(0,0,0,0.15)">|</span>
+        <span class="glossapop-separator">|</span>
         <a href="https://www.wordreference.com/fren/${encoded}" target="_blank">WordReference</a>
-        <span style="color:rgba(0,0,0,0.15)">|</span>
+        <span class="glossapop-separator">|</span>
         <a href="https://www.frdic.com/dicts/fr/${encoded}" target="_blank">法語助手</a>
       `;
       externalLinksBox.style.display = 'flex';

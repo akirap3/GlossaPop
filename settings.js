@@ -3,7 +3,8 @@
 let settings = {
   defaultTargetLang: 'en',
   defaultExplainLang: 'en',
-  triggerMode: 'icon'
+  triggerMode: 'icon',
+  themeMode: 'auto'
 };
 
 // Load user configurations
@@ -12,7 +13,8 @@ async function loadSettings() {
     chrome.storage.sync.get({
       defaultTargetLang: 'en',
       defaultExplainLang: 'en',
-      triggerMode: 'icon'
+      triggerMode: 'icon',
+      themeMode: 'auto'
     }, (items) => {
       settings = items;
       resolve();

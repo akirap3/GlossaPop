@@ -10,8 +10,12 @@ document.addEventListener('mouseup', (e) => {
   const selection = window.getSelection();
   const selectedText = selection.toString().trim();
 
+  const wordCount = selectedText.split(/\s+/).filter(Boolean).length;
+  const isSentence = wordCount > 4;
+  const maxLength = isSentence ? 350 : 50;
+
   // Check boundary sizes to avoid full paragraphs being processed
-  if (!selectedText || selectedText.length > 50 || /[\r\n]/.test(selectedText)) {
+  if (!selectedText || selectedText.length > maxLength || (!isSentence && /[\r\n]/.test(selectedText))) {
     hideAll();
     return;
   }
@@ -46,7 +50,11 @@ document.addEventListener('dblclick', (e) => {
   const selection = window.getSelection();
   const selectedText = selection.toString().trim();
 
-  if (!selectedText || selectedText.length > 50 || /[\r\n]/.test(selectedText)) {
+  const wordCount = selectedText.split(/\s+/).filter(Boolean).length;
+  const isSentence = wordCount > 4;
+  const maxLength = isSentence ? 350 : 50;
+
+  if (!selectedText || selectedText.length > maxLength || (!isSentence && /[\r\n]/.test(selectedText))) {
     return;
   }
 

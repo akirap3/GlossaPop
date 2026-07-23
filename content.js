@@ -27,6 +27,29 @@ function initShadowDOM() {
   hostElement.style.height = '0';
   hostElement.style.overflow = 'visible';
   hostElement.style.zIndex = '2147483647';
+  hostElement.style.setProperty('color-scheme', 'light dark', 'important');
+
+  // --- Dark Reader Isolation ---
+  // Detect and neutralize Dark Reader's filter-based color inversion.
+  // CSS filters on a parent cascade visually to ALL children; filter:none does NOT undo it.
+  // For Filter mode: apply inverse transform to cancel parent's invert(1) hue-rotate(180deg).
+  // For Dynamic mode: Shadow DOM naturally isolates, but we clean up any injected styles.
+  function applyDarkReaderCounterFilter() {
+    const mode = document.documentElement.getAttribute('data-darkreader-mode');
+    if (mode === 'filter' || mode === 'filter+') {
+      hostElement.style.setProperty('filter', 'invert(1) hue-rotate(180deg)', 'important');
+    } else {
+      hostElement.style.removeProperty('filter');
+    }
+  }
+  applyDarkReaderCounterFilter();
+
+  // Watch for Dark Reader toggling on/off (it sets/removes data-darkreader-mode on <html>)
+  const darkReaderObserver = new MutationObserver(() => applyDarkReaderCounterFilter());
+  darkReaderObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-darkreader-mode']
+  });
 
   document.documentElement.appendChild(hostElement);
   shadowRoot = hostElement.attachShadow({ mode: 'open' });
@@ -89,6 +112,24 @@ function showPopup(word, x, y) {
       fetchAndDisplay(word, false);
     }
   );
+
+  // Apply theme mode class based on settings
+  card.classList.remove('glossapop-dark', 'glossapop-light');
+  if (settings.themeMode === 'dark') {
+    card.classList.add('glossapop-dark');
+  } else if (settings.themeMode === 'light') {
+    card.classList.add('glossapop-light');
+  } else {
+    // Auto mode: detect Dark Reader or similar dark-mode extensions
+    const isDarkReaderActive = document.documentElement.hasAttribute('data-darkreader-mode')
+      || document.documentElement.hasAttribute('data-darkreader-scheme')
+      || !!document.querySelector('meta[name="darkreader"]');
+    if (isDarkReaderActive) {
+      card.classList.add('glossapop-dark');
+    }
+    // Otherwise, @media (prefers-color-scheme: dark) handles native OS dark mode
+  }
+
   card.classList.add('visible');
   
   fetchAndDisplay(word, true); // true indicates initial query (runs auto-detection)
@@ -182,37 +223,49 @@ async function fetchAndDisplay(word, isInitial = false) {
         }
       }
 
-      // Render modular DOM elements (loaded from ui.js)
-      renderLemma(lemmaRow, data, activeTargetLang);
-      renderConjugations(conjBox, data, activeTargetLang, word);
-      if (synonymsBox) renderSynonyms(synonymsBox, data, (clickedChipWord) => fetchAndDisplay(clickedChipWord, false));
-      renderExample(exampleBox, data, activeTargetLang);
-      renderLinks(externalLinksBox, data, activeTargetLang, word);
+      // Render modular DOM elements (loaded from ui.js) if it is a single word lookup
+      const wordCount = word.split(/\s+/).filter(Boolean).length;
+      const isSentence = wordCount > 4;
 
-      // 1. Render phonetics if available
-      if (data.phonetic) {
-        phoneticText.textContent = data.phonetic;
+      if (isSentence) {
+        if (lemmaRow) lemmaRow.style.display = 'none';
+        if (conjBox) conjBox.style.display = 'none';
+        if (synonymsBox) synonymsBox.style.display = 'none';
+        if (exampleBox) exampleBox.style.display = 'none';
+        if (externalLinksBox) externalLinksBox.style.display = 'none';
+        if (audioGroup) audioGroup.style.display = 'none';
       } else {
-        phoneticText.textContent = '';
-      }
-      if (audioGroup) audioGroup.style.display = 'flex';
+        renderLemma(lemmaRow, data, activeTargetLang);
+        renderConjugations(conjBox, data, activeTargetLang, word);
+        if (synonymsBox) renderSynonyms(synonymsBox, data, (clickedChipWord) => fetchAndDisplay(clickedChipWord, false));
+        renderExample(exampleBox, data, activeTargetLang);
+        renderLinks(externalLinksBox, data, activeTargetLang, word);
 
-      // 2. Bind pronunciation playback (Multi-tier Audio Playback)
-      speakBtn.onclick = () => {
-        playPronunciation(data.word || word, activeTargetLang, data.audio);
-      };
+        // 1. Render phonetics if available
+        if (data.phonetic) {
+          phoneticText.textContent = data.phonetic;
+        } else {
+          phoneticText.textContent = '';
+        }
+        if (audioGroup) audioGroup.style.display = 'flex';
+
+        // 2. Bind pronunciation playback (Multi-tier Audio Playback)
+        speakBtn.onclick = () => {
+          playPronunciation(data.word || word, activeTargetLang, data.audio);
+        };
+      }
 
       // 3. Render definition texts
-      if (data.definitions && data.definitions.length > 0) {
+      if (!isSentence && data.definitions && data.definitions.length > 0) {
         let html = '';
         data.definitions.forEach(def => {
           html += `<div class="glossapop-meaning-item">${escapeHtml(def)}</div>`;
         });
         contentDiv.innerHTML = html;
       } else if (data.translation) {
-        contentDiv.innerHTML = `<div class="glossapop-meaning-item">${escapeHtml(data.translation)}</div>`;
+        contentDiv.innerHTML = `<div class="glossapop-meaning-item" style="border-left: 2px solid #007aff; font-size: 13.5px; line-height: 1.45;">${escapeHtml(data.translation)}</div>`;
       } else {
-        contentDiv.innerHTML = `<div class="glossapop-error">No definitions found.</div>`;
+        contentDiv.innerHTML = `<div class="glossapop-error">No translation found.</div>`;
       }
     } else {
       const errMsg = (response && response.error) ? response.error : 'Word not found or API request failed.';
