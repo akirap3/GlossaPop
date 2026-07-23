@@ -1,5 +1,8 @@
-// ui.js - Scoped styles, layout declarations, and components markup
+// ui.js - Modernized UI Rendering Engine & Modular Component System for GlossaPop
 
+/**
+ * Scoped Glassmorphic Component Styles
+ */
 const POPUP_CSS = `
   /* Floating Trigger Icon */
   .glossapop-trigger-icon {
@@ -35,7 +38,7 @@ const POPUP_CSS = `
     fill: #ffffff;
   }
 
-  /* Floating Popup Card - High-Contrast Light Glassmorphism Style */
+  /* Floating Popup Card - Glassmorphism Style */
   .glossapop-card {
     position: absolute;
     width: 320px;
@@ -383,7 +386,6 @@ const POPUP_CSS = `
     color: #2c2c2e;
     padding-right: 4px;
   }
-  /* Custom Scrollbar Styles */
   .glossapop-content::-webkit-scrollbar {
     width: 4px;
   }
@@ -401,7 +403,7 @@ const POPUP_CSS = `
     padding-left: 6px;
   }
   
-  /* Loading Animation Spinner */
+  /* Loading Spinner */
   .glossapop-loader-container {
     display: flex;
     justify-content: center;
@@ -512,252 +514,282 @@ const POPUP_CSS = `
   }
 `;
 
-// Renders popup card's main frame
-function renderPopupFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange) {
-  const cefr = getCEFRLevel(word, activeTargetLang);
-  const cefrBadge = cefr ? `<span class="glossapop-cefr-badge" style="color:${cefr.color}; background:${cefr.bg};" title="${escapeHtml(cefr.label)}">${cefr.text}</span>` : '';
+/**
+ * UI Renderer Component System
+ */
+const UIComponents = {
+  /**
+   * Renders the popup card's container frame and binds segmented toggle events
+   */
+  renderFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange) {
+    const cefr = getCEFRLevel(word, activeTargetLang);
+    const cefrBadge = cefr ? `<span class="glossapop-cefr-badge" style="color:${cefr.color}; background:${cefr.bg};" title="${escapeHtml(cefr.label)}">${cefr.text}</span>` : '';
 
-  const card = shadowRoot.querySelector('.glossapop-card');
-  card.innerHTML = `
-    <div class="glossapop-header">
-      <div class="glossapop-brand">
-        <img class="glossapop-brand-logo" src="${chrome.runtime.getURL('icons/logo-cat.png')}" alt="Logo">
-        <span class="glossapop-title">GlossaPop</span>
+    const card = shadowRoot.querySelector('.glossapop-card');
+    card.innerHTML = `
+      <div class="glossapop-header">
+        <div class="glossapop-brand">
+          <img class="glossapop-brand-logo" src="${chrome.runtime.getURL('icons/logo-cat.png')}" alt="Logo">
+          <span class="glossapop-title">GlossaPop</span>
+        </div>
+        <button class="glossapop-close-btn" title="Close Popup">&times;</button>
       </div>
-      <button class="glossapop-close-btn" title="Close Popup">&times;</button>
-    </div>
-    <div class="glossapop-toggles">
-      <div class="glossapop-segment" id="target-lang-group">
-        <button class="glossapop-segment-btn ${activeTargetLang === 'en' ? 'active' : ''}" data-val="en">EN</button>
-        <button class="glossapop-segment-btn ${activeTargetLang === 'fr' ? 'active' : ''}" data-val="fr">FR</button>
+      <div class="glossapop-toggles">
+        <div class="glossapop-segment" id="target-lang-group">
+          <button class="glossapop-segment-btn ${activeTargetLang === 'en' ? 'active' : ''}" data-val="en">EN</button>
+          <button class="glossapop-segment-btn ${activeTargetLang === 'fr' ? 'active' : ''}" data-val="fr">FR</button>
+        </div>
+        <div class="glossapop-segment" id="explain-lang-group">
+          <button class="glossapop-segment-btn ${activeExplainLang === 'zh' ? 'active' : ''}" data-val="zh">Chinese</button>
+          <button class="glossapop-segment-btn ${activeExplainLang === 'en' ? 'active' : ''}" data-val="en">English</button>
+        </div>
       </div>
-      <div class="glossapop-segment" id="explain-lang-group">
-        <button class="glossapop-segment-btn ${activeExplainLang === 'zh' ? 'active' : ''}" data-val="zh">Chinese</button>
-        <button class="glossapop-segment-btn ${activeExplainLang === 'en' ? 'active' : ''}" data-val="en">English</button>
-      </div>
-    </div>
-    <div class="glossapop-word-info">
-      <h3 class="glossapop-word" title="${escapeHtml(word)}">${escapeHtml(word)}${cefrBadge}</h3>
-      <div class="glossapop-word-audio-group" style="display:none;">
-        <span class="glossapop-phonetic"></span>
-        <button class="glossapop-speak-btn" title="Pronounce">
-          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="glossapop-lemma-row" style="display:none;"></div>
-    <div class="glossapop-conjugation-box" style="display:none;"></div>
-    <div class="glossapop-content">
-      <div class="glossapop-loader-container">
-        <div class="glossapop-spinner"></div>
-      </div>
-    </div>
-    <div class="glossapop-synonyms-box" style="display:none;"></div>
-    <div class="glossapop-example-box" style="display:none;"></div>
-    <div class="glossapop-external-links" style="display:none;"></div>
-  `;
-
-  // Close action
-  card.querySelector('.glossapop-close-btn').addEventListener('click', hideAll);
-
-  // Target source language switches
-  card.querySelector('#target-lang-group').addEventListener('click', (e) => {
-    const btn = e.target.closest('.glossapop-segment-btn');
-    if (btn && !btn.classList.contains('active')) {
-      card.querySelectorAll('#target-lang-group .glossapop-segment-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      onTargetChange(btn.dataset.val);
-    }
-  });
-
-  // Explanation target language switches
-  card.querySelector('#explain-lang-group').addEventListener('click', (e) => {
-    const btn = e.target.closest('.glossapop-segment-btn');
-    if (btn && !btn.classList.contains('active')) {
-      card.querySelectorAll('#explain-lang-group .glossapop-segment-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      onExplainChange(btn.dataset.val);
-    }
-  });
-}
-
-// Renders lemma information row
-function renderLemma(lemmaRow, data, activeTargetLang) {
-  if (data.lemmaInfo && data.lemmaInfo.lemma && !(activeTargetLang === 'fr' && data.isVerb)) {
-    const lemma = data.lemmaInfo.lemma;
-    const description = data.lemmaInfo.description || '';
-    const isAdj = data.isAdjective || (data.definitions && data.definitions.some(d => d.includes('[Adjective]')));
-    const femForm = (activeTargetLang === 'fr' && !data.isVerb && isAdj) ? (data.apiFeminineForm || getFrenchFeminineForm(lemma)) : null;
-    
-    if (femForm) {
-      lemmaRow.innerHTML = `
-        <div class="glossapop-lemma-line">
-          <span class="glossapop-lemma-text">Base (Masculine): <strong>${escapeHtml(lemma)}</strong> (${escapeHtml(description)})</span>
-          <button class="glossapop-lemma-speak-btn" data-word="${escapeHtml(lemma)}" title="Pronounce masculine form">
+      <div class="glossapop-word-info">
+        <h3 class="glossapop-word" title="${escapeHtml(word)}">${escapeHtml(word)}${cefrBadge}</h3>
+        <div class="glossapop-word-audio-group" style="display:none;">
+          <span class="glossapop-phonetic"></span>
+          <button class="glossapop-speak-btn" title="Pronounce">
             <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
           </button>
         </div>
-        <div class="glossapop-lemma-line">
-          <span class="glossapop-lemma-text">Feminine Form: <strong>${escapeHtml(femForm)}</strong></span>
-          <button class="glossapop-lemma-speak-btn" data-word="${escapeHtml(femForm)}" title="Pronounce feminine form">
-            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-          </button>
+      </div>
+      <div class="glossapop-lemma-row" style="display:none;"></div>
+      <div class="glossapop-conjugation-box" style="display:none;"></div>
+      <div class="glossapop-content">
+        <div class="glossapop-loader-container">
+          <div class="glossapop-spinner"></div>
         </div>
-        <div class="glossapop-french-tip">
-          French Tip: The final consonant is silent in masculine (<strong>${escapeHtml(lemma)}</strong>) but is pronounced in feminine (<strong>${escapeHtml(femForm)}</strong>).
-        </div>
-      `;
-    } else {
-      lemmaRow.innerHTML = `
-        <div class="glossapop-lemma-line">
-          <span class="glossapop-lemma-text">Base Form: <strong>${escapeHtml(lemma)}</strong> (${escapeHtml(description)})</span>
-          <button class="glossapop-lemma-speak-btn" data-word="${escapeHtml(lemma)}" title="Pronounce base form">
-            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-          </button>
-        </div>
-      `;
-    }
-    
-    // Bind speech click event to all speaker buttons inside the lemma row
-    lemmaRow.querySelectorAll('.glossapop-lemma-speak-btn').forEach(btn => {
-      btn.onclick = () => {
-        const targetWord = btn.dataset.word;
-        playPronunciation(targetWord, activeTargetLang, null);
-      };
+      </div>
+      <div class="glossapop-synonyms-box" style="display:none;"></div>
+      <div class="glossapop-example-box" style="display:none;"></div>
+      <div class="glossapop-external-links" style="display:none;"></div>
+    `;
+
+    // Bind Event Handlers via Delegation
+    card.querySelector('.glossapop-close-btn').addEventListener('click', hideAll);
+
+    card.querySelector('#target-lang-group').addEventListener('click', (e) => {
+      const btn = e.target.closest('.glossapop-segment-btn');
+      if (btn && !btn.classList.contains('active')) {
+        card.querySelectorAll('#target-lang-group .glossapop-segment-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        onTargetChange(btn.dataset.val);
+      }
     });
-    lemmaRow.style.display = 'flex';
-  } else {
-    lemmaRow.style.display = 'none';
-  }
-}
 
-// Renders French verb conjugation grids with 5 tense tabs (including Subjonctif)
-function renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = 'present') {
-  if (activeTargetLang === 'fr' && data.isVerb) {
-    const verbToConjugate = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || queryWord);
-    
-    // Auto-detect subjunctive queries (e.g., "soient", "fasse", "puisse") to default active tab
-    const isSubjunctiveQuery = (data.definitions && data.definitions.some(d => d.toLowerCase().includes('subjunctive'))) || 
-                              ['soient', 'sois', 'soit', 'soyons', 'soyez', 'fasse', 'fassent', 'puisse', 'puissent', 'aie', 'aies', 'ait', 'ayons', 'ayez', 'aient'].includes(queryWord.toLowerCase());
-    if (activeTense === 'present' && isSubjunctiveQuery) {
-      activeTense = 'subjonctif';
-    }
+    card.querySelector('#explain-lang-group').addEventListener('click', (e) => {
+      const btn = e.target.closest('.glossapop-segment-btn');
+      if (btn && !btn.classList.contains('active')) {
+        card.querySelectorAll('#explain-lang-group .glossapop-segment-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        onExplainChange(btn.dataset.val);
+      }
+    });
+  },
 
-    const conj = (data.apiConjugations && data.apiConjugations[activeTense]) ? data.apiConjugations[activeTense] : getFrenchConjugations(verbToConjugate, activeTense);
-    if (conj) {
-      const tenses = [
-        { id: 'present', label: 'Présent' },
-        { id: 'passe_compose', label: 'Passé C.' },
-        { id: 'imparfait', label: 'Imparfait' },
-        { id: 'futur_simple', label: 'Futur' },
-        { id: 'subjonctif', label: 'Subjonctif' }
-      ];
-      const tabsHtml = tenses.map(t => `<button class="glossapop-tense-tab ${activeTense === t.id ? 'active' : ''}" data-tense="${t.id}">${t.label}</button>`).join('');
-
-      conjBox.innerHTML = `
-        <div class="glossapop-conj-title">Conjugaison: ${escapeHtml(verbToConjugate)}</div>
-        <div class="glossapop-tense-tabs">${tabsHtml}</div>
-        <div class="glossapop-conj-grid">
-          <div class="glossapop-conj-item"><span>je</span> <strong>${escapeHtml(conj.je)}</strong></div>
-          <div class="glossapop-conj-item"><span>nous</span> <strong>${escapeHtml(conj.nous)}</strong></div>
-          <div class="glossapop-conj-item"><span>tu</span> <strong>${escapeHtml(conj.tu)}</strong></div>
-          <div class="glossapop-conj-item"><span>vous</span> <strong>${escapeHtml(conj.vous)}</strong></div>
-          <div class="glossapop-conj-item"><span>il/elle</span> <strong>${escapeHtml(conj.il)}</strong></div>
-          <div class="glossapop-conj-item"><span>ils/elles</span> <strong>${escapeHtml(conj.ils)}</strong></div>
-        </div>
-      `;
-
-      // Bind click event to tense tabs
-      conjBox.querySelectorAll('.glossapop-tense-tab').forEach(tab => {
-        tab.onclick = (e) => {
-          e.stopPropagation();
-          const selectedTense = tab.dataset.tense;
-          renderConjugations(conjBox, data, activeTargetLang, queryWord, selectedTense);
+  /**
+   * Renders Lemma Row & Feminine Form Information
+   */
+  renderLemma(lemmaRow, data, activeTargetLang) {
+    if (data.lemmaInfo && data.lemmaInfo.lemma && !(activeTargetLang === 'fr' && data.isVerb)) {
+      const lemma = data.lemmaInfo.lemma;
+      const description = data.lemmaInfo.description || '';
+      const isAdj = data.isAdjective || (data.definitions && data.definitions.some(d => d.includes('[Adjective]')));
+      const femForm = (activeTargetLang === 'fr' && !data.isVerb && isAdj) ? (data.apiFeminineForm || getFrenchFeminineForm(lemma)) : null;
+      
+      if (femForm) {
+        lemmaRow.innerHTML = `
+          <div class="glossapop-lemma-line">
+            <span class="glossapop-lemma-text">Base (Masculine): <strong>${escapeHtml(lemma)}</strong> (${escapeHtml(description)})</span>
+            <button class="glossapop-lemma-speak-btn" data-word="${escapeHtml(lemma)}" title="Pronounce masculine form">
+              <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+          </div>
+          <div class="glossapop-lemma-line">
+            <span class="glossapop-lemma-text">Feminine Form: <strong>${escapeHtml(femForm)}</strong></span>
+            <button class="glossapop-lemma-speak-btn" data-word="${escapeHtml(femForm)}" title="Pronounce feminine form">
+              <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+          </div>
+          <div class="glossapop-french-tip">
+            French Tip: The final consonant is silent in masculine (<strong>${escapeHtml(lemma)}</strong>) but is pronounced in feminine (<strong>${escapeHtml(femForm)}</strong>).
+          </div>
+        `;
+      } else {
+        lemmaRow.innerHTML = `
+          <div class="glossapop-lemma-line">
+            <span class="glossapop-lemma-text">Base Form: <strong>${escapeHtml(lemma)}</strong> (${escapeHtml(description)})</span>
+            <button class="glossapop-lemma-speak-btn" data-word="${escapeHtml(lemma)}" title="Pronounce base form">
+              <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+          </div>
+        `;
+      }
+      
+      lemmaRow.querySelectorAll('.glossapop-lemma-speak-btn').forEach(btn => {
+        btn.onclick = () => {
+          playPronunciation(btn.dataset.word, activeTargetLang, null);
         };
       });
+      lemmaRow.style.display = 'flex';
+    } else {
+      lemmaRow.style.display = 'none';
+    }
+  },
 
-      conjBox.style.display = 'block';
+  /**
+   * Renders French Verb Conjugations with 5 Tenses
+   */
+  renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = 'present') {
+    if (activeTargetLang === 'fr' && data.isVerb) {
+      const verbToConjugate = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || queryWord);
+      
+      const isSubjunctiveQuery = (data.definitions && data.definitions.some(d => d.toLowerCase().includes('subjunctive'))) || 
+                                ['soient', 'sois', 'soit', 'soyons', 'soyez', 'fasse', 'fassent', 'puisse', 'puissent', 'aie', 'aies', 'ait', 'ayons', 'ayez', 'aient'].includes(queryWord.toLowerCase());
+      if (activeTense === 'present' && isSubjunctiveQuery) {
+        activeTense = 'subjonctif';
+      }
+
+      const conj = (data.apiConjugations && data.apiConjugations[activeTense]) ? data.apiConjugations[activeTense] : getFrenchConjugations(verbToConjugate, activeTense);
+      if (conj) {
+        const tenses = [
+          { id: 'present', label: 'Présent' },
+          { id: 'passe_compose', label: 'Passé C.' },
+          { id: 'imparfait', label: 'Imparfait' },
+          { id: 'futur_simple', label: 'Futur' },
+          { id: 'subjonctif', label: 'Subjonctif' }
+        ];
+        const tabsHtml = tenses.map(t => `<button class="glossapop-tense-tab ${activeTense === t.id ? 'active' : ''}" data-tense="${t.id}">${t.label}</button>`).join('');
+
+        conjBox.innerHTML = `
+          <div class="glossapop-conj-title">Conjugaison: ${escapeHtml(verbToConjugate)}</div>
+          <div class="glossapop-tense-tabs">${tabsHtml}</div>
+          <div class="glossapop-conj-grid">
+            <div class="glossapop-conj-item"><span>je</span> <strong>${escapeHtml(conj.je)}</strong></div>
+            <div class="glossapop-conj-item"><span>nous</span> <strong>${escapeHtml(conj.nous)}</strong></div>
+            <div class="glossapop-conj-item"><span>tu</span> <strong>${escapeHtml(conj.tu)}</strong></div>
+            <div class="glossapop-conj-item"><span>vous</span> <strong>${escapeHtml(conj.vous)}</strong></div>
+            <div class="glossapop-conj-item"><span>il/elle</span> <strong>${escapeHtml(conj.il)}</strong></div>
+            <div class="glossapop-conj-item"><span>ils/elles</span> <strong>${escapeHtml(conj.ils)}</strong></div>
+          </div>
+        `;
+
+        conjBox.querySelectorAll('.glossapop-tense-tab').forEach(tab => {
+          tab.onclick = (e) => {
+            e.stopPropagation();
+            this.renderConjugations(conjBox, data, activeTargetLang, queryWord, tab.dataset.tense);
+          };
+        });
+
+        conjBox.style.display = 'block';
+        return;
+      }
+    }
+    conjBox.style.display = 'none';
+  },
+
+  /**
+   * Renders Synonyms and Antonyms Chips
+   */
+  renderSynonyms(synonymsBox, data, onChipClick) {
+    const synonyms = data.synonyms || [];
+    const antonyms = data.antonyms || [];
+    if (synonyms.length === 0 && antonyms.length === 0) {
+      synonymsBox.style.display = 'none';
       return;
     }
-  }
-  conjBox.style.display = 'none';
-}
+    
+    let html = '';
+    if (synonyms.length > 0) {
+      html += `<span class="glossapop-synonyms-title">Synonyms:</span>`;
+      html += synonyms.map(s => `<span class="glossapop-chip" data-word="${escapeHtml(s)}">${escapeHtml(s)}</span>`).join('');
+    }
+    if (antonyms.length > 0) {
+      html += `<span class="glossapop-synonyms-title" style="margin-left:4px;">Antonyms:</span>`;
+      html += antonyms.map(a => `<span class="glossapop-chip antonym" data-word="${escapeHtml(a)}">${escapeHtml(a)}</span>`).join('');
+    }
+    
+    synonymsBox.innerHTML = html;
+    synonymsBox.querySelectorAll('.glossapop-chip').forEach(chip => {
+      chip.onclick = (e) => {
+        e.stopPropagation();
+        if (onChipClick) onChipClick(chip.dataset.word);
+      };
+    });
+    synonymsBox.style.display = 'flex';
+  },
 
-// Renders clickable synonyms and antonyms tag chips
+  /**
+   * Renders Example Sentence & Pronunciation Button
+   */
+  renderExample(exampleBox, data, activeTargetLang) {
+    if (data.example && data.example.text) {
+      exampleBox.innerHTML = `
+        <div class="glossapop-example-header">
+          <span>Example Sentence</span>
+          <button class="glossapop-example-speak-btn" title="Pronounce example sentence">
+            <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+        </div>
+        <div class="glossapop-example-text">"${escapeHtml(data.example.text)}"</div>
+        ${data.example.translation ? `<div class="glossapop-example-translation">${escapeHtml(data.example.translation)}</div>` : ''}
+      `;
+      exampleBox.querySelector('.glossapop-example-speak-btn').onclick = () => {
+        playPronunciation(data.example.text, activeTargetLang, null);
+      };
+      exampleBox.style.display = 'block';
+    } else {
+      exampleBox.style.display = 'none';
+    }
+  },
+
+  /**
+   * Renders External Reference Dictionary Links
+   */
+  renderLinks(externalLinksBox, data, activeTargetLang, queryWord) {
+    const lookupWord = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || queryWord);
+    const encoded = encodeURIComponent(lookupWord);
+    
+    if (activeTargetLang === 'en') {
+      externalLinksBox.innerHTML = `
+        <span>Read more:</span>
+        <a href="https://dictionary.cambridge.org/dictionary/english/${encoded}" target="_blank">Cambridge</a>
+        <span style="color:rgba(0,0,0,0.15)">|</span>
+        <a href="https://www.merriam-webster.com/dictionary/${encoded}" target="_blank">Merriam-Webster</a>
+      `;
+      externalLinksBox.style.display = 'flex';
+    } else if (activeTargetLang === 'fr') {
+      externalLinksBox.innerHTML = `
+        <span>Read more:</span>
+        <a href="https://www.larousse.fr/dictionnaires/francais/${encoded}" target="_blank">Larousse</a>
+        <span style="color:rgba(0,0,0,0.15)">|</span>
+        <a href="https://www.wordreference.com/fren/${encoded}" target="_blank">WordReference</a>
+        <span style="color:rgba(0,0,0,0.15)">|</span>
+        <a href="https://www.frdic.com/dicts/fr/${encoded}" target="_blank">法語助手</a>
+      `;
+      externalLinksBox.style.display = 'flex';
+    } else {
+      externalLinksBox.style.display = 'none';
+    }
+  }
+};
+
+// Aliases for Backward Compatibility
+function renderPopupFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange) {
+  UIComponents.renderFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange);
+}
+function renderLemma(lemmaRow, data, activeTargetLang) {
+  UIComponents.renderLemma(lemmaRow, data, activeTargetLang);
+}
+function renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = 'present') {
+  UIComponents.renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense);
+}
 function renderSynonyms(synonymsBox, data, onChipClick) {
-  const synonyms = data.synonyms || [];
-  const antonyms = data.antonyms || [];
-  if (synonyms.length === 0 && antonyms.length === 0) {
-    synonymsBox.style.display = 'none';
-    return;
-  }
-  
-  let html = '';
-  if (synonyms.length > 0) {
-    html += `<span class="glossapop-synonyms-title">Synonyms:</span>`;
-    html += synonyms.map(s => `<span class="glossapop-chip" data-word="${escapeHtml(s)}">${escapeHtml(s)}</span>`).join('');
-  }
-  if (antonyms.length > 0) {
-    html += `<span class="glossapop-synonyms-title" style="margin-left:4px;">Antonyms:</span>`;
-    html += antonyms.map(a => `<span class="glossapop-chip antonym" data-word="${escapeHtml(a)}">${escapeHtml(a)}</span>`).join('');
-  }
-  
-  synonymsBox.innerHTML = html;
-  synonymsBox.querySelectorAll('.glossapop-chip').forEach(chip => {
-    chip.onclick = (e) => {
-      e.stopPropagation();
-      if (onChipClick) onChipClick(chip.dataset.word);
-    };
-  });
-  synonymsBox.style.display = 'flex';
+  UIComponents.renderSynonyms(synonymsBox, data, onChipClick);
 }
-
-// Renders example sentences
 function renderExample(exampleBox, data, activeTargetLang) {
-  if (data.example && data.example.text) {
-    exampleBox.innerHTML = `
-      <div class="glossapop-example-header">
-        <span>Example Sentence</span>
-        <button class="glossapop-example-speak-btn" title="Pronounce example sentence">
-          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-        </button>
-      </div>
-      <div class="glossapop-example-text">"${escapeHtml(data.example.text)}"</div>
-      ${data.example.translation ? `<div class="glossapop-example-translation">${escapeHtml(data.example.translation)}</div>` : ''}
-    `;
-    exampleBox.querySelector('.glossapop-example-speak-btn').onclick = () => {
-      playPronunciation(data.example.text, activeTargetLang, null);
-    };
-    exampleBox.style.display = 'block';
-  } else {
-    exampleBox.style.display = 'none';
-  }
+  UIComponents.renderExample(exampleBox, data, activeTargetLang);
 }
-
-// Renders external reference links
 function renderLinks(externalLinksBox, data, activeTargetLang, queryWord) {
-  const lookupWord = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || queryWord);
-  const encoded = encodeURIComponent(lookupWord);
-  
-  if (activeTargetLang === 'en') {
-    externalLinksBox.innerHTML = `
-      <span>Read more:</span>
-      <a href="https://dictionary.cambridge.org/dictionary/english/${encoded}" target="_blank">Cambridge</a>
-      <span style="color:rgba(0,0,0,0.15)">|</span>
-      <a href="https://www.merriam-webster.com/dictionary/${encoded}" target="_blank">Merriam-Webster</a>
-    `;
-    externalLinksBox.style.display = 'flex';
-  } else if (activeTargetLang === 'fr') {
-    externalLinksBox.innerHTML = `
-      <span>Read more:</span>
-      <a href="https://www.larousse.fr/dictionnaires/francais/${encoded}" target="_blank">Larousse</a>
-      <span style="color:rgba(0,0,0,0.15)">|</span>
-      <a href="https://www.wordreference.com/fren/${encoded}" target="_blank">WordReference</a>
-      <span style="color:rgba(0,0,0,0.15)">|</span>
-      <a href="https://www.frdic.com/dicts/fr/${encoded}" target="_blank">法語助手</a>
-    `;
-    externalLinksBox.style.display = 'flex';
-  } else {
-    externalLinksBox.style.display = 'none';
-  }
+  UIComponents.renderLinks(externalLinksBox, data, activeTargetLang, queryWord);
 }
