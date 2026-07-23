@@ -244,14 +244,15 @@ async function runAllTests() {
   if (suite3Passed) console.log(`   ✅ Suite 3 Completed. All 35 Conjugation tables (5 tenses x 7 verbs) passed.`);
 
   // -------------------------------------------------------------
-  // SUITE 4: Inflected Form Base Lemma Definition Resolution Suite
+  // SUITE 4: Inflected Form Base Lemma & French IPA Resolution Suite
   // -------------------------------------------------------------
-  console.log('\n▶ [SUITE 4/6] Inflected Form Base Lemma Definition Resolution Suite');
-  const inflectedWords = ['automobilistes', 'running', 'soient', 'built'];
+  console.log('\n▶ [SUITE 4/6] Inflected Form Base Lemma & French IPA Resolution Suite');
+  const inflectedWords = ['automobilistes', 'perturbations', 'running', 'soient', 'built'];
   let suite4Passed = true;
 
   for (const w of inflectedWords) {
-    const res = await fetchLemmaInfo(w, w === 'running' || w === 'built' ? 'en' : 'fr');
+    const lang = (w === 'running' || w === 'built') ? 'en' : 'fr';
+    const res = await fetchLemmaInfo(w, lang);
     if (res.wiktionaryDefinitions && res.wiktionaryDefinitions.length > 1) {
       passedCount++;
     } else {
@@ -259,8 +260,19 @@ async function runAllTests() {
       failedCount++;
       suite4Passed = false;
     }
+
+    if (lang === 'fr') {
+      const ipa = await fetchFrenchPhonetic(w, res.lemmaInfo ? res.lemmaInfo.lemma : null);
+      if (ipa && ipa.startsWith('/') && ipa.endsWith('/')) {
+        passedCount++;
+      } else {
+        console.log(`   ❌ French IPA Resolution FAIL for "${w}": Got "${ipa}"`);
+        failedCount++;
+        suite4Passed = false;
+      }
+    }
   }
-  if (suite4Passed) console.log(`   ✅ Suite 4 Completed. All inflected form base lemma definitions retrieved.`);
+  if (suite4Passed) console.log(`   ✅ Suite 4 Completed. All inflected form base lemma definitions and French IPAs retrieved.`);
 
   // -------------------------------------------------------------
   // SUITE 5: CEFR Difficulty Level Estimation Suite
@@ -305,7 +317,7 @@ async function runAllTests() {
   // -------------------------------------------------------------
   // Final Test Summary
   // -------------------------------------------------------------
-  const totalTests = 100 + 12 + 35 + 4 + 6 + 1; // 158 Total Verification Checks
+  const totalTests = 100 + 12 + 35 + 8 + 6 + 1; // 162 Total Verification Checks
   console.log(`\n===============================================================`);
   console.log(`📊 Comprehensive QA Summary: ${passedCount} PASSED / ${failedCount} FAILED out of ${totalTests} Total Verification Checks`);
   console.log(`===============================================================\n`);

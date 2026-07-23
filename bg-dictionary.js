@@ -23,31 +23,50 @@ function setCachedResult(key, value) {
   translationCache.set(key, value);
 }
 
-// Fetch French phonetic IPA from Wiktionary HTML
-async function fetchFrenchPhonetic(word) {
-  try {
-    const res = await fetch(`https://en.wiktionary.org/api/rest_v1/page/html/${encodeURIComponent(word)}`);
-    if (res.ok) {
-      const html = await res.text();
-      
-      // Pattern 1: French pronunciation key
-      const match = html.match(/Appendix:French_pronunciation.*?class="IPA[^"]*"[^>]*>\/(.*?)\//s);
-      if (match && match[1]) {
-        return `/${match[1]}/`;
-      }
-      
-      // Pattern 2: Near French section
-      const frenchIdx = html.indexOf('id="French"');
-      if (frenchIdx !== -1) {
-        const substring = html.substring(frenchIdx, frenchIdx + 3000);
-        const ipaMatch = substring.match(/class="IPA[^"]*"[^>]*>\/(.*?)\//);
-        if (ipaMatch && ipaMatch[1]) {
-          return `/${ipaMatch[1]}/`;
+// Fetch French phonetic IPA from Wiktionary (supports base lemma & fr.wiktionary fallback)
+async function fetchFrenchPhonetic(word, lemma = null) {
+  const wordsToTry = [word];
+  if (lemma && lemma !== word) wordsToTry.push(lemma);
+  if (word.endsWith('s') && word.length > 3) wordsToTry.push(word.slice(0, -1));
+
+  for (const w of wordsToTry) {
+    try {
+      // 1. Query French Wiktionary MediaWiki Action API (fr.wiktionary.org)
+      const frRes = await fetch(`https://fr.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(w)}&prop=text&format=json&origin=*`, {
+        headers: { 'User-Agent': 'GlossaPop/1.0 (Chrome Extension; contact@glossapop.org)' }
+      });
+      if (frRes.ok) {
+        const frData = await frRes.json();
+        if (frData && frData.parse && frData.parse.text) {
+          const html = frData.parse.text['*'];
+          const match = html.match(/class="API"[^>]*>\\([^\\]+)\\<\/span>/) || html.match(/class="IPA"[^>]*>\/([^/]+)\//);
+          if (match && match[1]) {
+            return `/${match[1]}/`;
+          }
         }
       }
+
+      // 2. Query English Wiktionary REST HTML API (en.wiktionary.org)
+      const enRes = await fetch(`https://en.wiktionary.org/api/rest_v1/page/html/${encodeURIComponent(w)}`);
+      if (enRes.ok) {
+        const html = await enRes.text();
+        const match = html.match(/Appendix:French_pronunciation.*?class="IPA[^"]*"[^>]*>\/(.*?)\//s);
+        if (match && match[1]) {
+          return `/${match[1]}/`;
+        }
+        
+        const frenchIdx = html.indexOf('id="French"');
+        if (frenchIdx !== -1) {
+          const substring = html.substring(frenchIdx, frenchIdx + 3000);
+          const ipaMatch = substring.match(/class="IPA[^"]*"[^>]*>\/(.*?)\//);
+          if (ipaMatch && ipaMatch[1]) {
+            return `/${ipaMatch[1]}/`;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch French IPA phonetic:', e);
     }
-  } catch (e) {
-    console.warn('Failed to fetch French IPA phonetic:', e);
   }
   return '';
 }
@@ -335,7 +354,7 @@ async function autoDetectAndTranslate(word, target) {
       ? wiktionaryDefinitions 
       : [translation];
       
-    const phonetic = (guessedLang === 'fr') ? await fetchFrenchPhonetic(word) : '';
+    const phonetic = (guessedLang === 'fr') ? await fetchFrenchPhonetic(word, lemmaInfo ? lemmaInfo.lemma : null) : '';
       
     return {
       word,
