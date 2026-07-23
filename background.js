@@ -147,7 +147,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
             setCachedResult(cacheKey, result);
           } catch (error) {
-            throw new Error('Translation service is temporarily unavailable');
+            console.warn('Scenario 3 query partial failure:', error);
+            if (!result || !result.word) {
+              result = {
+                word: word.trim(),
+                translation: word.trim(),
+                phonetic: '',
+                audio: '',
+                definitions: [word.trim()],
+                detectedLang: source,
+                lemmaInfo: null,
+                isVerb: false,
+                example: null,
+                synonyms: [],
+                antonyms: []
+              };
+            }
           }
         }
         

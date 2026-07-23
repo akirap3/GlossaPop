@@ -2,6 +2,9 @@
 
 // Helper function to translate using Lingva with a robust fallback to Google's official translate API
 async function translateWord(word, source, target) {
+  if (!word) return '';
+  if (source === target) return word;
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 1200);
   const lingvaUrl = `https://lingva.ml/api/v1/${source}/${target}/${encodeURIComponent(word)}`;
@@ -20,17 +23,22 @@ async function translateWord(word, source, target) {
     clearTimeout(timeoutId);
     console.warn('Lingva instance error or timeout, falling back to official Google Translate API:', error);
     
-    // Fallback: Use Google Translate's public client API endpoint (ultra-fast ~100ms response)
-    const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(word)}`;
-    const response = await fetch(googleUrl);
-    if (response.ok) {
-      const data = await response.json();
-      if (data && data[0] && data[0][0] && data[0][0][0]) {
-        return data[0][0][0]; // Extract translated text from the nested arrays
+    try {
+      // Fallback: Use Google Translate's public client API endpoint (ultra-fast ~100ms response)
+      const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(word)}`;
+      const response = await fetch(googleUrl);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data[0] && data[0][0] && data[0][0][0]) {
+          return data[0][0][0]; // Extract translated text from the nested arrays
+        }
       }
-      throw new Error('Unexpected translation response format from fallback API');
+    } catch (gError) {
+      console.warn('Google Translate fallback API failed:', gError);
     }
-    throw new Error('Both Lingva and Google Translate fallback APIs failed');
+
+    // Soft fallback: Return original word rather than failing the entire dictionary lookup
+    return word;
   }
 }
 
