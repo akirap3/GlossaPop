@@ -139,6 +139,32 @@ async function fetchLemmaInfo(word, lang) {
             }
           }
         }
+
+        // Dynamically fetch synonyms for base lemma if current inflected form (e.g. participle) has no synonyms
+        if (lemmaInfo && lemmaInfo.lemma && synonyms.length === 0) {
+          try {
+            const lemmaRes = await fetch(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(lemmaInfo.lemma)}`);
+            if (lemmaRes.ok) {
+              const lemmaData = await lemmaRes.json();
+              const lemmaEntries = lemmaData[langKey];
+              if (lemmaEntries && Array.isArray(lemmaEntries)) {
+                const parsedLemmaWik = parseWiktionaryDefinitions(lemmaEntries);
+                synonyms = parsedLemmaWik.synonyms || [];
+                antonyms = parsedLemmaWik.antonyms || [];
+              }
+            }
+          } catch (e) {
+            console.warn('Dynamic root lemma synonyms fetch failed:', e);
+          }
+        }
+
+        // Re-evaluate isVerb if lemma is a verb infinitive or participle
+        if (lemmaInfo && lemmaInfo.lemma) {
+          const l = lemmaInfo.lemma.toLowerCase().trim();
+          if (l.endsWith('er') || l.endsWith('ir') || l.endsWith('re') || ['être', 'avoir', 'faire', 'aller'].includes(l)) {
+            isVerb = true;
+          }
+        }
       }
       return { lemmaInfo, isVerb, isAdjective, wiktionaryDefinitions, synonyms, antonyms, example };
     }
