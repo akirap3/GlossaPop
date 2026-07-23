@@ -55,19 +55,18 @@ async function fetchFrenchPhonetic(word) {
 // Query Wiktionary to check for lemma (root word), derivation info, and parts of speech
 async function fetchLemmaInfo(word, lang) {
   try {
-    const res = await fetch(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(word)}`);
+    const res = await fetch(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(word)}`, {
+      headers: { 'User-Agent': 'GlossaPop/1.0 (Chrome Extension; contact@glossapop.org)' }
+    });
     if (res.ok) {
       const data = await res.json();
       const langKey = lang === 'en' ? 'en' : 'fr';
-      const entries = data[langKey];
+      const entries = data[langKey] || data[lang] || [];
       
       let isVerb = false;
       let isAdjective = false;
-      if (langKey === 'fr' && entries && Array.isArray(entries) && entries.length > 0) {
-        const primaryPos = entries[0].partOfSpeech || '';
-        isVerb = (primaryPos === 'Verb');
-        isAdjective = (primaryPos === 'Adjective');
-      }
+      let apiFeminineForm = null;
+      let apiConjugations = null;
       
       let lemmaInfo = null;
       let wiktionaryDefinitions = [];
@@ -107,71 +106,115 @@ async function fetchLemmaInfo(word, lang) {
           if (example) break;
         }
         
-        // Strict Heuristic: Only look for base lemma derivation if the VERY FIRST definition on the page
-        // is actually an inflected form (indicated by form-of-definition class).
+        // Strict Heuristic: Only look for base lemma derivation if the definition explicitly indicates an inflected form.
         const firstEntry = entries[0];
         if (firstEntry && firstEntry.definitions && firstEntry.definitions[0]) {
           const firstDefHtml = firstEntry.definitions[0].definition || '';
-          if (firstDefHtml.includes('class="form-of-definition')) {
-            for (const entry of entries) {
-              if (entry.definitions && Array.isArray(entry.definitions)) {
-                for (const defObj of entry.definitions) {
-                  const html = defObj.definition || '';
-                  if (html.includes('class="form-of-definition')) {
-                    // Match links globally to find all candidates
-                    const matches = html.matchAll(/href="\/wiki\/([^"#\s>]+)[^"]*"\s+title="([^"]+)"/g);
-                    for (const m of matches) {
-                      const lemmaCandidate = decodeURIComponent(m[1]).replace(/_/g, ' ');
-                      // Skip Wiktionary special namespace pages (like Appendix:, Category:, Help:)
-                      if (!lemmaCandidate.includes(':') && lemmaCandidate.toLowerCase() !== word.toLowerCase()) {
-                        // Clean description text
-                        let description = html.replace(/<[^>]+>/g, ' ');
-                        description = description.replace(/\s+/g, ' ').trim();
-                        lemmaInfo = { lemma: lemmaCandidate, description };
-                        break;
-                      }
-                    }
-                    if (lemmaInfo) break;
-                  }
-                }
+          const lowerDef = firstDefHtml.toLowerCase();
+          if (lowerDef.includes('participle of') || lowerDef.includes('inflection of') || lowerDef.includes('plural of') || lowerDef.includes('form of') || firstDefHtml.includes('class="form-of-definition')) {
+            const matches = firstDefHtml.matchAll(/href="\/wiki\/([^"#\s>]+)[^"]*"\s+title="([^"]+)"/g);
+            for (const m of matches) {
+              const lemmaCandidate = decodeURIComponent(m[1]).split('#')[0].replace(/_/g, ' ');
+              // Skip Wiktionary special namespace pages (like Appendix:, Category:, Help:)
+              if (!lemmaCandidate.includes(':') && lemmaCandidate.toLowerCase() !== word.toLowerCase()) {
+                let description = firstDefHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                lemmaInfo = { lemma: lemmaCandidate, description };
+                break;
               }
-              if (lemmaInfo) break;
             }
           }
         }
 
-        // Dynamically fetch synonyms for base lemma if current inflected form (e.g. participle) has no synonyms
-        if (lemmaInfo && lemmaInfo.lemma && synonyms.length === 0) {
-          try {
-            const lemmaRes = await fetch(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(lemmaInfo.lemma)}`);
-            if (lemmaRes.ok) {
-              const lemmaData = await lemmaRes.json();
-              const lemmaEntries = lemmaData[langKey];
-              if (lemmaEntries && Array.isArray(lemmaEntries)) {
-                const parsedLemmaWik = parseWiktionaryDefinitions(lemmaEntries);
-                synonyms = parsedLemmaWik.synonyms || [];
-                antonyms = parsedLemmaWik.antonyms || [];
-              }
-            }
-          } catch (e) {
-            console.warn('Dynamic root lemma synonyms fetch failed:', e);
+        // Pure Dynamic POS Classification based on primary entry & derived lemmaInfo
+        if (entries.length > 0) {
+          let primaryPos = (entries[0].partOfSpeech || '').toLowerCase();
+          if (primaryPos === 'symbol' && entries.length > 1) {
+            primaryPos = (entries[1].partOfSpeech || '').toLowerCase();
+          }
+          const hasAdjEntry = entries.some(e => (e.partOfSpeech || '').toLowerCase() === 'adjective');
+          
+          if (primaryPos === 'verb' || primaryPos === 'participle') {
+            isVerb = true;
+            isAdjective = hasAdjEntry;
+          } else if (primaryPos === 'adjective') {
+            isAdjective = true;
+            isVerb = !!lemmaInfo || entries.some(e => {
+              const pos = (e.partOfSpeech || '').toLowerCase();
+              if (pos !== 'verb' && pos !== 'participle') return false;
+              return (e.definitions || []).some(d => {
+                const defText = (d.definition || '').toLowerCase();
+                return defText.includes('participle of') || defText.includes('inflection of') || defText.includes('past historic') || defText.includes('form of');
+              });
+            });
+          } else if (primaryPos === 'adverb') {
+            isAdjective = false;
+            isVerb = false;
+          } else if (primaryPos === 'noun') {
+            isAdjective = false;
+            isVerb = false;
+          } else {
+            isVerb = entries.some(e => ['verb', 'participle'].includes((e.partOfSpeech || '').toLowerCase()));
+            isAdjective = hasAdjEntry;
           }
         }
 
-        // Re-evaluate isVerb if lemma is a verb infinitive or participle
-        if (lemmaInfo && lemmaInfo.lemma) {
-          const l = lemmaInfo.lemma.toLowerCase().trim();
-          if (l.endsWith('er') || l.endsWith('ir') || l.endsWith('re') || ['être', 'avoir', 'faire', 'aller'].includes(l)) {
+        // Override isVerb if lemmaInfo indicates verb inflection/participle form
+        if (lemmaInfo) {
+          const desc = (lemmaInfo.description || '').toLowerCase();
+          if (!desc.includes('plural of') && !desc.includes('adverbial form')) {
             isVerb = true;
           }
         }
+
+        // Dynamically fetch base lemma definitions, synonyms, and antonyms for inflected forms (e.g. automobilistes -> automobiliste)
+        if (lemmaInfo && lemmaInfo.lemma) {
+          try {
+            const lemmaRes = await fetch(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(lemmaInfo.lemma)}`, {
+              headers: { 'User-Agent': 'GlossaPop/1.0 (Chrome Extension; contact@glossapop.org)' }
+            });
+            if (lemmaRes.ok) {
+              const lemmaData = await lemmaRes.json();
+              const lemmaEntries = lemmaData[langKey] || lemmaData[lang] || [];
+              if (lemmaEntries && Array.isArray(lemmaEntries)) {
+                const parsedLemmaWik = parseWiktionaryDefinitions(lemmaEntries);
+                if (synonyms.length === 0) synonyms = parsedLemmaWik.synonyms || [];
+                if (antonyms.length === 0) antonyms = parsedLemmaWik.antonyms || [];
+                
+                // Append base lemma definitions so inflected forms show the actual English meaning
+                if (parsedLemmaWik.definitions && Array.isArray(parsedLemmaWik.definitions)) {
+                  parsedLemmaWik.definitions.forEach(d => {
+                    if (!wiktionaryDefinitions.includes(d)) {
+                      wiktionaryDefinitions.push(d);
+                    }
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Dynamic root lemma definitions fetch failed:', e);
+          }
+        }
+
+        // Hybrid API Extraction for dynamic Feminine Form & Conjugations
+        entries.forEach(entry => {
+          if (entry.definitions) {
+            entry.definitions.forEach(d => {
+              const html = d.definition || '';
+              const femMatch = html.match(/feminine\s+(?:singular\s+)?of\s+<a[^>]+>([^<]+)<\/a>/i) ||
+                               html.match(/feminine\s+form\s+of\s+<a[^>]+>([^<]+)<\/a>/i);
+              if (femMatch && !apiFeminineForm) {
+                apiFeminineForm = femMatch[1].trim();
+              }
+            });
+          }
+        });
       }
-      return { lemmaInfo, isVerb, isAdjective, wiktionaryDefinitions, synonyms, antonyms, example };
+      return { lemmaInfo, isVerb, isAdjective, wiktionaryDefinitions, synonyms, antonyms, example, apiFeminineForm, apiConjugations };
     }
   } catch (e) {
     console.warn('Wiktionary lemma fetch failed:', e);
   }
-  return { lemmaInfo: null, isVerb: false, wiktionaryDefinitions: [], example: null };
+  return { lemmaInfo: null, isVerb: false, isAdjective: false, wiktionaryDefinitions: [], synonyms: [], antonyms: [], example: null, apiFeminineForm: null, apiConjugations: null };
 }
 
 // Helper to perform translation with auto-detection of the source language

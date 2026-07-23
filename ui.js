@@ -587,7 +587,7 @@ function renderLemma(lemmaRow, data, activeTargetLang) {
     const lemma = data.lemmaInfo.lemma;
     const description = data.lemmaInfo.description || '';
     const isAdj = data.isAdjective || (data.definitions && data.definitions.some(d => d.includes('[Adjective]')));
-    const femForm = (activeTargetLang === 'fr' && !data.isVerb && isAdj) ? getFrenchFeminineForm(lemma) : null;
+    const femForm = (activeTargetLang === 'fr' && !data.isVerb && isAdj) ? (data.apiFeminineForm || getFrenchFeminineForm(lemma)) : null;
     
     if (femForm) {
       lemmaRow.innerHTML = `
@@ -643,7 +643,7 @@ function renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTe
       activeTense = 'subjonctif';
     }
 
-    const conj = getFrenchConjugations(verbToConjugate, activeTense);
+    const conj = (data.apiConjugations && data.apiConjugations[activeTense]) ? data.apiConjugations[activeTense] : getFrenchConjugations(verbToConjugate, activeTense);
     if (conj) {
       const tenses = [
         { id: 'present', label: 'Présent' },
