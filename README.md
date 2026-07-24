@@ -1,6 +1,6 @@
 # GlossaPop
 
-A modern, high-performance Chrome Extension built with Manifest V3 for floating translation popups. Select any word on a page to look up its definition in English or French instantly, complete with phonetics, audio pronunciations, grammatical conjugations, example sentences, and layout isolation.
+A modern, high-performance Chrome Extension built with Manifest V3 for floating translation popups. Select any word on a page to look up its definition in English or French instantly, complete with phonetics, audio pronunciations, grammatical conjugations, example sentences, Google Sheets sync, and layout isolation.
 
 👉 **[Install GlossaPop on Chrome Web Store](https://chromewebstore.google.com/detail/kmamglgfhenmcomflbdmfjdnmnlkggad)**
 
@@ -11,31 +11,38 @@ A modern, high-performance Chrome Extension built with Manifest V3 for floating 
 ## Key Features
 
 - **Isolated Shadow DOM Popup**: Floats the popup in a clean Shadow DOM container, fully preventing the host website's styles (CORS, background styles, or font configurations) from corrupting the layout.
-- **Premium Light Glassmorphism Design**: Rendered as a beautiful translucent white card (`rgba(255, 255, 255, 0.75)`) with a `24px` backdrop blur. The card width is optimized to `320px` to give contents and reference links ample breathing room.
-- **WCAG AA Compliance**: All text elements (titles, definitions, and buttons) use high-contrast dark text. Example containers use a high-contrast dark clay/amber orange (`#b84a00`), meeting strict accessibility guidelines (over 4.5:1 contrast ratio against the white glass background).
-- **Personalized Mascot Branding**: Displays a high-density circular orange cat logo wearing glasses next to the title in both the popup card and the settings options page.
-- **Smart Language Auto-Detection**: Automatically detects if a clicked/double-clicked word is English or French. It queries Google Translate's auto-language detection in the background, updates the UI toggles dynamically, and loads the appropriate pronunciation engine.
-- **Dynamic IPA Phonetics (English & French)**: Displays phonetic transcriptions side-by-side with the pronunciation button:
+- **Google Drive & Sheets Integration**:
+  - **1-Click Save (`☆ Save` ➔ `★ Saved`)**: Save words directly to your personal Google Sheet with a single click.
+  - **Automatic Deduplication & Local Sync**: Displays `✓ Already in Vocabulary Book` and prevents duplicate entries. Automatically syncs saved words to local cache upon connecting.
+  - **Dual-Tab Sheet Architecture**: Intelligently categorizes English words into `English Words` tab and French words into `French Words` tab.
+  - **Smart 3-Step Sheet Resolution**: Auto-detects existing `GlossaPop Vocabulary Book` files in Google Drive (filtering out trashed files), ensuring reconnecting or using multiple devices reuses the same sheet seamlessly.
+  - **1-Click Vocabulary CSV Export**: Easily export your saved English (`GlossaPop_EN.csv`) and French (`GlossaPop_FR.csv`) word collections directly from the Options page.
+- **Flexible Theme Modes (Auto / Light / Dark)**:
+  - **Auto**: Automatically matches your OS system preference (`prefers-color-scheme`).
+  - **Light Glassmorphism**: Translucent white glass card (`rgba(255, 255, 255, 0.75)`) with `24px` backdrop blur.
+  - **Dark Glassmorphism**: High-contrast sleek dark glass card (`rgba(25, 25, 30, 0.92)`) with neon blue/green accent badges.
+- **Dynamic API Definition Translation**:
+  - Automatically translates Wiktionary definition items into your selected explanation language (**Chinese** or **English**) on the fly via Google Translate API without hardcoded dictionary lists.
+- **WCAG AA Compliance**: High-contrast typography across both light and dark themes ensures maximum readability (over 4.5:1 contrast ratio).
+- **Personalized Mascot Branding**: Displays a high-density circular mascot logo next to the title in both the popup card and options page.
+- **Smart Language Auto-Detection**: Automatically detects if a clicked/double-clicked word is English or French, updates UI toggles dynamically, and loads the appropriate pronunciation engine.
+- **Dynamic IPA Phonetics (English & French)**:
   - **English Phonetics**: Fetched from the Free Dictionary API.
-  - **French Phonetics**: Fetched dynamically from the Wiktionary HTML API via a custom regex scraper that matches the French pronunciation IPA key (e.g. `/mɛ.zɔ̃/` for *maison*).
-- **Multi-Tier Natural Audio Pronunciation Engine**: Speech playback is clear and natural, completely bypassing robotic default synthesizer voices:
+  - **French Phonetics**: Fetched dynamically from Wiktionary HTML API via a custom regex parser matching IPA keys (e.g. `/mɛ.zɔ̃/` for *maison*).
+- **Multi-Tier Natural Audio Pronunciation Engine**:
   - **Tier 1 (Real Human Voice)**: Plays high-quality human recordings (MP3s) fetched from the Free Dictionary API for English.
-  - **Tier 2 (Neural/Statistical Speech)**: Plays clear, natural neural speech using Google Translate's TTS endpoints for French and fallback words.
-  - **Tier 3 (Localized Web Speech Fallback)**: Uses local `window.speechSynthesis` only as a final fail-safe, with strict filters matching the exact language locale (preventing English engines from reading French words) and a natural rate speed (`0.95`).
-- **Inline Speaker Audio Positioning**: The main speaker pronunciation button and phonetic script are positioned side-by-side on the right side of the word title, saving vertical space.
-- **Multilingual Example Sentences with Fallback**: Displays a short example sentence (and its translation) for each word. If the dictionary returns no examples, a triple-redundancy fallback queries Google Translate's public examples database followed by Tatoeba API, translating the sentence to your target language.
-- **CEFR Language Level Badge (A1–C2)**: Displays a color-coded European Framework level badge next to the word title (A1/A2 green, B1/B2 blue, C1/C2 purple).
-- **French Multi-Tense Verb Conjugations**: When a French verb is selected, a tabbed conjugation box allows toggling across 4 core tenses in real time: **Présent**, **Passé composé**, **Imparfait**, and **Futur simple**.
+  - **Tier 2 (Neural Speech)**: Plays clear neural speech using Google Translate TTS for French and fallback words.
+  - **Tier 3 (Localized Web Speech Fallback)**: Uses `window.speechSynthesis` as a fail-safe with exact locale matching (`en-US`/`fr-FR`).
+- **Multilingual Example Sentences**: Displays example sentences and translations. Queries Google Translate's public examples database followed by Tatoeba API if dictionary examples are unavailable.
+- **CEFR Language Level Badge (A1–C2)**: Displays color-coded European Framework level badges (A1/A2 green, B1/B2 blue, C1/C2 purple).
+- **French Multi-Tense Verb Conjugations**: Dynamically displays tabbed conjugations for French verbs across 5 core tenses: **Présent**, **Passé composé**, **Imparfait**, **Futur simple**, and **Subjonctif**. Non-verb nouns and adjectives automatically filter out the conjugation box.
 - **Clickable Synonyms & Antonyms Chips**: Displays interactive synonym and antonym tag chips under definitions; clicking any chip instantly queries that word inside the active card.
-- **High-Performance Parallelization & LRU Memory Cache**: Queries dictionary APIs concurrently with `Promise.all` and caches recent lookups in memory (`translationCache`), returning instant **0ms** responses for repeated lookups.
-- **Root Lemma & Derivation Parser**: Detects and displays the base form (lemma) for inflected words (e.g. past participles, plurals, gender variations). Common base words are protected by a strict first-definition heuristic to avoid false positive lemma matches.
-- **External Dictionary Reference Links**: A dedicated row of external dictionary reference links is displayed at the bottom of the card. The links intelligently map to the base lemma form to ensure valid dictionary lookup:
+- **External Dictionary Reference Links**: Direct links at the bottom of the card mapping to base lemma forms:
   - **English**: Cambridge Dictionary, Merriam-Webster
   - **French**: Larousse, WordReference, French Assistant (法語助手)
 - **Configurable Triggers**:
   - **Double Click**: Triggers the lookup immediately below the selected word.
-  - **Text Selection**: Shows a non-intrusive float bubble; clicking it opens the card to ensure standard reading flows are not interrupted.
-- **Premium Options UI**: Glassmorphism dashboard layout with auto-save updates synced instantly across all active tabs using the Chrome Storage Sync API.
+  - **Text Selection**: Shows a non-intrusive float bubble; clicking it opens the card.
 
 ---
 
@@ -46,21 +53,22 @@ The project follows a clean, single-responsibility modular structure:
 ```
 GlossaPop/
 ├── assets/            # Project promotional screenshots and mockups
-├── manifest.json      # Manifest V3 configuration settings & permissions
-├── background.js      # Background router that dynamically imports service worker modules
-├── bg-api.js          # Direct external API queries (Lingva, Google Translate, Tatoeba)
+├── manifest.json      # Manifest V3 configuration settings, OAuth2 scopes & permissions
+├── background.js      # Background service worker router & message dispatcher
+├── bg-api.js          # Direct external API queries (Lingva, Google Translate, Tatoeba, Definition Translation)
 ├── bg-parser.js       # HTML/JSON definition and example parsers for background queries
-├── bg-dictionary.js   # Orchestrates dictionary flows, lemma lookups, and French phonetics
+├── bg-dictionary.js   # Orchestrates dictionary flows, POS classification, and French phonetics
+├── bg-sheets.js       # Google Drive & Sheets API v4 engine, OAuth token management, and CSV export
 ├── utils.js           # Shared utilities (escaping, French feminine derivation, conjugations)
 ├── audio.js           # Front-end audio pronouncer (Human MP3, Google TTS, Web Speech)
-├── ui.js              # Scoped CSS styles tag and HTML card templates with mascot logo
+├── ui.js              # Scoped CSS styles tag and HTML card templates with theme support
 ├── settings.js        # Syncs and loads configuration options using chrome.storage.sync
 ├── events.js          # Cursor mouseup selections, double-clicks, and click-outside dismissal
 ├── content.js         # Main coordinator initializing Shadow DOM hosts and routing events
-├── options.html       # Configurations page UI markup with circular mascot logo
+├── options.html       # Configurations page UI markup with Google Sync & CSV Export buttons
 ├── options.css        # Premium dark glassmorphic styling for settings panel
-├── options.js         # Settings manager linking inputs with chrome.storage.sync
-├── icons/             # Contains extension icons and circular logo-cat.png mascot
+├── options.js         # Settings manager handling Google OAuth connection and settings
+├── icons/             # Contains extension icons and circular mascot logo
 ├── CHROMEWEBSTORE.md  # Chrome Web Store submission metadata, descriptions & justifications
 ├── PRIVACY.md         # Privacy Policy declaration complying with developer guidelines
 └── README.md          # Extension overview, file structure, and installation guide
@@ -87,15 +95,17 @@ Simply visit the official [GlossaPop Chrome Web Store Page](https://chromewebsto
 
 1. Go to any public web page (e.g. Wikipedia).
 2. Highlight a word using your mouse.
-3. Click the magnifying glass icon that floats near your selection to open the lookup card.
-4. Click the speaker icon next to the word to play the pronunciation.
-5. Use the header switches (EN/FR and Chinese/English) to change source and translation outputs.
-6. Open the **Extension Options** page by clicking details on the extension card or right-clicking the icon. You can switch the trigger mode to **Double Click** to display the popup immediately without the middle bubble step.
+3. Click the floating magnifying glass icon (or double-click if configured) to open the lookup card.
+4. Click **`☆ Save`** to save the word directly to your Google Sheet (`★ Saved`).
+5. Click the speaker icon next to the word to play pronunciation.
+6. Use the header switches (EN/FR and Chinese/English) to change source and translation output languages.
+7. Open **Extension Options** by right-clicking the GlossaPop extension icon and selecting **Options**. Here you can connect your Google Account, sync vocabulary caches, and export CSV files.
 
 ---
 
 ## APIs and Technologies Used
 
+- **Google Drive API v3 & Sheets API v4**: Real-time cloud sync & spreadsheet management (`https://www.googleapis.com/auth/drive.file`)
 - **English Queries**: [Free Dictionary API](https://dictionaryapi.dev/)
 - **French/Bilingual Queries**: [Wiktionary REST API](https://en.wiktionary.org/api/rest_v1/page/definition/) & [Wiktionary HTML API](https://en.wiktionary.org/api/rest_v1/page/html/) (French IPA extraction)
 - **Example Fallbacks**: Google Translate Examples Database & [Tatoeba API](https://api.tatoeba.org/)
