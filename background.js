@@ -118,7 +118,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         const token = await getAuthToken(false);
         const csvContent = await exportAnkiCsv(token, message.targetLang);
-        sendResponse({ success: true, csvContent, filename: `GlossaPop_Anki_${message.targetLang.toUpperCase()}.csv` });
+        sendResponse({ success: true, csvContent, filename: `GlossaPop_${message.targetLang.toUpperCase()}.csv` });
       } catch (err) {
         console.error('exportAnkiCsv error:', err);
         sendResponse({ success: false, error: err.message });

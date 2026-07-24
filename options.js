@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     exportEnBtn.addEventListener('click', () => {
       exportEnBtn.textContent = '⏳ Exporting...';
       chrome.runtime.sendMessage({ action: 'exportAnkiCsv', targetLang: 'en' }, (res) => {
-        exportEnBtn.textContent = '📥 Export English Anki CSV';
+        exportEnBtn.textContent = '📥 Export English CSV';
         if (res && res.success) {
           triggerCsvDownload(res.filename, res.csvContent);
         } else {
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
     exportFrBtn.addEventListener('click', () => {
       exportFrBtn.textContent = '⏳ Exporting...';
       chrome.runtime.sendMessage({ action: 'exportAnkiCsv', targetLang: 'fr' }, (res) => {
-        exportFrBtn.textContent = '📥 Export French Anki CSV';
+        exportFrBtn.textContent = '📥 Export French CSV';
         if (res && res.success) {
           triggerCsvDownload(res.filename, res.csvContent);
         } else {
