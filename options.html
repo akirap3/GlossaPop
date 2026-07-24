@@ -86,6 +86,25 @@
             <div class="segmented-slider"></div>
           </div>
         </div>
+
+        <!-- Google Drive & Sheets Sync & Anki Export -->
+        <div class="setting-section">
+          <h2>📊 Google Drive & Sheets Sync</h2>
+          <p class="section-desc">Connect your Google account to automatically sync saved vocabulary words into your personal Google Sheet and export Anki flashcard CSVs.</p>
+          
+          <div class="cloud-status-box" style="background: rgba(255, 255, 255, 0.05); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); margin-top: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <span id="google-auth-status" style="font-weight: 600; font-size: 13.5px; color: #e5e5ea;">⚪ Checking Connection...</span>
+              <button id="google-auth-btn" style="padding: 7px 16px; border-radius: 8px; border: none; font-size: 12.5px; font-weight: 600; cursor: pointer; background: #0a84ff; color: #ffffff; transition: all 0.2s;">Connect Google Account</button>
+            </div>
+            
+            <div id="sheets-actions" style="display: none; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.12);">
+              <button id="sync-words-btn" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #30d158; background: rgba(48, 209, 88, 0.18); color: #30d158; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;">🔄 Sync Vocabulary Cache</button>
+              <button id="export-anki-en-btn" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #64d2ff; background: rgba(100, 210, 255, 0.18); color: #64d2ff; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;">📥 Export English Anki CSV</button>
+              <button id="export-anki-fr-btn" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #bf5af2; background: rgba(191, 90, 242, 0.18); color: #bf5af2; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;">📥 Export French Anki CSV</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Footer & Status Notification -->

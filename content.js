@@ -279,6 +279,66 @@ async function fetchAndDisplay(word, isInitial = false) {
       } else {
         contentDiv.innerHTML = `<div class="glossapop-error">No translation found.</div>`;
       }
+
+      // 4. Bind Google Sheets Save Button & Deduplication status
+      const saveBtn = shadowRoot.querySelector('#glossapop-save-word');
+      if (saveBtn) {
+        const queryKey = (data.word || word).trim().toLowerCase();
+        chrome.storage.local.get(['savedWords'], (stored) => {
+          const savedWords = stored.savedWords || {};
+          if (savedWords[queryKey]) {
+            saveBtn.classList.add('saved');
+            saveBtn.textContent = '★ Saved';
+          } else {
+            saveBtn.classList.remove('saved');
+            saveBtn.textContent = '☆ Save';
+          }
+        });
+
+        saveBtn.onclick = (e) => {
+          e.stopPropagation();
+          const wordToSave = data.word || word;
+          const cefrObj = getCEFRLevel(wordToSave, activeTargetLang);
+
+          const wordData = {
+            word: wordToSave,
+            phonetic: data.phonetic || '',
+            cefr: cefrObj ? cefrObj.text : '',
+            definition: (data.definitions && data.definitions[0]) ? data.definitions[0] : (data.translation || ''),
+            exampleSentence: data.example ? data.example.text : '',
+            exampleTranslation: data.example ? data.example.translation : ''
+          };
+
+          saveBtn.textContent = '⏳ Saving...';
+
+          chrome.runtime.sendMessage({
+            action: 'saveWordToSheet',
+            targetLang: activeTargetLang,
+            wordData
+          }, (res) => {
+            if (chrome.runtime.lastError) {
+              saveBtn.textContent = '☆ Save';
+              showToastNotice(shadowRoot, `❌ Auth Required: Connect in Options`);
+              return;
+            }
+
+            if (res && res.success) {
+              saveBtn.classList.add('saved');
+              saveBtn.textContent = '★ Saved';
+              if (res.duplicate) {
+                showToastNotice(shadowRoot, `✓ Already in Vocabulary Book`);
+              } else {
+                showToastNotice(shadowRoot, `✓ Saved to Google Sheet!`);
+              }
+            } else {
+              saveBtn.classList.remove('saved');
+              saveBtn.textContent = '☆ Save';
+              const err = (res && res.error) ? res.error : 'Failed to save';
+              showToastNotice(shadowRoot, `❌ ${err}`);
+            }
+          });
+        };
+      }
     } else {
       const errMsg = (response && response.error) ? response.error : 'Word not found or API request failed.';
       contentDiv.innerHTML = `<div class="glossapop-error">${escapeHtml(errMsg)}</div>`;

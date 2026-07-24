@@ -142,6 +142,55 @@ const POPUP_CSS = `
     transform: scale(1.15);
   }
 
+  /* Save Word Button */
+  .glossapop-save-btn {
+    border: 1px solid rgba(0, 102, 204, 0.2);
+    background: rgba(0, 102, 204, 0.08);
+    color: #0066cc;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.2s ease;
+  }
+  .glossapop-save-btn:hover {
+    background: rgba(0, 102, 204, 0.18);
+    transform: scale(1.04);
+  }
+  .glossapop-save-btn.saved {
+    border-color: rgba(52, 199, 89, 0.35);
+    background: rgba(52, 199, 89, 0.12);
+    color: #2e7d32;
+  }
+
+  /* Toast Notice Banner */
+  .glossapop-toast-notice {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(28, 28, 30, 0.92);
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 99;
+    white-space: nowrap;
+  }
+  .glossapop-toast-notice.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
   /* Segmented Toggles */
   .glossapop-toggles {
     display: flex;
@@ -638,6 +687,10 @@ const POPUP_CSS = `
   .glossapop-dark .glossapop-chip:hover { background: rgba(10, 132, 255, 0.3); }
   .glossapop-dark .glossapop-chip.antonym { color: #ff453a; background: rgba(255, 69, 58, 0.15); }
   .glossapop-dark .glossapop-chip.antonym:hover { background: rgba(255, 69, 58, 0.3); }
+  .glossapop-dark .glossapop-save-btn { border-color: rgba(100, 210, 255, 0.4); background: rgba(100, 210, 255, 0.15); color: #64d2ff; }
+  .glossapop-dark .glossapop-save-btn:hover { background: rgba(100, 210, 255, 0.3); }
+  .glossapop-dark .glossapop-save-btn.saved { border-color: rgba(48, 209, 88, 0.45); background: rgba(48, 209, 88, 0.2); color: #30d158; }
+  .glossapop-dark .glossapop-toast-notice { background: rgba(255, 255, 255, 0.95); color: #1c1c1e; }
   .glossapop-dark .glossapop-lemma-row { background: rgba(48, 209, 88, 0.15); color: #ffffff; border-left-color: #30d158; }
   .glossapop-dark .glossapop-lemma-text { color: #e5e5ea; }
   .glossapop-dark .glossapop-lemma-text strong { color: #30d158; }
@@ -712,6 +765,10 @@ const POPUP_CSS = `
     .glossapop-card:not(.glossapop-light) .glossapop-conjugation-box { background: rgba(10, 132, 255, 0.08); color: #ffffff; border-left-color: #0a84ff; }
     .glossapop-card:not(.glossapop-light) .glossapop-conj-title { color: #64d2ff; }
     .glossapop-card:not(.glossapop-light) .glossapop-highlight { background-color: rgba(255, 159, 10, 0.25); color: #ff9f0a; }
+    .glossapop-card:not(.glossapop-light) .glossapop-save-btn { border-color: rgba(100, 210, 255, 0.4); background: rgba(100, 210, 255, 0.15); color: #64d2ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-save-btn:hover { background: rgba(100, 210, 255, 0.3); }
+    .glossapop-card:not(.glossapop-light) .glossapop-save-btn.saved { border-color: rgba(48, 209, 88, 0.45); background: rgba(48, 209, 88, 0.2); color: #30d158; }
+    .glossapop-card:not(.glossapop-light) .glossapop-toast-notice { background: rgba(255, 255, 255, 0.95); color: #1c1c1e; }
     .glossapop-card:not(.glossapop-light) .glossapop-separator { color: rgba(255, 255, 255, 0.35); }
     .glossapop-card:not(.glossapop-light) .glossapop-segment { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.05); }
   }
@@ -739,6 +796,7 @@ const UIComponents = {
           <span class="glossapop-title">GlossaPop</span>
         </div>
         <div class="glossapop-header-actions">
+          <button class="glossapop-save-btn" id="glossapop-save-word" title="Save to Google Sheets">☆ Save</button>
           <button class="glossapop-theme-toggle" id="glossapop-theme-cycle" title="Toggle theme: Auto / Light / Dark">🌗</button>
           <button class="glossapop-close-btn" title="Close Popup">&times;</button>
         </div>
@@ -1015,24 +1073,43 @@ const UIComponents = {
     if (activeTargetLang === 'en') {
       externalLinksBox.innerHTML = `
         <span>Read more:</span>
-        <a href="https://dictionary.cambridge.org/dictionary/english/${encoded}" target="_blank">Cambridge</a>
+        <a href="https://dictionary.cambridge.org/dictionary/english/${encoded}" target="_blank" rel="noopener noreferrer">Cambridge</a>
         <span class="glossapop-separator">|</span>
-        <a href="https://www.merriam-webster.com/dictionary/${encoded}" target="_blank">Merriam-Webster</a>
+        <a href="https://www.merriam-webster.com/dictionary/${encoded}" target="_blank" rel="noopener noreferrer">Merriam-Webster</a>
       `;
       externalLinksBox.style.display = 'flex';
     } else if (activeTargetLang === 'fr') {
       externalLinksBox.innerHTML = `
         <span>Read more:</span>
-        <a href="https://www.larousse.fr/dictionnaires/francais/${encoded}" target="_blank">Larousse</a>
+        <a href="https://www.larousse.fr/dictionnaires/francais/${encoded}" target="_blank" rel="noopener noreferrer">Larousse</a>
         <span class="glossapop-separator">|</span>
-        <a href="https://www.wordreference.com/fren/${encoded}" target="_blank">WordReference</a>
+        <a href="https://www.wordreference.com/fren/${encoded}" target="_blank" rel="noopener noreferrer">WordReference</a>
         <span class="glossapop-separator">|</span>
-        <a href="https://www.frdic.com/dicts/fr/${encoded}" target="_blank">法語助手</a>
+        <a href="https://www.frdic.com/dicts/fr/${encoded}" target="_blank" rel="noopener noreferrer">法語助手</a>
       `;
       externalLinksBox.style.display = 'flex';
     } else {
       externalLinksBox.style.display = 'none';
     }
+  },
+
+  /**
+   * Shows a temporary toast notice banner at bottom of card
+   */
+  showToast(shadowRoot, message) {
+    const card = shadowRoot.querySelector('.glossapop-card');
+    if (!card) return;
+    let toast = card.querySelector('.glossapop-toast-notice');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'glossapop-toast-notice';
+      card.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2400);
   }
 };
 
@@ -1054,4 +1131,7 @@ function renderExample(exampleBox, data, activeTargetLang) {
 }
 function renderLinks(externalLinksBox, data, activeTargetLang, queryWord) {
   UIComponents.renderLinks(externalLinksBox, data, activeTargetLang, queryWord);
+}
+function showToastNotice(shadowRoot, message) {
+  UIComponents.showToast(shadowRoot, message);
 }

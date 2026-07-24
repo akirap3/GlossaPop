@@ -107,3 +107,55 @@ async function fetchFallbackExample(word, sourceLang, targetLang) {
   // Tertiary Fallback: Query Tatoeba
   return await fetchTatoebaExample(word, sourceLang, targetLang);
 }
+
+/**
+ * Dynamically translates an array of Wiktionary definition strings into the target explanation language.
+ */
+async function translateDefinitions(definitions, targetLang) {
+  if (!definitions || !Array.isArray(definitions) || definitions.length === 0) return [];
+  if (targetLang === 'en') return definitions;
+
+  const posMap = {
+    '[adjective]': '[形容詞]',
+    '[noun]': '[名詞]',
+    '[verb]': '[動詞]',
+    '[adverb]': '[副詞]',
+    '[preposition]': '[介詞]',
+    '[conjunction]': '[連詞]',
+    '[pronoun]': '[代詞]',
+    '[interjection]': '[感嘆詞]'
+  };
+
+  const translatedDefs = await Promise.all(definitions.map(async (defStr) => {
+    const match = defStr.match(/^\[([^\]]+)\]\s*(.*)$/);
+    if (!match) {
+      try { return await translateWord(defStr, 'en', targetLang); } catch (e) { return defStr; }
+    }
+
+    const origPos = match[1];
+    let bodyText = match[2];
+
+    const pluralMatch = bodyText.match(/^plural\s+of\s+(.+)$/i);
+    if (pluralMatch) {
+      const posTag = targetLang.startsWith('zh') ? (posMap[`[${origPos.toLowerCase()}]`] || `[${origPos}]`) : `[${origPos}]`;
+      return targetLang.startsWith('zh') ? `${posTag} ${pluralMatch[1]} 的複數` : `${posTag} plural of ${pluralMatch[1]}`;
+    }
+
+    const femMatch = bodyText.match(/^(?:feminine\s+form|feminine\s+singular)\s+of\s+(.+)$/i);
+    if (femMatch) {
+      const posTag = targetLang.startsWith('zh') ? (posMap[`[${origPos.toLowerCase()}]`] || `[${origPos}]`) : `[${origPos}]`;
+      return targetLang.startsWith('zh') ? `${posTag} ${femMatch[1]} 的陰性單數` : `${posTag} feminine form of ${femMatch[1]}`;
+    }
+
+    try {
+      const gTarget = targetLang === 'zh' ? 'zh-TW' : targetLang;
+      const translatedBody = await translateWord(bodyText, 'en', gTarget);
+      const posTag = targetLang.startsWith('zh') ? (posMap[`[${origPos.toLowerCase()}]`] || `[${origPos}]`) : `[${origPos}]`;
+      return `${posTag} ${translatedBody}`;
+    } catch (e) {
+      return defStr;
+    }
+  }));
+
+  return translatedDefs;
+}

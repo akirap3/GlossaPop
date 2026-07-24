@@ -151,37 +151,30 @@ async function fetchLemmaInfo(word, lang) {
             primaryPos = (entries[1].partOfSpeech || '').toLowerCase();
           }
           const hasAdjEntry = entries.some(e => (e.partOfSpeech || '').toLowerCase() === 'adjective');
-          
+          const hasVerbEntry = entries.some(e => ['verb', 'participle'].includes((e.partOfSpeech || '').toLowerCase()));
+
           if (primaryPos === 'verb' || primaryPos === 'participle') {
             isVerb = true;
             isAdjective = hasAdjEntry;
           } else if (primaryPos === 'adjective') {
             isAdjective = true;
-            isVerb = !!lemmaInfo || entries.some(e => {
-              const pos = (e.partOfSpeech || '').toLowerCase();
-              if (pos !== 'verb' && pos !== 'participle') return false;
-              return (e.definitions || []).some(d => {
-                const defText = (d.definition || '').toLowerCase();
-                return defText.includes('participle of') || defText.includes('inflection of') || defText.includes('past historic') || defText.includes('form of');
-              });
-            });
-          } else if (primaryPos === 'adverb') {
-            isAdjective = false;
-            isVerb = false;
-          } else if (primaryPos === 'noun') {
+            isVerb = hasVerbEntry;
+          } else if (primaryPos === 'noun' || primaryPos === 'adverb') {
             isAdjective = false;
             isVerb = false;
           } else {
-            isVerb = entries.some(e => ['verb', 'participle'].includes((e.partOfSpeech || '').toLowerCase()));
+            isVerb = hasVerbEntry;
             isAdjective = hasAdjEntry;
           }
         }
 
-        // Override isVerb if lemmaInfo indicates verb inflection/participle form
+        // Override isVerb ONLY if lemmaInfo explicitly indicates verb inflection/participle form
         if (lemmaInfo) {
           const desc = (lemmaInfo.description || '').toLowerCase();
-          if (!desc.includes('plural of') && !desc.includes('adverbial form')) {
+          if (desc.includes('verb') || desc.includes('participle of') || desc.includes('conjugation of')) {
             isVerb = true;
+          } else if (desc.includes('plural of') || desc.includes('adjective') || desc.includes('noun')) {
+            isVerb = false;
           }
         }
 
@@ -318,8 +311,12 @@ async function autoDetectAndTranslate(word, target) {
         }
       }
       
-      if (targetSourceLang === 'fr' && wiktionaryDefinitions && wiktionaryDefinitions.length > 0) {
-        result.definitions = wiktionaryDefinitions;
+      if (wiktionaryDefinitions && wiktionaryDefinitions.length > 0) {
+        if (target !== 'en') {
+          result.definitions = await translateDefinitions(wiktionaryDefinitions, target);
+        } else {
+          result.definitions = wiktionaryDefinitions;
+        }
       }
       
       // Combine synonyms & antonyms dynamically from Wiktionary and API queries
