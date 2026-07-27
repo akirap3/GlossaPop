@@ -18,10 +18,10 @@ global.chrome = {
 };
 
 // Load core extension scripts
-const utilsCode = fs.readFileSync(path.join(__dirname, 'utils.js'), 'utf8');
-const bgApiCode = fs.readFileSync(path.join(__dirname, 'bg-api.js'), 'utf8');
-const bgParserCode = fs.readFileSync(path.join(__dirname, 'bg-parser.js'), 'utf8');
-const bgDictCode = fs.readFileSync(path.join(__dirname, 'bg-dictionary.js'), 'utf8');
+const utilsCode = fs.readFileSync(path.join(__dirname, '../utils.js'), 'utf8');
+const bgApiCode = fs.readFileSync(path.join(__dirname, '../bg-api.js'), 'utf8');
+const bgParserCode = fs.readFileSync(path.join(__dirname, '../bg-parser.js'), 'utf8');
+const bgDictCode = fs.readFileSync(path.join(__dirname, '../bg-dictionary.js'), 'utf8');
 
 eval(utilsCode);
 eval(bgApiCode);

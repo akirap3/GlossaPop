@@ -61,7 +61,8 @@ global.getFrenchConjugations = (verb, tense) => ({
 });
 global.playPronunciation = () => {};
 
-const uiContent = fs.readFileSync('./ui.js', 'utf8');
+const path = require('path');
+const uiContent = fs.readFileSync(path.join(__dirname, '../ui.js'), 'utf8');
 eval(uiContent.replace('const UIComponents =', 'global.UIComponents ='));
 
 function runTenseSwitchingTests() {

@@ -45,7 +45,8 @@ global.chrome = {
   runtime: {}
 };
 
-eval(fs.readFileSync('./bg-sheets.js', 'utf8'));
+const path = require('path');
+eval(fs.readFileSync(path.join(__dirname, '../bg-sheets.js'), 'utf8'));
 
 async function runAuthUnitTests() {
   console.log('===============================================================');
