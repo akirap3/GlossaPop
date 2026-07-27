@@ -172,6 +172,16 @@ const POPUP_CSS = `
     background: rgba(52, 199, 89, 0.12);
     color: #2e7d32;
   }
+  .glossapop-save-btn:disabled,
+  .glossapop-save-btn.disabled {
+    opacity: 0.45;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    transform: none !important;
+    background: rgba(142, 142, 147, 0.12) !important;
+    border-color: rgba(142, 142, 147, 0.2) !important;
+    color: #8e8e93 !important;
+  }
 
   /* Toast Notice Banner */
   .glossapop-toast-notice {

@@ -167,6 +167,14 @@ async function fetchAndDisplay(word, isInitial = false) {
   const exampleBox = shadowRoot.querySelector('.glossapop-example-box');
   const externalLinksBox = shadowRoot.querySelector('.glossapop-external-links');
 
+  // Disable Save button while fetching data sources
+  const saveBtn = shadowRoot.querySelector('#glossapop-save-word');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.classList.add('disabled');
+    saveBtn.textContent = '⏳ Loading...';
+  }
+
   // Show loading spinner
   contentDiv.innerHTML = `
     <div class="glossapop-loader-container">
@@ -283,6 +291,9 @@ async function fetchAndDisplay(word, isInitial = false) {
       // 4. Bind Google Sheets Save Button & Deduplication status
       const saveBtn = shadowRoot.querySelector('#glossapop-save-word');
       if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('disabled');
+
         const queryKey = (data.word || word).trim().toLowerCase();
         chrome.storage.local.get(['savedWords'], (stored) => {
           const savedWords = stored.savedWords || {};
@@ -342,6 +353,12 @@ async function fetchAndDisplay(word, isInitial = false) {
     } else {
       const errMsg = (response && response.error) ? response.error : 'Word not found or API request failed.';
       contentDiv.innerHTML = `<div class="glossapop-error">${escapeHtml(errMsg)}</div>`;
+      const saveBtn = shadowRoot.querySelector('#glossapop-save-word');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.classList.add('disabled');
+        saveBtn.textContent = '☆ Save';
+      }
     }
   });
 }
