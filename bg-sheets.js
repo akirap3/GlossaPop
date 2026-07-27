@@ -1,13 +1,42 @@
 // bg-sheets.js - Google Drive & Google Sheets API v4 Integration Engine
 
 const SPREADSHEET_TITLE = 'GlossaPop Vocabulary Book';
-const SHEET_EN = 'English Words';
-const SHEET_FR = 'French Words';
 const HEADERS = ['Word', 'IPA', 'CEFR', 'Definition', 'Example Sentence', 'Example Translation', 'Date'];
 
-/**
- * Obtain Google OAuth 2.0 Auth Token with launchWebAuthFlow fallback
- */
+// 10-Language Sheet Title Mapping
+const LANGUAGE_SHEET_MAP = {
+  'en': 'English Words',
+  'fr': 'French Words',
+  'es': 'Spanish Words',
+  'de': 'German Words',
+  'ja': 'Japanese Words',
+  'ko': 'Korean Words',
+  'it': 'Italian Words',
+  'pt': 'Portuguese Words',
+  'zh-tw': 'Traditional Chinese Words',
+  'zh-cn': 'Simplified Chinese Words',
+  'zh': 'Chinese Words'
+};
+
+const ALL_SHEET_TITLES = [
+  'English Words',
+  'French Words',
+  'Spanish Words',
+  'German Words',
+  'Japanese Words',
+  'Korean Words',
+  'Italian Words',
+  'Portuguese Words',
+  'Traditional Chinese Words',
+  'Simplified Chinese Words'
+];
+
+function getSheetTitleForLang(targetLang) {
+  if (!targetLang) return 'English Words';
+  const langKey = targetLang.toLowerCase().trim();
+  return LANGUAGE_SHEET_MAP[langKey] || 'English Words';
+}
+
 /**
  * Obtain Google OAuth 2.0 Auth Token with silent auto-refresh and launchWebAuthFlow support.
  */
@@ -145,6 +174,59 @@ async function fetchWithAuthAutoRetry(fetchCallFn) {
 }
 
 /**
+ * Dynamically ensures that the target language tab exists in the user's Google Spreadsheet.
+ * Creates the tab on-the-fly with frozen header row if missing.
+ */
+async function ensureSheetExists(token, spreadsheetId, sheetTitle) {
+  try {
+    const metaRes = await fetchWithAuthAutoRetry(t => fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`, {
+      headers: { Authorization: `Bearer ${t}` }
+    }));
+    
+    if (!metaRes.ok) return;
+    const metaData = await metaRes.json();
+    const existingTitles = (metaData.sheets || []).map(s => s.properties.title);
+    
+    if (existingTitles.includes(sheetTitle)) return;
+
+    console.log(`📌 Dynamic Tab Creation: Adding missing "${sheetTitle}" tab to Google Spreadsheet...`);
+
+    await fetchWithAuthAutoRetry(t => fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${t}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        requests: [
+          {
+            addSheet: {
+              properties: { title: sheetTitle, gridProperties: { frozenRowCount: 1 } }
+            }
+          }
+        ]
+      })
+    }));
+
+    await fetchWithAuthAutoRetry(t => fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${t}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        valueInputOption: 'USER_ENTERED',
+        data: [
+          { range: `'${sheetTitle}'!A1:G1`, values: [HEADERS] }
+        ]
+      })
+    }));
+  } catch (err) {
+    console.warn(`Failed to dynamically create sheet tab "${sheetTitle}":`, err);
+  }
+}
+
+/**
  * Find existing or create a new GlossaPop Vocabulary Book spreadsheet
  */
 async function getOrCreateSpreadsheet(token) {
@@ -189,8 +271,16 @@ async function getOrCreateSpreadsheet(token) {
         console.warn('Drive search for existing spreadsheet failed:', e);
       }
 
-      // 3. Create a new Google Spreadsheet workbook if none exists
+      // 3. Create a new Google Spreadsheet workbook if none exists (with all 10 language tabs)
       try {
+        const initialSheets = ALL_SHEET_TITLES.map(title => ({
+          properties: { title, gridProperties: { frozenRowCount: 1 } }
+        }));
+        
+        const initialHeaderData = ALL_SHEET_TITLES.map(title => ({
+          range: `'${title}'!A1:G1`, values: [HEADERS]
+        }));
+
         const createRes = await fetchWithAuthAutoRetry(t => fetch('https://sheets.googleapis.com/v4/spreadsheets', {
           method: 'POST',
           headers: {
@@ -199,10 +289,7 @@ async function getOrCreateSpreadsheet(token) {
           },
           body: JSON.stringify({
             properties: { title: SPREADSHEET_TITLE },
-            sheets: [
-              { properties: { title: SHEET_EN, gridProperties: { frozenRowCount: 1 } } },
-              { properties: { title: SHEET_FR, gridProperties: { frozenRowCount: 1 } } }
-            ]
+            sheets: initialSheets
           })
         }));
 
@@ -214,7 +301,7 @@ async function getOrCreateSpreadsheet(token) {
         const spreadsheet = await createRes.json();
         spreadsheetId = spreadsheet.spreadsheetId;
 
-        // Populate initial column headers
+        // Populate initial column headers for all 10 language tabs
         await fetchWithAuthAutoRetry(t => fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
           method: 'POST',
           headers: {
@@ -223,10 +310,7 @@ async function getOrCreateSpreadsheet(token) {
           },
           body: JSON.stringify({
             valueInputOption: 'USER_ENTERED',
-            data: [
-              { range: `'${SHEET_EN}'!A1:G1`, values: [HEADERS] },
-              { range: `'${SHEET_FR}'!A1:G1`, values: [HEADERS] }
-            ]
+            data: initialHeaderData
           })
         }));
 
@@ -244,7 +328,9 @@ async function getOrCreateSpreadsheet(token) {
  */
 async function appendWordToSheet(token, targetLang, wordData) {
   const spreadsheetId = await getOrCreateSpreadsheet(token);
-  const sheetTitle = targetLang === 'fr' ? SHEET_FR : SHEET_EN;
+  const sheetTitle = getSheetTitleForLang(targetLang);
+
+  await ensureSheetExists(token, spreadsheetId, sheetTitle);
 
   const today = new Date().toISOString().split('T')[0];
   const rowValues = [
@@ -278,11 +364,26 @@ async function appendWordToSheet(token, targetLang, wordData) {
 }
 
 /**
- * Fetch all saved words from both sheets to build local deduplication cache
+ * Fetch all saved words from all sheets to build local deduplication cache
  */
 async function fetchSpreadsheetWords(token) {
   const spreadsheetId = await getOrCreateSpreadsheet(token);
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?ranges=${encodeURIComponent(SHEET_EN)}!A2:A&ranges=${encodeURIComponent(SHEET_FR)}!A2:A`;
+
+  let existingTitles = ALL_SHEET_TITLES;
+  try {
+    const metaRes = await fetchWithAuthAutoRetry(t => fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`, {
+      headers: { Authorization: `Bearer ${t}` }
+    }));
+    if (metaRes.ok) {
+      const metaData = await metaRes.json();
+      if (metaData.sheets && Array.isArray(metaData.sheets)) {
+        existingTitles = metaData.sheets.map(s => s.properties.title);
+      }
+    }
+  } catch (e) {}
+
+  const rangesQuery = existingTitles.map(t => `ranges=${encodeURIComponent(t)}!A2:A`).join('&');
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${rangesQuery}`;
 
   const response = await fetchWithAuthAutoRetry(t => fetch(url, {
     headers: { Authorization: `Bearer ${t}` }
@@ -321,7 +422,9 @@ async function fetchSpreadsheetWords(token) {
  */
 async function exportAnkiCsv(token, targetLang) {
   const spreadsheetId = await getOrCreateSpreadsheet(token);
-  const sheetTitle = targetLang === 'fr' ? SHEET_FR : SHEET_EN;
+  const sheetTitle = getSheetTitleForLang(targetLang);
+
+  await ensureSheetExists(token, spreadsheetId, sheetTitle);
 
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetTitle)}!A1:G`;
   const response = await fetchWithAuthAutoRetry(t => fetch(url, {

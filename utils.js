@@ -155,12 +155,47 @@ function getFrenchElerEterStems(verb) {
 }
 
 /**
+ * Module-Level Constants for French Morphology
+ */
+const ETRE_VERBS = [
+  'aller', 'venir', 'devenir', 'revenir', 'partir', 'sortir', 
+  'naître', 'mourir', 'entrer', 'monter', 'descendre', 'tomber', 
+  'rester', 'retourner'
+];
+
+const AUX_TENSE_MAP = {
+  'passe_compose': 'present',
+  'plus_que_parfait': 'imparfait',
+  'passe_anterieur': 'passe_simple',
+  'futur_anterieur': 'futur_simple',
+  'subjonctif_passe': 'subjonctif_present',
+  'subjonctif_plus_que_parfait': 'subjonctif_imparfait',
+  'conditionnel_passe': 'conditionnel_present',
+  'imperatif_passe': 'imperatif_present'
+};
+
+/**
  * French Verb Conjugation Engine (3-Tier Hybrid Architecture)
  * Priority 1: Local offline NPM library (french-verbs + french-verbs-lefff) - 0ms, 100% authoritative
  * Priority 2: Online Kaikki API fallback
  * Priority 3: Online Wiktionary API fallback
  */
 let _lefffDictCache = null;
+let _frenchVerbsModuleCache = null;
+
+function getLefffDict() {
+  if (_lefffDictCache) return _lefffDictCache;
+  if (typeof require !== 'undefined') {
+    try {
+      _lefffDictCache = require('french-verbs-lefff/dist/conjugations.json');
+      _frenchVerbsModuleCache = require('french-verbs');
+    } catch (e) {}
+  } else if (typeof window !== 'undefined' && window.Lefff) {
+    _lefffDictCache = window.Lefff;
+    if (window.frenchVerbs) _frenchVerbsModuleCache = window.frenchVerbs;
+  }
+  return _lefffDictCache;
+}
 
 function getFrenchConjugations(verb, tense = 'present') {
   if (!verb) return null;
@@ -178,40 +213,23 @@ function getFrenchConjugations(verb, tense = 'present') {
   const { prefix, base } = decomposeFrenchVerb(v);
 
   // -----------------------------------------------------------------
-  // PRIORITY 1: Offline NPM Library (french-verbs + french-verbs-lefff)
+  // PRIORITY 1: Offline LEFFF Engine (Node & Browser)
   // -----------------------------------------------------------------
-  if (typeof require !== 'undefined') {
+  const Lefff = getLefffDict();
+  if (Lefff && _frenchVerbsModuleCache) {
     try {
-      const { getConjugation } = require('french-verbs');
-      if (!_lefffDictCache) {
-        _lefffDictCache = require('french-verbs-lefff/dist/conjugations.json');
-      }
-      const Lefff = _lefffDictCache;
-      
+      const { getConjugation } = _frenchVerbsModuleCache;
       const targetVerb = Lefff[v] ? v : (Lefff[base] ? base : null);
       if (targetVerb && Lefff[targetVerb]) {
         console.log(`🟢 [Priority 1: Offline LEFFF Engine] Conjugating "${verb}" (targetVerb: "${targetVerb}") via french-verbs library.`);
         const p = targetVerb === base ? prefix : '';
         
-        const isCompound = ['passe_compose', 'plus_que_parfait', 'passe_anterieur', 'futur_anterieur', 'subjonctif_passe', 'subjonctif_plus_que_parfait', 'conditionnel_passe', 'imperatif_passe'].includes(tense);
-        
+        const isCompound = Object.prototype.hasOwnProperty.call(AUX_TENSE_MAP, tense);
         if (isCompound) {
           const pp = getConjugation(Lefff, targetVerb, 'PARTICIPE_PASSE', 0, {}, false);
           const fullPp = p + pp;
-          const ETRE_VERBS = ['aller', 'venir', 'devenir', 'revenir', 'partir', 'sortir', 'naître', 'mourir', 'entrer', 'monter', 'descendre', 'tomber', 'rester', 'retourner'];
           const auxVerb = (isPronominal || ETRE_VERBS.includes(v) || ETRE_VERBS.includes(base)) ? 'être' : 'avoir';
-          
-          let auxTenseMap = {
-            'passe_compose': 'present',
-            'plus_que_parfait': 'imparfait',
-            'passe_anterieur': 'passe_simple',
-            'futur_anterieur': 'futur_simple',
-            'subjonctif_passe': 'subjonctif_present',
-            'subjonctif_plus_que_parfait': 'subjonctif_imparfait',
-            'conditionnel_passe': 'conditionnel_present',
-            'imperatif_passe': 'imperatif_present'
-          };
-          const auxConj = getFrenchConjugations(auxVerb, auxTenseMap[tense]);
+          const auxConj = getFrenchConjugations(auxVerb, AUX_TENSE_MAP[tense]);
           if (auxConj) {
             if (tense === 'imperatif_passe') {
               return {
@@ -842,28 +860,28 @@ function detectFrenchQueryTense(word, data = {}) {
     if (defStr.includes('past participle') || defStr.includes('passé composé') || defStr.includes('compound past')) return 'passe_compose';
   }
 
-  // 2. Exact Reverse LEFFF Table Lookup for Irregular Verbs (être, avoir, faire, aller, etc.)
-  if (typeof require !== 'undefined') {
+  // 2. Exact Reverse LEFFF Table Lookup for Irregular Verbs
+  const Lefff = getLefffDict();
+  if (Lefff && _frenchVerbsModuleCache) {
     try {
-      const { getConjugation } = require('french-verbs');
-      if (!_lefffDictCache) {
-        _lefffDictCache = require('french-verbs-lefff/dist/conjugations.json');
-      }
-      const Lefff = _lefffDictCache;
+      const { getConjugation } = _frenchVerbsModuleCache;
       const targetVerb = data.lemmaInfo ? data.lemmaInfo.lemma : null;
       
       const tensesToCheck = [
         { fv: 'FUTUR', id: 'futur_simple' },
         { fv: 'SUBJONCTIF_PRESENT', id: 'subjonctif_present' },
+        { fv: 'SUBJONCTIF_IMPARFAIT', id: 'subjonctif_imparfait' },
         { fv: 'IMPARFAIT', id: 'imparfait' },
+        { fv: 'PASSE_SIMPLE', id: 'passe_simple' },
+        { fv: 'CONDITIONNEL_PRESENT', id: 'conditionnel_present' },
         { fv: 'PARTICIPE_PASSE', id: 'passe_compose' },
         { fv: 'PASSE_COMPOSE', id: 'passe_compose' },
         { fv: 'PRESENT', id: 'present' }
       ];
 
-      const checkVerbs = targetVerb && Lefff[targetVerb] 
+      const checkVerbs = (targetVerb && Lefff[targetVerb]) 
         ? [targetVerb] 
-        : ['être', 'avoir', 'faire', 'pouvoir', 'vouloir', 'aller', 'voir', 'savoir', 'venir', 'devenir'];
+        : BASE_IRREGULAR_VERBS;
 
       for (const vCandidate of checkVerbs) {
         if (Lefff[vCandidate]) {
