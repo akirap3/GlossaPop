@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GlossaPop - Settings Dashboard</title>
   <link rel="stylesheet" href="options.css">
 </head>
@@ -28,12 +29,12 @@
             <span class="sensor-icon">⚡</span>
             <div class="sensor-text">
               <strong>Lookup Source Language:</strong>
-              <span class="sensor-status">🟢 Auto-Detect Page Language (自動偵測網頁語言)</span>
+              <span class="sensor-status">🟢 Auto-Detect Page Language</span>
               <p class="sensor-desc">GlossaPop automatically senses Japanese, French, Spanish, German, etc. when you read pages.</p>
             </div>
           </div>
 
-          <div class="matrix-grid" style="grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 16px;">
+          <div class="matrix-grid" style="grid-template-columns: 1fr auto 1fr; align-items: start; margin-top: 16px;">
             <div class="select-group">
               <label class="select-label">
                 <span class="label-badge badge-green">Explain 1</span> Primary Target
@@ -73,7 +74,7 @@
                 <option value="it">Italian (it)</option>
                 <option value="pt">Portuguese (pt)</option>
               </select>
-              <span class="select-hint">Secondary definition and translation target</span>
+              <span class="select-hint">Secondary definition target</span>
             </div>
           </div>
         </div>
@@ -131,8 +132,12 @@
               <h2>📊 Google Drive & Sheets Synchronization</h2>
               <p class="section-desc" style="margin: 0;">Connect your Google account to automatically sync saved vocabulary into your personal Google Sheet and export CSVs.</p>
             </div>
-            <div>
-              <button id="google-auth-btn" class="auth-btn-main">Connect Google Account</button>
+            <div class="toggle-switch-group">
+              <span id="google-auth-label" class="toggle-status-label disconnected">Disconnected</span>
+              <label class="toggle-switch" aria-label="Toggle Google Account Synchronization">
+                <input type="checkbox" id="google-auth-toggle">
+                <span class="toggle-slider"></span>
+              </label>
             </div>
           </div>
           

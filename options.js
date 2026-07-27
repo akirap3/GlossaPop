@@ -101,6 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 4. Google Drive & Sheets Integration Handlers
+  const authToggle = document.getElementById('google-auth-toggle');
+  const authLabel = document.getElementById('google-auth-label');
   const authStatus = document.getElementById('google-auth-status');
   const authBtn = document.getElementById('google-auth-btn');
   const sheetsActions = document.getElementById('sheets-actions');
@@ -109,19 +111,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const exportFrBtn = document.getElementById('export-anki-fr-btn');
 
   function updateAuthUI(connected) {
-    if (!authStatus || !authBtn || !sheetsActions) return;
-    if (connected) {
-      authStatus.textContent = '🟢 Connected to Google Drive';
-      authStatus.style.color = '#30d158';
-      authBtn.textContent = 'Disconnect';
-      authBtn.style.background = '#ff453a';
-      sheetsActions.style.display = 'flex';
-    } else {
-      authStatus.textContent = '⚪ Not Connected';
-      authStatus.style.color = '#e5e5ea';
-      authBtn.textContent = 'Connect Google Account';
-      authBtn.style.background = '#0a84ff';
-      sheetsActions.style.display = 'none';
+    if (authToggle) {
+      authToggle.checked = !!connected;
+    }
+    if (authLabel) {
+      authLabel.textContent = connected ? 'Connected' : 'Disconnected';
+      authLabel.className = 'toggle-status-label ' + (connected ? 'connected' : 'disconnected');
+    }
+    if (authStatus) {
+      authStatus.textContent = connected ? '🟢 Connected to Google Drive' : '⚪ Not Connected';
+      authStatus.style.color = connected ? '#30d158' : '#e5e5ea';
+    }
+    if (authBtn) {
+      authBtn.textContent = connected ? 'Disconnect' : 'Connect Google Account';
+    }
+    if (sheetsActions) {
+      sheetsActions.style.display = connected ? 'flex' : 'none';
     }
   }
 
@@ -131,16 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Toggle Connect / Disconnect
-  if (authBtn) {
-    authBtn.addEventListener('click', () => {
-      const isConnected = authBtn.textContent === 'Disconnect';
-      if (isConnected) {
+  if (authToggle) {
+    authToggle.addEventListener('change', () => {
+      const shouldConnect = authToggle.checked;
+      if (!shouldConnect) {
         chrome.runtime.sendMessage({ action: 'disconnectGoogleAuth' }, () => {
           updateAuthUI(false);
           showStatusToast();
         });
       } else {
-        authBtn.textContent = '⏳ Connecting...';
+        if (authLabel) authLabel.textContent = '⏳ Connecting...';
         chrome.runtime.sendMessage({ action: 'connectGoogleAuth' }, (res) => {
           if (res && res.success) {
             updateAuthUI(true);

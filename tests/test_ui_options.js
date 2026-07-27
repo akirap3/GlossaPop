@@ -285,6 +285,46 @@ async function runUiOptionsSuite() {
     }
   }
 
+  // -------------------------------------------------------------
+  // [SUB-SUITE 1.8] Explain 1 & Explain 2 Vertical Alignment Test
+  // -------------------------------------------------------------
+  console.log('\n▶ [1.8] Checking Explain 1 & Explain 2 Vertical Alignment Rules');
+  const htmlContent = fs.readFileSync(path.join(__dirname, '../options.html'), 'utf8');
+  const cssContent = fs.readFileSync(path.join(__dirname, '../options.css'), 'utf8');
+
+  const hasAlignStart = htmlContent.includes('align-items: start;') || htmlContent.includes('align-items: flex-start;') || (cssContent.includes('.matrix-grid') && (cssContent.includes('align-items: start') || cssContent.includes('align-items: flex-start')));
+  const hasMatchingHints = htmlContent.includes('Primary definition target') && htmlContent.includes('Secondary definition target');
+
+  if (hasAlignStart && hasMatchingHints) {
+    console.log('   ✅ PASS: Explain 1 & Explain 2 layout alignment rules (align-items: start & matching hints) verified');
+    passed++;
+  } else {
+    console.log('   ❌ FAIL: Explain 1 & Explain 2 layout alignment rules incomplete');
+    failed++;
+  }
+
+  // -------------------------------------------------------------
+  // [SUB-SUITE 1.9] RWD Layout, 3-Tile Theme Switcher & Auth Toggle Switch Test
+  // -------------------------------------------------------------
+  console.log('\n▶ [1.9] Checking Options Page RWD Layout, 3-Tile Theme Switcher & Auth Toggle Switch');
+  const hasViewportMeta = htmlContent.includes('<meta name="viewport"') && htmlContent.includes('width=device-width');
+  const has860Breakpoint = cssContent.includes('@media') && cssContent.includes('max-width: 860px');
+  const hasMinWidthZero = cssContent.includes('min-width: 0;');
+  const hasRadioGap = cssContent.includes('.radio-card-group') && cssContent.includes('gap:');
+  const hasFlexWrap = cssContent.includes('.cloud-status-strip') && cssContent.includes('flex-wrap: wrap') && cssContent.includes('.sheets-actions-group') && cssContent.includes('flex-wrap: wrap');
+  const hasCenteredFooter = cssContent.includes('.footer') && cssContent.includes('justify-content: center') && cssContent.includes('text-align: center');
+  const has1200Container = cssContent.includes('.container') && (cssContent.includes('max-width: 1200px') || cssContent.includes('max-width: 100%'));
+  const hasSegmentedTiles = cssContent.includes('.segmented-control') && cssContent.includes('.segmented-control label');
+  const hasAuthToggleSwitch = htmlContent.includes('google-auth-toggle') && cssContent.includes('.toggle-switch') && cssContent.includes('.toggle-slider');
+
+  if (hasViewportMeta && has860Breakpoint && hasMinWidthZero && hasRadioGap && hasFlexWrap && hasCenteredFooter && has1200Container && hasSegmentedTiles && hasAuthToggleSwitch) {
+    console.log('   ✅ PASS: Options Page 3-tile theme switcher, accessible Google Auth toggle switch, and centered footer verified');
+    passed++;
+  } else {
+    console.log('   ❌ FAIL: Accessible Google Auth toggle switch or styles missing');
+    failed++;
+  }
+
   console.log('\n===============================================================');
   console.log(`📊 Categorized Suite 1 Summary: ${passed} PASSED / ${failed} FAILED out of ${passed + failed} Checks`);
   console.log('===============================================================');
