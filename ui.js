@@ -1069,13 +1069,18 @@ const UIComponents = {
   },
 
   /**
-   * Renders Example Sentence & Highlight Target Word context
+   * Renders Example Sentence & Highlight Target Word context (supports webpage context capture)
+   */
+  /**
+   * Renders Example Sentence & Highlight Target Word
    */
   renderExample(exampleBox, data, activeTargetLang) {
-    if (data.example && data.example.text) {
-      // Highlight target word context case-insensitively
-      const wordToHighlight = data.word || (data.lemmaInfo ? data.lemmaInfo.lemma : "");
-      let textHtml = escapeHtml(data.example.text);
+    if (data && data.example && data.example.text) {
+      const exampleText = data.example.text;
+      const exampleTranslation = data.example.translation || '';
+      const wordToHighlight = data.word || (data.lemmaInfo ? data.lemmaInfo.lemma : '');
+      
+      let textHtml = escapeHtml(exampleText);
       if (wordToHighlight) {
         const stem = wordToHighlight.length > 4 ? wordToHighlight.slice(0, -2) : wordToHighlight;
         const regexStr = `\\b(${wordToHighlight}|${stem}[a-z]{0,4})\\b`;
@@ -1092,17 +1097,20 @@ const UIComponents = {
 
       exampleBox.innerHTML = `
         <div class="glossapop-example-header">
-          <span>Example Sentence</span>
+          <span>EXAMPLE SENTENCE</span>
           <button class="glossapop-example-speak-btn" title="Pronounce example sentence">
             <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
           </button>
         </div>
         <div class="glossapop-example-text">"${textHtml}"</div>
-        ${data.example.translation ? `<div class="glossapop-example-translation">${escapeHtml(data.example.translation)}</div>` : ''}
+        ${exampleTranslation ? `<div class="glossapop-example-translation">${escapeHtml(exampleTranslation)}</div>` : ''}
       `;
-      exampleBox.querySelector('.glossapop-example-speak-btn').onclick = () => {
-        playPronunciation(data.example.text, activeTargetLang, null);
-      };
+      const speakBtn = exampleBox.querySelector('.glossapop-example-speak-btn');
+      if (speakBtn) {
+        speakBtn.onclick = () => {
+          playPronunciation(exampleText, activeTargetLang, null);
+        };
+      }
       exampleBox.style.display = 'block';
     } else {
       exampleBox.style.display = 'none';

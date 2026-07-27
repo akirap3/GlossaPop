@@ -1,4 +1,16 @@
-// events.js - Listens for mouseup selections, dblclicks, and page clicks
+// Helper to walk up DOM tree to find true block container (e.g. <p>, <div>, <article>)
+function findBlockContainer(node) {
+  let el = node ? (node.nodeType === 1 ? node : node.parentElement) : null;
+  const blockTags = new Set(['P', 'DIV', 'ARTICLE', 'SECTION', 'LI', 'TD', 'TH', 'MAIN', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+  while (el && el !== document.body && el !== document.documentElement) {
+    if (blockTags.has(el.tagName)) {
+      const text = (el.innerText || el.textContent || '').trim();
+      if (text.length > 20) return el;
+    }
+    el = el.parentElement;
+  }
+  return node ? (node.parentElement || node) : null;
+}
 
 // Listen for mouseup selection event (to show the trigger bubble)
 document.addEventListener('mouseup', (e) => {

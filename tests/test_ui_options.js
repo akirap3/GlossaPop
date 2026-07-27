@@ -260,6 +260,31 @@ async function runUiOptionsSuite() {
     }
   });
 
+  // -------------------------------------------------------------
+  // [SUB-SUITE 1.7] Dictionary Example Sentence Box Rendering
+  // -------------------------------------------------------------
+  console.log('\n▶ [1.7] Checking Standard Dictionary Example Sentence Box Rendering');
+  const mockExampleBox = new MockElement('div', 'glossapop-example-box');
+  const testData = {
+    word: 'versuche',
+    example: { text: "Ich versuche es.", translation: "I'll try it." }
+  };
+
+  if (typeof UIComponents.renderExample === 'function') {
+    UIComponents.renderExample(mockExampleBox, testData, 'de');
+    const html = mockExampleBox.innerHTML;
+    const hasExampleHeader = html.includes('EXAMPLE SENTENCE') || html.includes('Example Sentence');
+    const hasHighlight = html.includes('glossapop-highlight') && html.includes('versuche');
+
+    if (hasExampleHeader && hasHighlight) {
+      console.log('   ✅ PASS: Dictionary Example Sentence header and target word highlight rendered');
+      passed++;
+    } else {
+      console.log(`   ❌ FAIL: Example Sentence box rendering error: "${html}"`);
+      failed++;
+    }
+  }
+
   console.log('\n===============================================================');
   console.log(`📊 Categorized Suite 1 Summary: ${passed} PASSED / ${failed} FAILED out of ${passed + failed} Checks`);
   console.log('===============================================================');

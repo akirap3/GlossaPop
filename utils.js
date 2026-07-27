@@ -484,3 +484,5 @@ function detectPageLanguage(doc) {
 
   return 'en';
 }
+
+

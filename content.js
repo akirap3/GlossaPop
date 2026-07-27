@@ -188,8 +188,9 @@ async function fetchAndDisplay(word, isInitial = false) {
   if (exampleBox) exampleBox.style.display = 'none';
   if (externalLinksBox) externalLinksBox.style.display = 'none';
 
-  // Determine query source language (use 'auto' for initial queries)
-  const sourceLangQuery = isInitial ? 'auto' : activeTargetLang;
+  // Determine query source language (use sensed webpage language or fallback to 'auto')
+  const sensedPageLang = (typeof detectPageLanguage === 'function') ? detectPageLanguage(document) : 'en';
+  const sourceLangQuery = isInitial ? (sensedPageLang || 'auto') : activeTargetLang;
 
   // Query background.js proxy to avoid CORS barriers
   chrome.runtime.sendMessage({
