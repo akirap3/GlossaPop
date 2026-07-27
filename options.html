@@ -33,7 +33,7 @@
             </div>
           </div>
 
-          <div class="matrix-grid" style="grid-template-columns: 1fr 1fr; margin-top: 16px;">
+          <div class="matrix-grid" style="grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 16px;">
             <div class="select-group">
               <label class="select-label">
                 <span class="label-badge badge-green">Explain 1</span> Primary Target
@@ -50,7 +50,11 @@
                 <option value="it">Italian (it)</option>
                 <option value="pt">Portuguese (pt)</option>
               </select>
-              <span class="select-hint">Primary definition and translation target</span>
+              <span class="select-hint">Primary definition target</span>
+            </div>
+
+            <div class="swap-btn-container">
+              <button id="swap-explain-langs" class="swap-lang-btn" title="Swap Primary & Secondary Languages">⇄</button>
             </div>
 
             <div class="select-group">

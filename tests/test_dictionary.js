@@ -315,9 +315,32 @@ async function runAllTests() {
   }
 
   // -------------------------------------------------------------
+  // SUITE 7: Wiktionary CSS Leakage Stripper Suite
+  // -------------------------------------------------------------
+  console.log('\n▶ [SUITE 7/7] Wiktionary CSS Leakage Stripper Suite');
+  const dirtyEntry = [
+    {
+      partOfSpeech: '動詞',
+      definitions: [
+        { definition: '試試 .mw-parser-output .object-usage-tag{font-style:italic}.mw-parser-output .deprecated{color:var(--wikt-palette-grey-lime-8,olivedrab)} [ 與 zu ( + 不定式 ) ‘' }
+      ]
+    }
+  ];
+
+  const res = parseWiktionaryDefinitions(dirtyEntry);
+  const cleanDef = res.definitions[0] || '';
+  if (!cleanDef.includes('.mw-parser-output') && !cleanDef.includes('font-style:italic') && cleanDef.includes('試試')) {
+    passedCount++;
+    console.log(`   ✅ Suite 7 Completed. Definition cleaned: "${cleanDef}"`);
+  } else {
+    console.log(`   ❌ Suite 7 FAIL: Definition contains CSS leak: "${cleanDef}"`);
+    failedCount++;
+  }
+
+  // -------------------------------------------------------------
   // Final Test Summary
   // -------------------------------------------------------------
-  const totalTests = 100 + 12 + 35 + 8 + 6 + 1; // 162 Total Verification Checks
+  const totalTests = 100 + 12 + 35 + 8 + 6 + 1 + 1; // 163 Total Verification Checks
   console.log(`\n===============================================================`);
   console.log(`📊 Comprehensive QA Summary: ${passedCount} PASSED / ${failedCount} FAILED out of ${totalTests} Total Verification Checks`);
   console.log(`===============================================================\n`);

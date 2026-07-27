@@ -59,6 +59,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1500);
   }
 
+  // Swap languages button listener
+  const swapBtn = document.getElementById('swap-explain-langs');
+  if (swapBtn) {
+    swapBtn.addEventListener('click', () => {
+      swapLanguageOptions(explainLangA, explainLangB);
+      chrome.storage.sync.set({
+        explainLangA: explainLangA ? explainLangA.value : 'zh-TW',
+        explainLangB: explainLangB ? explainLangB.value : 'en'
+      }, () => showStatusToast());
+    });
+  }
+
   // Monitor select dropdown changes to auto-save values instantly
   [explainLangA, explainLangB].forEach(selectEl => {
     if (selectEl) {
@@ -238,4 +250,15 @@ function syncLanguageDropdownOptions(selectA, selectB) {
       syncLanguageDropdownOptions(selectA, selectB);
     }
   }
+}
+
+/**
+ * Swaps Primary and Secondary Target language dropdown values
+ */
+function swapLanguageOptions(selectA, selectB) {
+  if (!selectA || !selectB) return;
+  const temp = selectA.value;
+  selectA.value = selectB.value;
+  selectB.value = temp;
+  syncLanguageDropdownOptions(selectA, selectB);
 }

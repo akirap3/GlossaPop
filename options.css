@@ -129,6 +129,36 @@ h1 {
   color: var(--text-muted);
 }
 
+/* Swap Button Container */
+.swap-btn-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 10px;
+}
+.swap-lang-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--card-box-border);
+  background: var(--input-bg);
+  color: var(--accent-blue);
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.swap-lang-btn:hover {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border-color: var(--accent-blue);
+  transform: scale(1.1) rotate(180deg);
+}
+
 /* Card Box Containers */
 .card-box {
   background: var(--card-box-bg);
@@ -176,6 +206,7 @@ h2 {
   align-items: center;
   gap: 5px;
   margin-bottom: 5px;
+  white-space: nowrap;
 }
 
 .label-badge {
@@ -183,6 +214,7 @@ h2 {
   padding: 1px 5px;
   border-radius: 4px;
   font-weight: 700;
+  white-space: nowrap;
 }
 .badge-blue { background: rgba(10, 132, 255, 0.2); color: #64d2ff; }
 .badge-purple { background: rgba(191, 90, 242, 0.2); color: #bf5af2; }

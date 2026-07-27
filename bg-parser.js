@@ -30,7 +30,10 @@ function parseWiktionaryDefinitions(entries) {
           d.antonyms.forEach(a => antonyms.add(a.replace(/<[^>]+>/g, '').trim()));
         }
 
-        // Strip HTML tags
+        // Strip CSS style blocks and .mw-parser-output noise
+        defText = defText.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+        defText = defText.replace(/(\.mw-parser-output|\.[a-z0-9_\-]+)\s*\{[^}]*\}/gi, '');
+        defText = defText.replace(/\.mw-parser-output/gi, '');
         defText = defText.replace(/<[^>]+>/g, ' ');
         defText = defText.replace(/\s+/g, ' ').trim();
         if (defText) {

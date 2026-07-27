@@ -1,77 +1,53 @@
-// test_languages.js - TDD Unit Tests for 2x2 Multi-Language Matrix Upgrade
+// test_languages.js - Categorized Suite 2 for Multi-Language Matrix, Sensor & Dynamic Reference Links
 
 const fs = require('fs');
 const path = require('path');
 
-// Storage & Chrome API Mocks
-let mockStorageSync = {};
+// Load dependencies
+const utilsCode = fs.readFileSync(path.join(__dirname, '../utils.js'), 'utf8');
+eval(utilsCode);
 
 global.chrome = {
   storage: {
     sync: {
-      get: (defaults, cb) => {
-        const result = { ...defaults };
-        Object.keys(defaults).forEach(k => {
-          if (mockStorageSync[k] !== undefined) {
-            result[k] = mockStorageSync[k];
-          }
-        });
-        cb(result);
-      },
-      set: (obj, cb) => {
-        Object.assign(mockStorageSync, obj);
-        if (cb) cb();
-      }
+      get: (defaults, cb) => cb(defaults),
+      set: (obj, cb) => cb && cb()
     },
-    onChanged: {
-      addListener: () => {}
-    }
-  },
-  runtime: {}
+    onChanged: { addListener: () => {} }
+  }
 };
 
-// Load settings script
 const settingsCode = fs.readFileSync(path.join(__dirname, '../settings.js'), 'utf8');
 eval(settingsCode.replace('let settings =', 'global.settings ='));
 
-// Load audio script
 const audioCode = fs.readFileSync(path.join(__dirname, '../audio.js'), 'utf8');
 eval(audioCode);
 
-// Load ui script
-global.escapeHtml = str => str || '';
-const uiCode = fs.readFileSync(path.join(__dirname, '../ui.js'), 'utf8');
-eval(uiCode.replace('const UIComponents =', 'global.UIComponents ='));
-
-async function runLanguageMatrixTddTests() {
+async function runLanguagesSuite() {
   console.log('===============================================================');
-  console.log('🧪 GlossaPop 2x2 Multi-Language Matrix TDD Unit Test Suite');
+  console.log('🧪 GlossaPop Categorized Suite 2: Languages, Sensor & Links');
   console.log('===============================================================');
 
   let passed = 0;
   let failed = 0;
 
-  // TEST 1: Default Settings Schema for 2x2 Language Matrix
-  console.log('\n▶ [Test 1] Checking Default 2x2 Language Matrix Settings');
-  mockStorageSync = {};
-  await loadSettings();
-
-  if (
-    settings.sourceLangA === 'en' &&
-    settings.sourceLangB === 'fr' &&
-    settings.explainLangA === 'zh-TW' &&
-    settings.explainLangB === 'en'
-  ) {
-    console.log('   ✅ PASS: Default 2x2 language matrix initialized correctly');
+  // -------------------------------------------------------------
+  // [SUB-SUITE 2.1] Default Language Settings Initialization
+  // -------------------------------------------------------------
+  console.log('\n▶ [2.1] Checking Default Language Settings');
+  if (settings.explainLangA === 'zh-TW' && settings.explainLangB === 'en') {
+    console.log('   ✅ PASS: Default explanation language matrix initialized correctly');
     passed++;
   } else {
-    console.log('   ❌ FAIL: Settings missing sourceLangA/sourceLangB/explainLangA/explainLangB schema:', settings);
+    console.log('   ❌ FAIL: Default language matrix initialization error');
     failed++;
   }
 
-  // TEST 2: Multi-Language Speech Locale Mapper
-  console.log('\n▶ [Test 2] Checking Audio Speech Voice Locales (ES, DE, JA, KO, IT, PT)');
-  const localeTests = [
+  // -------------------------------------------------------------
+  // [SUB-SUITE 2.2] Audio Speech Voice Locales
+  // -------------------------------------------------------------
+  console.log('\n▶ [2.2] Checking Audio Speech Voice Locales');
+  const locales = [
     { lang: 'en', expected: 'en-US' },
     { lang: 'fr', expected: 'fr-FR' },
     { lang: 'es', expected: 'es-ES' },
@@ -82,25 +58,22 @@ async function runLanguageMatrixTddTests() {
     { lang: 'pt', expected: 'pt-PT' }
   ];
 
-  localeTests.forEach(item => {
-    if (typeof getSpeechVoiceLocale === 'function') {
-      const loc = getSpeechVoiceLocale(item.lang);
-      if (loc === item.expected) {
-        console.log(`   ✅ PASS: Language "${item.lang}" ➔ Locale "${loc}"`);
-        passed++;
-      } else {
-        console.log(`   ❌ FAIL: Language "${item.lang}" expected "${item.expected}", got "${loc}"`);
-        failed++;
-      }
+  locales.forEach(loc => {
+    const res = getSpeechVoiceLocale(loc.lang);
+    if (res === loc.expected) {
+      console.log(`   ✅ PASS: Language "${loc.lang}" ➔ Locale "${res}"`);
+      passed++;
     } else {
-      console.log(`   ❌ FAIL: getSpeechVoiceLocale function not implemented`);
+      console.log(`   ❌ FAIL: Language "${loc.lang}" ➔ Got "${res}", expected "${loc.expected}"`);
       failed++;
     }
   });
 
-  // TEST 3: Language Code Display Label Helper
-  console.log('\n▶ [Test 3] Checking Language Display Label Generator');
-  const labelTests = [
+  // -------------------------------------------------------------
+  // [SUB-SUITE 2.3] Language Display Labels
+  // -------------------------------------------------------------
+  console.log('\n▶ [2.3] Checking Language Display Labels');
+  const labels = [
     { code: 'en', expected: 'EN' },
     { code: 'fr', expected: 'FR' },
     { code: 'es', expected: 'ES' },
@@ -113,50 +86,157 @@ async function runLanguageMatrixTddTests() {
     { code: 'zh-CN', expected: '簡中' }
   ];
 
-  labelTests.forEach(item => {
-    if (typeof getLanguageLabel === 'function') {
-      const label = getLanguageLabel(item.code);
-      if (label === item.expected) {
-        console.log(`   ✅ PASS: Code "${item.code}" ➔ Label "${label}"`);
-        passed++;
-      } else {
-        console.log(`   ❌ FAIL: Code "${item.code}" expected "${item.expected}", got "${label}"`);
-        failed++;
-      }
+  labels.forEach(lbl => {
+    const res = getLanguageLabel(lbl.code);
+    if (res === lbl.expected) {
+      console.log(`   ✅ PASS: Code "${lbl.code}" ➔ Label "${res}"`);
+      passed++;
     } else {
-      console.log(`   ❌ FAIL: getLanguageLabel function not implemented`);
+      console.log(`   ❌ FAIL: Code "${lbl.code}" ➔ Got "${res}", expected "${lbl.expected}"`);
       failed++;
     }
   });
 
-  // TEST 4: Japanese ('ja') detectedLang Highlight Activation Test
-  console.log('\n▶ [Test 4] Checking Japanese ("ja") detectedLang Active Highlight');
-  const mockTargetGroup = {
-    querySelectorAll: () => [
-      { dataset: { val: 'ja' }, classList: { add: (c) => mockTargetGroup.activeVal = 'ja', remove: (c) => {} } },
-      { dataset: { val: 'de' }, classList: { add: (c) => mockTargetGroup.activeVal = 'de', remove: (c) => {} } }
-    ]
-  };
-  const activeDetectedLang = 'ja';
-  const buttons = mockTargetGroup.querySelectorAll();
-  let matchedBtn = buttons.find(btn => 
-    btn.dataset.val === activeDetectedLang || 
-    activeDetectedLang.startsWith(btn.dataset.val) || 
-    btn.dataset.val.startsWith(activeDetectedLang)
-  );
-  if (matchedBtn) matchedBtn.classList.add('active');
+  // -------------------------------------------------------------
+  // [SUB-SUITE 2.4] Auto Page Language Sensor (detectPageLanguage)
+  // -------------------------------------------------------------
+  console.log('\n▶ [2.4] Checking Automatic Page Language Sensor (detectPageLanguage)');
+  const domTests = [
+    { doc: { documentElement: { lang: 'ja' } }, expected: 'ja' },
+    { doc: { documentElement: { lang: 'fr-FR' } }, expected: 'fr' },
+    { doc: { documentElement: { lang: 'es-ES' } }, expected: 'es' },
+    { doc: { documentElement: { lang: 'de' } }, expected: 'de' },
+    { doc: { documentElement: { lang: '' }, querySelector: () => ({ getAttribute: () => 'zh_TW' }) }, expected: 'zh-TW' },
+    { doc: { documentElement: { lang: '' }, querySelector: () => null }, expected: 'en' }
+  ];
 
-  if (mockTargetGroup.activeVal === 'ja') {
-    console.log('   ✅ PASS: Japanese ("ja") segment button successfully highlighted blue');
-    passed++;
-  } else {
-    console.log('   ❌ FAIL: Japanese ("ja") segment button failed to highlight blue');
-    failed++;
-  }
-  console.log(`📊 TDD Test Summary: ${passed} PASSED / ${failed} FAILED out of ${passed + failed} Checks`);
+  domTests.forEach((t, i) => {
+    const res = detectPageLanguage(t.doc);
+    if (res === t.expected) {
+      console.log(`   ✅ PASS: Sensor Case ${i + 1} ➔ Detected "${res}"`);
+      passed++;
+    } else {
+      console.log(`   ❌ FAIL: Sensor Case ${i + 1} expected "${t.expected}", got "${res}"`);
+      failed++;
+    }
+  });
+
+  // -------------------------------------------------------------
+  // [SUB-SUITE 2.5] Dynamic Language Reference Links
+  // -------------------------------------------------------------
+  console.log('\n▶ [2.5] Checking Language-Aware Dynamic Reference Links');
+  const linkTests = [
+    {
+      lang: 'ja', word: '番組',
+      expectedNames: ['Jisho', 'Weblio', 'OJAD'],
+      expectedUrls: [
+        'https://jisho.org/search/%E7%95%AA%E7%B5%84',
+        'https://cjjc.weblio.jp/content/%E7%95%AA%E7%B5%84',
+        'https://www.gavo.t.u-tokyo.ac.jp/ojad/search/index/word:%E7%95%AA%E7%B5%84'
+      ]
+    },
+    {
+      lang: 'fr', explainLang: 'zh-TW', word: 'contente',
+      expectedNames: ['Larousse', 'WordReference', 'CNRTL', '法語助手'],
+      expectedUrls: [
+        'https://www.larousse.fr/dictionnaires/francais/contente',
+        'https://www.wordreference.com/fren/contente',
+        'https://www.cnrtl.fr/definition/contente',
+        'https://www.frdic.com/dicts/fr/contente'
+      ]
+    },
+    {
+      lang: 'fr', explainLang: 'en', word: 'contente',
+      expectedNames: ['Larousse', 'WordReference', 'CNRTL'],
+      expectedUrls: [
+        'https://www.larousse.fr/dictionnaires/francais/contente',
+        'https://www.wordreference.com/fren/contente',
+        'https://www.cnrtl.fr/definition/contente'
+      ]
+    },
+    {
+      lang: 'es', word: 'hola',
+      expectedNames: ['SpanishDict', 'RAE', 'WordReference'],
+      expectedUrls: [
+        'https://www.spanishdict.com/translate/hola',
+        'https://dle.rae.es/hola',
+        'https://www.wordreference.com/es/en/translation.asp?spen=hola'
+      ]
+    },
+    {
+      lang: 'de', word: 'haus',
+      expectedNames: ['Duden', 'DWDS', 'Leo'],
+      expectedUrls: [
+        'https://www.duden.de/suchen/dudenonline/haus',
+        'https://www.dwds.de/wb/haus',
+        'https://dict.leo.org/german-english/haus'
+      ]
+    },
+    {
+      lang: 'ko', word: '안녕',
+      expectedNames: ['Naver', 'Daum'],
+      expectedUrls: [
+        'https://dict.naver.com/search.nhn?query=%EC%95%88%EB%85%95',
+        'https://dic.daum.net/search.do?q=%EC%95%88%EB%85%95'
+      ]
+    },
+    {
+      lang: 'it', word: 'ciao',
+      expectedNames: ['Treccani', 'WordReference'],
+      expectedUrls: [
+        'https://www.treccani.it/vocabolario/ricerca/ciao/',
+        'https://www.wordreference.com/iten/ciao'
+      ]
+    },
+    {
+      lang: 'pt', word: 'obrigado',
+      expectedNames: ['Priberam', 'WordReference'],
+      expectedUrls: [
+        'https://dicionario.priberam.org/obrigado',
+        'https://www.wordreference.com/pten/obrigado'
+      ]
+    },
+    {
+      lang: 'zh-TW', word: '萌典',
+      expectedNames: ['MoeDict', 'WordReference'],
+      expectedUrls: [
+        'https://www.moedict.tw/%E8%90%8C%E5%85%B8',
+        'https://www.wordreference.com/zhen/%E8%90%8C%E5%85%B8'
+      ]
+    },
+    {
+      lang: 'en', word: 'cat',
+      expectedNames: ['Cambridge', 'Oxford', 'Merriam-Webster'],
+      expectedUrls: [
+        'https://dictionary.cambridge.org/dictionary/english/cat',
+        'https://www.oxfordlearnersdictionaries.com/definition/english/cat',
+        'https://www.merriam-webster.com/dictionary/cat'
+      ]
+    }
+  ];
+
+  linkTests.forEach((tc, idx) => {
+    const res = getDynamicReferenceLinks(tc.word, tc.lang, tc.explainLang || '');
+    const names = res.map(l => l.name);
+    const urls = res.map(l => l.url);
+
+    const namesMatch = JSON.stringify(names) === JSON.stringify(tc.expectedNames);
+    const urlsMatch = JSON.stringify(urls) === JSON.stringify(tc.expectedUrls);
+
+    if (namesMatch && urlsMatch) {
+      console.log(`   ✅ PASS: Links Case ${idx + 1} (${tc.lang}) ➔ ${JSON.stringify(names)} matched`);
+      passed++;
+    } else {
+      console.log(`   ❌ FAIL: Links Case ${idx + 1} (${tc.lang}) failed`);
+      failed++;
+    }
+  });
+
+  console.log('\n===============================================================');
+  console.log(`📊 Categorized Suite 2 Summary: ${passed} PASSED / ${failed} FAILED out of ${passed + failed} Checks`);
   console.log('===============================================================');
 
   if (failed > 0) process.exit(1);
 }
 
-runLanguageMatrixTddTests();
+runLanguagesSuite();

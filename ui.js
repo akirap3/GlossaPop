@@ -151,14 +151,15 @@ const POPUP_CSS = `
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 8px;
-    background: rgba(10, 132, 255, 0.14);
-    border: 1px solid rgba(10, 132, 255, 0.3);
-    color: #0066cc;
-    font-size: 11px;
+    background: #0066cc;
+    border: 1px solid rgba(0, 102, 204, 0.2);
+    color: #ffffff;
+    font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(0, 102, 204, 0.25);
     user-select: none;
   }
 
@@ -690,11 +691,18 @@ const POPUP_CSS = `
   .glossapop-dark .glossapop-cefr-badge.cefr-c1 { --cefr-color: #da8fff; --cefr-bg: rgba(218, 143, 255, 0.15); }
   .glossapop-dark .glossapop-cefr-badge.cefr-c2 { --cefr-color: #ff375f; --cefr-bg: rgba(255, 55, 95, 0.15); }
   .glossapop-dark .glossapop-phonetic { color: #64d2ff; }
+  .glossapop-dark .glossapop-badge-tag {
+    background: linear-gradient(135deg, #0a84ff, #5e5ce6);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(10, 132, 255, 0.55);
+  }
   .glossapop-dark .glossapop-segment-btn { color: #e5e5ea; }
   .glossapop-dark .glossapop-segment-btn.active {
-    background: #0a84ff;
-    color: #ffffff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    background: rgba(10, 132, 255, 0.22);
+    border: 1px solid rgba(10, 132, 255, 0.4);
+    color: #64d2ff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   }
   .glossapop-dark .glossapop-content { color: #ffffff; }
   .glossapop-dark .glossapop-meaning-item { color: #ffffff; border-left-color: #0a84ff; }
@@ -762,8 +770,9 @@ const POPUP_CSS = `
     .glossapop-card:not(.glossapop-light) .glossapop-cefr-badge.cefr-c1 { --cefr-color: #da8fff; --cefr-bg: rgba(218, 143, 255, 0.15); }
     .glossapop-card:not(.glossapop-light) .glossapop-cefr-badge.cefr-c2 { --cefr-color: #ff375f; --cefr-bg: rgba(255, 55, 95, 0.15); }
     .glossapop-card:not(.glossapop-light) .glossapop-phonetic { color: #64d2ff; }
+    .glossapop-card:not(.glossapop-light) .glossapop-badge-tag { background: linear-gradient(135deg, #0a84ff, #5e5ce6); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; box-shadow: 0 3px 10px rgba(10, 132, 255, 0.55); }
     .glossapop-card:not(.glossapop-light) .glossapop-segment-btn { color: #e5e5ea; }
-    .glossapop-card:not(.glossapop-light) .glossapop-segment-btn.active { background: #0a84ff; color: #ffffff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); }
+    .glossapop-card:not(.glossapop-light) .glossapop-segment-btn.active { background: rgba(10, 132, 255, 0.22); border: 1px solid rgba(10, 132, 255, 0.4); color: #64d2ff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
     .glossapop-card:not(.glossapop-light) .glossapop-content { color: #ffffff; }
     .glossapop-card:not(.glossapop-light) .glossapop-meaning-item { color: #ffffff; border-left-color: #0a84ff; }
     .glossapop-card:not(.glossapop-light) .glossapop-speak-btn { background: rgba(10, 132, 255, 0.15); color: #0a84ff; }
