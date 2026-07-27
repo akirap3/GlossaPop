@@ -435,3 +435,52 @@ function getDynamicReferenceLinks(word, lang, explainLang = '') {
     { name: 'Merriam-Webster', url: `https://www.merriam-webster.com/dictionary/${encoded}` }
   ];
 }
+
+/**
+ * Automatically senses the primary language of the current webpage DOM
+ */
+function detectPageLanguage(doc) {
+  const d = doc || (typeof document !== 'undefined' ? document : null);
+  if (!d) return 'en';
+
+  // 1. Check <html lang="..."> attribute
+  if (d.documentElement && d.documentElement.lang) {
+    const raw = d.documentElement.lang.trim();
+    if (raw) {
+      const lower = raw.toLowerCase();
+      if (lower.startsWith('ja')) return 'ja';
+      if (lower.startsWith('fr')) return 'fr';
+      if (lower.startsWith('es')) return 'es';
+      if (lower.startsWith('de')) return 'de';
+      if (lower.startsWith('ko')) return 'ko';
+      if (lower.startsWith('it')) return 'it';
+      if (lower.startsWith('pt')) return 'pt';
+      if (lower.startsWith('zh-cn') || lower === 'zh-hans') return 'zh-CN';
+      if (lower.startsWith('zh')) return 'zh-TW';
+      if (lower.startsWith('en')) return 'en';
+      return lower.split('-')[0];
+    }
+  }
+
+  // 2. Check <meta property="og:locale"> or <meta http-equiv="content-language">
+  try {
+    const metaLocale = d.querySelector('meta[property="og:locale"], meta[name="og:locale"], meta[http-equiv="content-language"]');
+    if (metaLocale) {
+      const val = (metaLocale.getAttribute('content') || '').toLowerCase().trim();
+      if (val) {
+        if (val.includes('ja')) return 'ja';
+        if (val.includes('fr')) return 'fr';
+        if (val.includes('es')) return 'es';
+        if (val.includes('de')) return 'de';
+        if (val.includes('ko')) return 'ko';
+        if (val.includes('it')) return 'it';
+        if (val.includes('pt')) return 'pt';
+        if (val.includes('zh_tw') || val.includes('zh-tw')) return 'zh-TW';
+        if (val.includes('zh_cn') || val.includes('zh-cn')) return 'zh-CN';
+        if (val.includes('en')) return 'en';
+      }
+    }
+  } catch (e) {}
+
+  return 'en';
+}

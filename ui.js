@@ -147,6 +147,20 @@ const POPUP_CSS = `
     color: #1c1c1e;
     transform: scale(1.15);
   }
+  .glossapop-badge-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 10px;
+    border-radius: 8px;
+    background: rgba(10, 132, 255, 0.14);
+    border: 1px solid rgba(10, 132, 255, 0.3);
+    color: #0066cc;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    user-select: none;
+  }
 
   /* Save Word Button */
   .glossapop-save-btn {
@@ -826,9 +840,8 @@ const UIComponents = {
         </div>
       </div>
       <div class="glossapop-toggles">
-        <div class="glossapop-segment" id="target-lang-group">
-          <button class="glossapop-segment-btn ${activeTargetLang === sLangA ? 'active' : ''}" data-val="${sLangA}">${getLanguageLabel(sLangA)}</button>
-          <button class="glossapop-segment-btn ${activeTargetLang === sLangB ? 'active' : ''}" data-val="${sLangB}">${getLanguageLabel(sLangB)}</button>
+        <div class="glossapop-badge-tag" id="target-lang-group" title="Detected Webpage Language">
+          ${getLanguageLabel(activeTargetLang)}
         </div>
         <div class="glossapop-segment" id="explain-lang-group">
           <button class="glossapop-segment-btn ${activeExplainLang === eLangA ? 'active' : ''}" data-val="${eLangA}">${getLanguageLabel(eLangA)}</button>

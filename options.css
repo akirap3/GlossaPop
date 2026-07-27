@@ -98,6 +98,37 @@ h1 {
   grid-column: 1 / -1;
 }
 
+/* Auto Sensor Banner */
+.auto-sensor-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(10, 132, 255, 0.08);
+  border: 1px solid rgba(10, 132, 255, 0.22);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 8px;
+}
+.sensor-icon {
+  font-size: 18px;
+}
+.sensor-text {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-main);
+}
+.sensor-status {
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--accent-blue);
+  font-weight: 700;
+}
+.sensor-desc {
+  margin: 4px 0 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 /* Card Box Containers */
 .card-box {
   background: var(--card-box-bg);

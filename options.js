@@ -32,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (explainLangA) explainLangA.value = items.explainLangA;
     if (explainLangB) explainLangB.value = items.explainLangB;
 
+    // Apply mutual exclusivity sync on startup
+    syncLanguageDropdownOptions(explainLangA, explainLangB);
+
     // Trigger Mode Selection
     const validTriggerMode = ['icon', 'dblclick'].includes(items.triggerMode) ? items.triggerMode : 'icon';
     const triggerRadio = document.querySelector(`input[name="triggerMode"][value="${validTriggerMode}"]`);
@@ -57,12 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Monitor select dropdown changes to auto-save values instantly
-  [sourceLangA, sourceLangB, explainLangA, explainLangB].forEach(selectEl => {
+  [explainLangA, explainLangB].forEach(selectEl => {
     if (selectEl) {
       selectEl.addEventListener('change', () => {
+        syncLanguageDropdownOptions(explainLangA, explainLangB);
         chrome.storage.sync.set({
-          sourceLangA: sourceLangA ? sourceLangA.value : 'en',
-          sourceLangB: sourceLangB ? sourceLangB.value : 'fr',
           explainLangA: explainLangA ? explainLangA.value : 'zh-TW',
           explainLangB: explainLangB ? explainLangB.value : 'en'
         }, () => showStatusToast());
@@ -204,3 +206,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+/**
+ * Ensures Primary (explainLangA) and Secondary (explainLangB) Target dropdowns are mutually exclusive
+ */
+function syncLanguageDropdownOptions(selectA, selectB) {
+  if (!selectA || !selectB) return;
+
+  const valA = selectA.value;
+  const valB = selectB.value;
+
+  const optsA = Array.from(selectA.options || (selectA.getElementsByTagName ? selectA.getElementsByTagName('option') : []));
+  const optsB = Array.from(selectB.options || (selectB.getElementsByTagName ? selectB.getElementsByTagName('option') : []));
+
+  // 1. Disable selected value A in selectB options
+  optsB.forEach(opt => {
+    opt.disabled = (opt.value === valA);
+  });
+
+  // 2. Disable selected value B in selectA options
+  optsA.forEach(opt => {
+    opt.disabled = (opt.value === valB);
+  });
+
+  // 3. If selectB collides with selectA, auto-switch selectB to first enabled option
+  if (valB === valA) {
+    const validOptB = optsB.find(opt => !opt.disabled && opt.value !== valA);
+    if (validOptB) {
+      selectB.value = validOptB.value;
+      // Re-run sync to update disabled states for new valB
+      syncLanguageDropdownOptions(selectA, selectB);
+    }
+  }
+}

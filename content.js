@@ -88,8 +88,8 @@ function showPopup(word, x, y) {
   initShadowDOM();
   const card = shadowRoot.querySelector('.glossapop-card');
   
-  // Assign settings default languages
-  activeTargetLang = settings.sourceLangA || 'en';
+  // Sense webpage target language automatically
+  activeTargetLang = (typeof detectPageLanguage === 'function') ? detectPageLanguage(document) : 'en';
   activeExplainLang = settings.explainLangA || 'zh-TW';
 
   // Position card
@@ -210,24 +210,8 @@ async function fetchAndDisplay(word, isInitial = false) {
       if (isInitial && data.detectedLang) {
         activeTargetLang = data.detectedLang;
         const targetGroup = shadowRoot.querySelector('#target-lang-group');
-        if (targetGroup) {
-          const buttons = Array.from(targetGroup.querySelectorAll('.glossapop-segment-btn'));
-          let matchedBtn = buttons.find(btn => 
-            btn.dataset.val === activeTargetLang || 
-            activeTargetLang.startsWith(btn.dataset.val) || 
-            btn.dataset.val.startsWith(activeTargetLang)
-          );
-          if (!matchedBtn && buttons.length > 0) {
-            matchedBtn = buttons[0];
-            activeTargetLang = matchedBtn.dataset.val;
-          }
-          buttons.forEach(btn => {
-            if (btn === matchedBtn) {
-              btn.classList.add('active');
-            } else {
-              btn.classList.remove('active');
-            }
-          });
+        if (targetGroup && typeof getLanguageLabel === 'function') {
+          targetGroup.textContent = getLanguageLabel(activeTargetLang);
         }
       }
 

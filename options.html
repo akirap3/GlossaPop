@@ -22,50 +22,18 @@
         
         <!-- Left Column: 2x2 Multi-Language Matrix Card -->
         <div class="setting-section card-box">
-          <div class="card-header-badge">
-            <h2>🌐 Multi-Language Preferences (2×2 Matrix)</h2>
-            <p class="section-desc">Customize your 2 lookup languages & 2 explanation languages for quick card header toggles.</p>
+          <h2 class="section-title">🌐 Multi-Language Preferences</h2>
+          
+          <div class="auto-sensor-banner">
+            <span class="sensor-icon">⚡</span>
+            <div class="sensor-text">
+              <strong>Lookup Source Language:</strong>
+              <span class="sensor-status">🟢 Auto-Detect Page Language (自動偵測網頁語言)</span>
+              <p class="sensor-desc">GlossaPop automatically senses Japanese, French, Spanish, German, etc. when you read pages.</p>
+            </div>
           </div>
 
-          <div class="matrix-grid">
-            <div class="select-group">
-              <label class="select-label">
-                <span class="label-badge badge-blue">Lookup 1</span> Primary Source
-              </label>
-              <select id="sourceLangA" class="lang-select">
-                <option value="en">English (en)</option>
-                <option value="fr">French (fr)</option>
-                <option value="es">Spanish (es)</option>
-                <option value="de">German (de)</option>
-                <option value="ja">Japanese (ja)</option>
-                <option value="ko">Korean (ko)</option>
-                <option value="it">Italian (it)</option>
-                <option value="pt">Portuguese (pt)</option>
-                <option value="zh-TW">繁體中文 (zh-TW)</option>
-                <option value="zh-CN">簡體中文 (zh-CN)</option>
-              </select>
-              <span class="select-hint">Default lookup language for text queries</span>
-            </div>
-
-            <div class="select-group">
-              <label class="select-label">
-                <span class="label-badge badge-purple">Lookup 2</span> Secondary Source
-              </label>
-              <select id="sourceLangB" class="lang-select">
-                <option value="en">English (en)</option>
-                <option value="fr" selected>French (fr)</option>
-                <option value="es">Spanish (es)</option>
-                <option value="de">German (de)</option>
-                <option value="ja">Japanese (ja)</option>
-                <option value="ko">Korean (ko)</option>
-                <option value="it">Italian (it)</option>
-                <option value="pt">Portuguese (pt)</option>
-                <option value="zh-TW">繁體中文 (zh-TW)</option>
-                <option value="zh-CN">簡體中文 (zh-CN)</option>
-              </select>
-              <span class="select-hint">Alternative lookup language for header toggle</span>
-            </div>
-
+          <div class="matrix-grid" style="grid-template-columns: 1fr 1fr; margin-top: 16px;">
             <div class="select-group">
               <label class="select-label">
                 <span class="label-badge badge-green">Explain 1</span> Primary Target
