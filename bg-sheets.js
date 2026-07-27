@@ -8,59 +8,79 @@ const HEADERS = ['Word', 'IPA', 'CEFR', 'Definition', 'Example Sentence', 'Examp
 /**
  * Obtain Google OAuth 2.0 Auth Token with launchWebAuthFlow fallback
  */
+/**
+ * Obtain Google OAuth 2.0 Auth Token with silent auto-refresh and launchWebAuthFlow support.
+ */
 function getAuthToken(interactive = false) {
   return new Promise((resolve, reject) => {
     if (typeof chrome === 'undefined' || !chrome.identity) {
       return reject(new Error('Chrome Identity API is not available in this context.'));
     }
 
-    // 1. First try standard chrome.identity.getAuthToken
-    chrome.identity.getAuthToken({ interactive }, (token) => {
-      if (!chrome.runtime.lastError && token) {
-        chrome.storage.local.set({ oauthToken: token });
-        return resolve(token);
+    // 1. Check user's explicit connection preference state first
+    chrome.storage.sync.get(['googleAuthConnected'], (storedSync) => {
+      // If user explicitly disconnected, block all silent/background token requests
+      if (!storedSync.googleAuthConnected && !interactive) {
+        return reject(new Error('Google Account is disconnected. Please connect in Options.'));
       }
 
-      const getAuthError = chrome.runtime.lastError ? chrome.runtime.lastError.message : '';
+      // 2. Check cached token and expiry timestamp in local storage
+      chrome.storage.local.get(['oauthToken', 'oauthTokenExpiry'], (storedLocal) => {
+        const now = Date.now();
+        const cachedToken = storedLocal.oauthToken;
+        const expiry = storedLocal.oauthTokenExpiry || 0;
 
-      // 2. Check local token cache
-      chrome.storage.local.get(['oauthToken'], (stored) => {
-        if (stored.oauthToken && !interactive) {
-          return resolve(stored.oauthToken);
+        // If cached token exists and is NOT expired (leave 60s safety buffer), return immediately
+        if (cachedToken && expiry > now + 60000 && !interactive) {
+          return resolve(cachedToken);
         }
 
-        if (!interactive) {
-          return reject(new Error(getAuthError || 'Auth token not granted'));
-        }
-
-        // 3. Fallback to launchWebAuthFlow for Web Application Client IDs or unpacked ID mismatches
-        const clientId = '213944880893-ej291f9246dm8rpc0l8jt20il2akmiak.apps.googleusercontent.com';
-        const redirectUri = chrome.identity.getRedirectURL();
-        const scopes = encodeURIComponent('https://www.googleapis.com/auth/drive.file');
-        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}`;
-
-        chrome.identity.launchWebAuthFlow({
-          url: authUrl,
-          interactive: true
-        }, (redirectUrl) => {
-          if (chrome.runtime.lastError || !redirectUrl) {
-            const err = chrome.runtime.lastError ? chrome.runtime.lastError.message : (getAuthError || 'Web auth flow cancelled');
-            return reject(new Error(err));
+        // 3. Try standard chrome.identity.getAuthToken
+        chrome.identity.getAuthToken({ interactive }, (token) => {
+          if (!chrome.runtime.lastError && token) {
+            const tokenExpiry = Date.now() + 3500 * 1000;
+            chrome.storage.local.set({ oauthToken: token, oauthTokenExpiry: tokenExpiry });
+            return resolve(token);
           }
 
-          try {
-            const hash = new URL(redirectUrl).hash.substring(1);
-            const params = new URLSearchParams(hash);
-            const accessToken = params.get('access_token');
-            if (accessToken) {
-              chrome.storage.local.set({ oauthToken: accessToken });
-              resolve(accessToken);
-            } else {
-              reject(new Error('No access_token returned from OAuth flow'));
+          const getAuthError = chrome.runtime.lastError ? chrome.runtime.lastError.message : '';
+
+          // 4. Fallback to launchWebAuthFlow (supports silent refresh via prompt=none when interactive=false)
+          const clientId = '213944880893-ej291f9246dm8rpc0l8jt20il2akmiak.apps.googleusercontent.com';
+          const redirectUri = chrome.identity.getRedirectURL();
+          const scopes = encodeURIComponent('https://www.googleapis.com/auth/drive.file');
+          
+          let authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}`;
+          if (!interactive) {
+            authUrl += '&prompt=none'; // Silent refresh without popup
+          }
+
+          chrome.identity.launchWebAuthFlow({
+            url: authUrl,
+            interactive: interactive
+          }, (redirectUrl) => {
+            if (chrome.runtime.lastError || !redirectUrl) {
+              const err = chrome.runtime.lastError ? chrome.runtime.lastError.message : (getAuthError || 'Web auth flow failed');
+              return reject(new Error(err));
             }
-          } catch (e) {
-            reject(new Error('Failed to parse OAuth redirect URL: ' + e.message));
-          }
+
+            try {
+              const hash = new URL(redirectUrl).hash.substring(1);
+              const params = new URLSearchParams(hash);
+              const accessToken = params.get('access_token');
+              const expiresIn = parseInt(params.get('expires_in') || '3600', 10);
+              
+              if (accessToken) {
+                const tokenExpiry = Date.now() + (expiresIn - 60) * 1000;
+                chrome.storage.local.set({ oauthToken: accessToken, oauthTokenExpiry: tokenExpiry });
+                resolve(accessToken);
+              } else {
+                reject(new Error('No access_token returned from OAuth flow'));
+              }
+            } catch (e) {
+              reject(new Error('Failed to parse OAuth redirect URL: ' + e.message));
+            }
+          });
         });
       });
     });
@@ -72,7 +92,7 @@ function getAuthToken(interactive = false) {
  */
 function removeAuthToken(token) {
   return new Promise((resolve) => {
-    chrome.storage.local.remove(['oauthToken', 'savedWords']);
+    chrome.storage.local.remove(['oauthToken', 'oauthTokenExpiry', 'savedWords']);
     chrome.storage.sync.set({ googleAuthConnected: false });
 
     if (token) {
@@ -95,6 +115,36 @@ function removeAuthToken(token) {
 }
 
 /**
+ * Executes a Google API fetch call with token auto-refresh and 401 retry handling.
+ */
+async function fetchWithAuthAutoRetry(fetchCallFn) {
+  const storedSync = await new Promise(r => chrome.storage.sync.get(['googleAuthConnected'], r));
+  if (!storedSync.googleAuthConnected) {
+    throw new Error('Google Account is disconnected. Please connect in Options.');
+  }
+
+  let token = await getAuthToken(false);
+  let res = await fetchCallFn(token);
+
+  // If HTTP 401 Unauthorized (token expired or revoked), handle auto-refresh & retry once
+  if (res.status === 401) {
+    console.warn('Google API returned 401 Unauthorized. Clearing expired token and attempting silent refresh...');
+    await new Promise(r => chrome.storage.local.remove(['oauthToken', 'oauthTokenExpiry'], r));
+
+    try {
+      token = await getAuthToken(false); // Attempt silent token refresh
+      res = await fetchCallFn(token);    // Retry API call once with fresh token
+    } catch (refreshErr) {
+      console.warn('Silent token refresh failed after 401. Setting googleAuthConnected = false:', refreshErr);
+      await new Promise(r => chrome.storage.sync.set({ googleAuthConnected: false }, r));
+      throw new Error('Google Account session expired. Please reconnect in Options.');
+    }
+  }
+
+  return res;
+}
+
+/**
  * Find existing or create a new GlossaPop Vocabulary Book spreadsheet
  */
 async function getOrCreateSpreadsheet(token) {
@@ -105,9 +155,9 @@ async function getOrCreateSpreadsheet(token) {
       // 1. Verify if stored spreadsheet ID still exists, is accessible, and is NOT in Trash
       if (spreadsheetId) {
         try {
-          const driveCheck = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?fields=trashed`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const driveCheck = await fetchWithAuthAutoRetry(t => fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?fields=trashed`, {
+            headers: { Authorization: `Bearer ${t}` }
+          }));
           if (driveCheck.ok) {
             const fileMeta = await driveCheck.json();
             if (!fileMeta.trashed) {
@@ -123,9 +173,9 @@ async function getOrCreateSpreadsheet(token) {
       // 2. Search Google Drive for an existing "GlossaPop Vocabulary Book" file
       try {
         const query = encodeURIComponent(`name = '${SPREADSHEET_TITLE}' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false`);
-        const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&orderBy=createdTime%20desc&fields=files(id,name)`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const searchRes = await fetchWithAuthAutoRetry(t => fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&orderBy=createdTime%20desc&fields=files(id,name)`, {
+          headers: { Authorization: `Bearer ${t}` }
+        }));
 
         if (searchRes.ok) {
           const searchData = await searchRes.json();
@@ -141,10 +191,10 @@ async function getOrCreateSpreadsheet(token) {
 
       // 3. Create a new Google Spreadsheet workbook if none exists
       try {
-        const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+        const createRes = await fetchWithAuthAutoRetry(t => fetch('https://sheets.googleapis.com/v4/spreadsheets', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${t}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -154,7 +204,7 @@ async function getOrCreateSpreadsheet(token) {
               { properties: { title: SHEET_FR, gridProperties: { frozenRowCount: 1 } } }
             ]
           })
-        });
+        }));
 
         if (!createRes.ok) {
           const errData = await createRes.json();
@@ -165,10 +215,10 @@ async function getOrCreateSpreadsheet(token) {
         spreadsheetId = spreadsheet.spreadsheetId;
 
         // Populate initial column headers
-        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
+        await fetchWithAuthAutoRetry(t => fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${t}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -178,7 +228,7 @@ async function getOrCreateSpreadsheet(token) {
               { range: `'${SHEET_FR}'!A1:G1`, values: [HEADERS] }
             ]
           })
-        });
+        }));
 
         chrome.storage.sync.set({ spreadsheetId });
         resolve(spreadsheetId);
@@ -208,16 +258,16 @@ async function appendWordToSheet(token, targetLang, wordData) {
   ];
 
   const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetTitle)}!A:G:append?valueInputOption=USER_ENTERED`;
-  const response = await fetch(appendUrl, {
+  const response = await fetchWithAuthAutoRetry(t => fetch(appendUrl, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${t}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       values: [rowValues]
     })
-  });
+  }));
 
   if (!response.ok) {
     const errData = await response.json();
@@ -234,9 +284,9 @@ async function fetchSpreadsheetWords(token) {
   const spreadsheetId = await getOrCreateSpreadsheet(token);
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?ranges=${encodeURIComponent(SHEET_EN)}!A2:A&ranges=${encodeURIComponent(SHEET_FR)}!A2:A`;
 
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const response = await fetchWithAuthAutoRetry(t => fetch(url, {
+    headers: { Authorization: `Bearer ${t}` }
+  }));
 
   if (!response.ok) {
     throw new Error(`Failed to fetch spreadsheet words (HTTP ${response.status})`);
@@ -267,16 +317,16 @@ async function fetchSpreadsheetWords(token) {
 }
 
 /**
- * Export Anki-compatible CSV string for the given language sheet
+ * Export CSV string for the given language sheet
  */
 async function exportAnkiCsv(token, targetLang) {
   const spreadsheetId = await getOrCreateSpreadsheet(token);
   const sheetTitle = targetLang === 'fr' ? SHEET_FR : SHEET_EN;
 
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetTitle)}!A1:G`;
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const response = await fetchWithAuthAutoRetry(t => fetch(url, {
+    headers: { Authorization: `Bearer ${t}` }
+  }));
 
   if (!response.ok) {
     throw new Error(`Failed to fetch sheet data for export (HTTP ${response.status})`);
