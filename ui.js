@@ -147,20 +147,76 @@ const POPUP_CSS = `
     color: #1c1c1e;
     transform: scale(1.15);
   }
-  .glossapop-badge-tag {
+  /* Sleek Glassmorphic Source Language Dropdown (Single Unified Pill) */
+  .glossapop-source-select-wrapper {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 4px 12px;
-    border-radius: 8px;
-    background: #0066cc;
-    border: 1px solid rgba(0, 102, 204, 0.2);
+  }
+  .glossapop-source-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: #0066cc url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 12px 12px;
+    border: 1px solid rgba(0, 102, 204, 0.3);
     color: #ffffff;
     font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    box-shadow: 0 2px 6px rgba(0, 102, 204, 0.25);
-    user-select: none;
+    padding: 4px 24px 4px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.25);
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glossapop-source-select:hover {
+    background-color: #0052a3;
+    box-shadow: 0 3px 10px rgba(0, 102, 204, 0.35);
+    transform: translateY(-1px);
+  }
+  .glossapop-source-select option {
+    background: #1c1c1e;
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  /* Modern Segmented Quick-Switch Pills Bar */
+  .glossapop-quick-pills-bar {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 12px;
+    padding: 2px 0;
+  }
+  .glossapop-pills-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 2px;
+  }
+  .glossapop-source-pill {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(0, 102, 204, 0.08);
+    color: #0066cc;
+    border: 1px solid rgba(0, 102, 204, 0.18);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glossapop-source-pill:hover {
+    background: rgba(0, 102, 204, 0.16);
+    border-color: rgba(0, 102, 204, 0.3);
+    transform: translateY(-1px);
+  }
+  .glossapop-source-pill.active {
+    background: #0066cc;
+    color: #ffffff;
+    border-color: #0066cc;
+    box-shadow: 0 2px 6px rgba(0, 102, 204, 0.3);
   }
 
   /* Save Word Button */
@@ -580,7 +636,54 @@ const POPUP_CSS = `
   .glossapop-cefr-badge.cefr-c1 { --cefr-color: #7b1fa2; --cefr-bg: rgba(123, 31, 162, 0.12); }
   .glossapop-cefr-badge.cefr-c2 { --cefr-color: #c2185b; --cefr-bg: rgba(194, 24, 91, 0.12); }
 
-  /* French Tense Switcher Tabs Styles */
+  /* French Tense Switcher Pager & Header Styles */
+  .glossapop-conj-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .glossapop-conj-pager {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #0066cc;
+  }
+  .glossapop-pager-btn {
+    background: rgba(0, 102, 204, 0.08);
+    border: 1px solid rgba(0, 102, 204, 0.2);
+    border-radius: 6px;
+    color: #0066cc;
+    width: 18px;
+    height: 18px;
+    line-height: 16px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 0;
+    transition: all 0.15s ease;
+  }
+  .glossapop-pager-btn:hover:not(:disabled) {
+    background: #0066cc;
+    color: #ffffff;
+  }
+  .glossapop-pager-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .glossapop-dark .glossapop-conj-pager { color: #64d2ff; }
+  .glossapop-dark .glossapop-pager-btn {
+    background: rgba(100, 210, 255, 0.12);
+    border-color: rgba(100, 210, 255, 0.25);
+    color: #64d2ff;
+  }
+  .glossapop-dark .glossapop-pager-btn:hover:not(:disabled) {
+    background: #0a84ff;
+    color: #ffffff;
+  }
   .glossapop-tense-tabs {
     display: flex;
     gap: 4px;
@@ -691,11 +794,26 @@ const POPUP_CSS = `
   .glossapop-dark .glossapop-cefr-badge.cefr-c1 { --cefr-color: #da8fff; --cefr-bg: rgba(218, 143, 255, 0.15); }
   .glossapop-dark .glossapop-cefr-badge.cefr-c2 { --cefr-color: #ff375f; --cefr-bg: rgba(255, 55, 95, 0.15); }
   .glossapop-dark .glossapop-phonetic { color: #64d2ff; }
-  .glossapop-dark .glossapop-badge-tag {
-    background: linear-gradient(135deg, #0a84ff, #5e5ce6);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+  .glossapop-dark .glossapop-source-select {
+    background: linear-gradient(135deg, #0a84ff, #5e5ce6) url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") no-repeat right 8px center / 12px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 3px 10px rgba(10, 132, 255, 0.45);
+  }
+  .glossapop-dark .glossapop-pills-label { color: #8e8e93; }
+  .glossapop-dark .glossapop-source-pill {
+    background: rgba(100, 210, 255, 0.12);
+    color: #64d2ff;
+    border-color: rgba(100, 210, 255, 0.25);
+  }
+  .glossapop-dark .glossapop-source-pill:hover {
+    background: rgba(100, 210, 255, 0.22);
+    border-color: rgba(100, 210, 255, 0.4);
+  }
+  .glossapop-dark .glossapop-source-pill.active {
+    background: #0a84ff;
     color: #ffffff;
-    box-shadow: 0 3px 10px rgba(10, 132, 255, 0.55);
+    border-color: #0a84ff;
+    box-shadow: 0 2px 8px rgba(10, 132, 255, 0.5);
   }
   .glossapop-dark .glossapop-segment-btn { color: #e5e5ea; }
   .glossapop-dark .glossapop-segment-btn.active {
@@ -847,13 +965,32 @@ const UIComponents = {
         </div>
       </div>
       <div class="glossapop-toggles">
-        <div class="glossapop-badge-tag" id="target-lang-group" title="Detected Webpage Language">
-          ${getLanguageLabel(activeTargetLang)}
+        <div class="glossapop-source-select-wrapper" id="target-lang-group" title="Source Language (Click to switch)">
+          <select class="glossapop-source-select" id="glossapop-source-select" title="Source Language (Click to switch)">
+            <option value="en" ${activeTargetLang === 'en' ? 'selected' : ''}>EN</option>
+            <option value="fr" ${activeTargetLang === 'fr' ? 'selected' : ''}>FR</option>
+            <option value="es" ${activeTargetLang === 'es' ? 'selected' : ''}>ES</option>
+            <option value="de" ${activeTargetLang === 'de' ? 'selected' : ''}>DE</option>
+            <option value="ja" ${activeTargetLang === 'ja' ? 'selected' : ''}>JA</option>
+            <option value="ko" ${activeTargetLang === 'ko' ? 'selected' : ''}>KO</option>
+            <option value="it" ${activeTargetLang === 'it' ? 'selected' : ''}>IT</option>
+            <option value="pt" ${activeTargetLang === 'pt' ? 'selected' : ''}>PT</option>
+            <option value="zh-TW" ${activeTargetLang === 'zh-TW' ? 'selected' : ''}>繁中</option>
+            <option value="zh-CN" ${activeTargetLang === 'zh-CN' ? 'selected' : ''}>簡中</option>
+          </select>
         </div>
         <div class="glossapop-segment" id="explain-lang-group">
           <button class="glossapop-segment-btn ${activeExplainLang === eLangA ? 'active' : ''}" data-val="${eLangA}">${getLanguageLabel(eLangA)}</button>
           <button class="glossapop-segment-btn ${activeExplainLang === eLangB ? 'active' : ''}" data-val="${eLangB}">${getLanguageLabel(eLangB)}</button>
         </div>
+      </div>
+      <div class="glossapop-quick-pills-bar">
+        <span class="glossapop-pills-label">Switch:</span>
+        <button class="glossapop-source-pill ${activeTargetLang === 'fr' ? 'active' : ''}" data-val="fr">FR</button>
+        <button class="glossapop-source-pill ${activeTargetLang === 'es' ? 'active' : ''}" data-val="es">ES</button>
+        <button class="glossapop-source-pill ${activeTargetLang === 'de' ? 'active' : ''}" data-val="de">DE</button>
+        <button class="glossapop-source-pill ${activeTargetLang === 'ja' ? 'active' : ''}" data-val="ja">JA</button>
+        <button class="glossapop-source-pill ${activeTargetLang === 'en' ? 'active' : ''}" data-val="en">EN</button>
       </div>
       <div class="glossapop-word-info">
         <h3 class="glossapop-word" title="${escapeHtml(word)}">${escapeHtml(displayWord)}${cefrBadge}</h3>
@@ -907,14 +1044,27 @@ const UIComponents = {
       chrome.storage.sync.set({ themeMode: nextMode });
     });
 
-    card.querySelector('#target-lang-group').addEventListener('click', (e) => {
-      const btn = e.target.closest('.glossapop-segment-btn');
-      if (btn && !btn.classList.contains('active')) {
-        card.querySelectorAll('#target-lang-group .glossapop-segment-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        onTargetChange(btn.dataset.val);
-      }
-    });
+    // Source Language Select Listener
+    const sourceSelect = card.querySelector('#glossapop-source-select');
+    if (sourceSelect) {
+      sourceSelect.addEventListener('change', (e) => {
+        onTargetChange(e.target.value);
+      });
+    }
+
+    // Source Language Pill Buttons Listener
+    const pillBar = card.querySelector('.glossapop-quick-pills-bar');
+    if (pillBar) {
+      pillBar.addEventListener('click', (e) => {
+        const btn = e.target.closest('.glossapop-source-pill');
+        if (btn && !btn.classList.contains('active')) {
+          pillBar.querySelectorAll('.glossapop-source-pill').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (sourceSelect) sourceSelect.value = btn.dataset.val;
+          onTargetChange(btn.dataset.val);
+        }
+      });
+    }
 
     card.querySelector('#explain-lang-group').addEventListener('click', (e) => {
       const btn = e.target.closest('.glossapop-segment-btn');
@@ -979,29 +1129,104 @@ const UIComponents = {
   /**
    * Renders French Verb Conjugations with 5 Tenses
    */
-  renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = null) {
+  renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = null, currentPage = null) {
     if (activeTargetLang === 'fr' && data.isVerb) {
       const verbToConjugate = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || queryWord);
       
-      const isSubjunctiveQuery = (data.definitions && data.definitions.some(d => d.toLowerCase().includes('subjunctive'))) || 
-                                ['soient', 'sois', 'soit', 'soyons', 'soyez', 'fasse', 'fassent', 'puisse', 'puissent', 'aie', 'aies', 'ait', 'ayons', 'ayez', 'aient'].includes(queryWord.toLowerCase());
-      if (!activeTense) {
-        activeTense = isSubjunctiveQuery ? 'subjonctif' : 'present';
+      if (!activeTense && !currentPage) {
+        activeTense = (typeof detectFrenchQueryTense === 'function')
+          ? detectFrenchQueryTense(queryWord, data)
+          : 'present';
       }
 
-      const conj = (data.apiConjugations && data.apiConjugations[activeTense]) ? data.apiConjugations[activeTense] : getFrenchConjugations(verbToConjugate, activeTense);
+      const tensePageInfo = (typeof getTensePageInfo === 'function') ? getTensePageInfo(activeTense) : { pageIndex: 1 };
+      if (!currentPage) {
+        currentPage = tensePageInfo.pageIndex;
+      }
+
+      // Define 5 pages corresponding to screenshot rows
+      const pages = [
+        {
+          pageIndex: 1,
+          category: 'Indicatif (常用)',
+          tenses: [
+            { id: 'present', label: 'Présent' },
+            { id: 'passe_compose', label: 'Passé C.' },
+            { id: 'imparfait', label: 'Imparfait' },
+            { id: 'plus_que_parfait', label: 'Plus-que-p.' }
+          ]
+        },
+        {
+          pageIndex: 2,
+          category: 'Indicatif (進階)',
+          tenses: [
+            { id: 'passe_simple', label: 'Passé S.' },
+            { id: 'passe_anterieur', label: 'Passé Ant.' },
+            { id: 'futur_simple', label: 'Futur' },
+            { id: 'futur_anterieur', label: 'Futur Ant.' }
+          ]
+        },
+        {
+          pageIndex: 3,
+          category: 'Subjonctif',
+          tenses: [
+            { id: 'subjonctif_present', label: 'Subj. Prés.' },
+            { id: 'subjonctif_passe', label: 'Subj. Passé' },
+            { id: 'subjonctif_imparfait', label: 'Subj. Imp.' },
+            { id: 'subjonctif_plus_que_parfait', label: 'Subj. P.Q.P.' }
+          ]
+        },
+        {
+          pageIndex: 4,
+          category: 'Conditionnel & Impératif',
+          tenses: [
+            { id: 'conditionnel_present', label: 'Conditionnel' },
+            { id: 'conditionnel_passe', label: 'Cond. Passé' },
+            { id: 'imperatif_present', label: 'Impératif' },
+            { id: 'imperatif_passe', label: 'Impér. Passé' }
+          ]
+        },
+        {
+          pageIndex: 5,
+          category: 'Participe',
+          tenses: [
+            { id: 'participe_present', label: 'Part. Prés.' },
+            { id: 'participe_passe', label: 'Part. Passé' }
+          ]
+        }
+      ];
+
+      const activePageObj = pages.find(p => p.pageIndex === currentPage) || pages[0];
+      
+      if (!activeTense || !activePageObj.tenses.some(t => t.id === activeTense)) {
+        activeTense = activePageObj.tenses[0].id;
+      }
+
+      let conj = null;
+      if (data.apiConjugations) {
+        conj = (data.apiConjugations[activeTense] && Object.keys(data.apiConjugations[activeTense]).length > 0)
+          ? data.apiConjugations[activeTense]
+          : null;
+      }
+      if (!conj) {
+        conj = getFrenchConjugations(verbToConjugate, activeTense);
+      }
+      if (!conj) {
+        conj = getFrenchConjugations(verbToConjugate, 'present');
+      }
+      
       if (conj) {
-        const tenses = [
-          { id: 'present', label: 'Présent' },
-          { id: 'passe_compose', label: 'Passé C.' },
-          { id: 'imparfait', label: 'Imparfait' },
-          { id: 'futur_simple', label: 'Futur' },
-          { id: 'subjonctif', label: 'Subjonctif' }
-        ];
-        const tabsHtml = tenses.map(t => `<button class="glossapop-tense-tab ${activeTense === t.id ? 'active' : ''}" data-tense="${t.id}">${t.label}</button>`).join('');
+        const tabsHtml = activePageObj.tenses.map(t => `<button class="glossapop-tense-tab ${activeTense === t.id ? 'active' : ''}" data-tense="${t.id}">${t.label}</button>`).join('');
 
         conjBox.innerHTML = `
-          <div class="glossapop-conj-title">Conjugaison: ${escapeHtml(verbToConjugate)}</div>
+          <div class="glossapop-conj-header">
+            <div class="glossapop-conj-title">CONJUGAISON: ${escapeHtml(verbToConjugate.toUpperCase())}</div>
+            <div class="glossapop-conj-pager">
+              <button class="glossapop-pager-btn glossapop-prev-page" ${currentPage === 1 ? 'disabled' : ''}>‹</button>
+              <span class="glossapop-pager-info">${currentPage}/5</span>
+              <button class="glossapop-pager-btn glossapop-next-page" ${currentPage === 5 ? 'disabled' : ''}>›</button>
+            </div>
+          </div>
           <div class="glossapop-tense-tabs">${tabsHtml}</div>
           <div class="glossapop-conj-grid">
             <div class="glossapop-conj-item" title="${escapeHtml(conj.je)}" data-speak="${escapeHtml(conj.je)}"><strong>${escapeHtml(conj.je)}</strong></div>
@@ -1013,14 +1238,35 @@ const UIComponents = {
           </div>
         `;
 
+        // Bind pager events
+        const prevBtn = conjBox.querySelector('.glossapop-prev-page');
+        const nextBtn = conjBox.querySelector('.glossapop-next-page');
+        if (prevBtn) {
+          prevBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (currentPage > 1) {
+              this.renderConjugations(conjBox, data, activeTargetLang, queryWord, null, currentPage - 1);
+            }
+          };
+        }
+        if (nextBtn) {
+          nextBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (currentPage < 5) {
+              this.renderConjugations(conjBox, data, activeTargetLang, queryWord, null, currentPage + 1);
+            }
+          };
+        }
+
+        // Bind tense tab events
         conjBox.querySelectorAll('.glossapop-tense-tab').forEach(tab => {
           tab.onclick = (e) => {
             e.stopPropagation();
-            this.renderConjugations(conjBox, data, activeTargetLang, queryWord, tab.dataset.tense);
+            this.renderConjugations(conjBox, data, activeTargetLang, queryWord, tab.dataset.tense, currentPage);
           };
         });
 
-        // Click to play pronunciation for any person
+        // Click to play pronunciation
         conjBox.querySelectorAll('.glossapop-conj-item').forEach(item => {
           item.onclick = (e) => {
             e.stopPropagation();

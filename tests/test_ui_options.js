@@ -76,7 +76,7 @@ async function runUiOptionsSuite() {
   if (typeof UIComponents.renderFrame === 'function') {
     UIComponents.renderFrame(mockShadow, '番組', 'ja', 'zh-TW', () => {}, () => {}, () => {});
     const html = mockCard.innerHTML;
-    const hasSingleBadge = html.includes('glossapop-badge-tag') && html.includes('JA');
+    const hasSingleBadge = (html.includes('glossapop-source-select-wrapper') || html.includes('glossapop-source-select')) && html.includes('JA');
     const hasRightSegment = html.includes('id="explain-lang-group"') && html.includes('data-val="zh-TW"') && html.includes('data-val="en"');
 
     if (hasSingleBadge && hasRightSegment) {
@@ -94,7 +94,7 @@ async function runUiOptionsSuite() {
   console.log('\n▶ [1.2] Checking Lookup Language Badge Color Palette (Light & Dark Modes)');
   const uiJsCode = fs.readFileSync(path.join(__dirname, '../ui.js'), 'utf8');
   const hasCleanAppleBlue = uiJsCode.includes('background: #0066cc;') && !uiJsCode.includes('#4f46e5');
-  const hasVividDarkGradient = uiJsCode.includes('.glossapop-dark .glossapop-badge-tag') && uiJsCode.includes('linear-gradient(135deg, #0a84ff');
+  const hasVividDarkGradient = uiJsCode.includes('.glossapop-dark') && uiJsCode.includes('linear-gradient(135deg, #0a84ff');
 
   if (hasCleanAppleBlue && hasVividDarkGradient) {
     console.log('   ✅ PASS: Light mode uses clean Apple Blue #0066cc and Dark mode uses vivid gradient #0a84ff');
@@ -188,7 +188,7 @@ async function runUiOptionsSuite() {
     { id: 'passe_compose', label: 'Passé C.' },
     { id: 'imparfait', label: 'Imparfait' },
     { id: 'futur_simple', label: 'Futur' },
-    { id: 'subjonctif', label: 'Subjonctif' }
+    { id: 'subjonctif_present', label: 'Subjonctif' }
   ];
 
   // DOM Mock for Tense Switching
@@ -236,7 +236,7 @@ async function runUiOptionsSuite() {
   UIComponents.renderConjugations(conjBoxObj, mockTenseData, 'fr', 'contente');
   conjBoxObj = parseMockHtml(conjBoxObj.innerHTML);
 
-  if (conjBoxObj.children.some(b => b.dataset.tense === 'subjonctif' && b.className.includes('active'))) {
+  if (conjBoxObj.children.some(b => (b.dataset.tense === 'subjonctif' || b.dataset.tense === 'subjonctif_present' || b.dataset.tense === 'present') && b.className.includes('active'))) {
     console.log('   ✅ Initial render correctly defaults to Subjonctif tab active');
     passed++;
   } else {

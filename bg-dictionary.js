@@ -249,7 +249,13 @@ async function fetchFrenchConjugationsFallback(verb) {
       const kData = await kRes.json();
       if (Array.isArray(kData) && kData.length > 0 && kData[0].forms) {
         const forms = kData[0].forms;
-        const result = { present: {}, passe_compose: {}, imparfait: {}, futur_simple: {}, subjonctif: {} };
+        const result = {
+          present: {}, passe_compose: {}, imparfait: {}, plus_que_parfait: {},
+          passe_simple: {}, passe_anterieur: {}, futur_simple: {}, futur_anterieur: {},
+          subjonctif_present: {}, subjonctif_passe: {}, subjonctif_imparfait: {}, subjonctif_plus_que_parfait: {},
+          conditionnel_present: {}, conditionnel_passe: {}, imperatif_present: {}, imperatif_passe: {},
+          participe_present: {}, participe_passe: {}
+        };
         
         forms.forEach(f => {
           if (f.form && f.tags) {
@@ -283,18 +289,34 @@ async function fetchFrenchConjugationsFallback(verb) {
                 result.futur_simple[key] = withElision('je', formText);
                 if (key !== 'je') result.futur_simple[key] = `${key} ${formText}`;
               }
-              // 4. Subjonctif
+              // 4. Subjonctif Présent
               else if (tags.includes('present') && tags.includes('subjunctive')) {
-                result.subjonctif[key] = withElision('que je', formText);
-                if (key === 'tu') result.subjonctif[key] = `que tu ${formText}`;
-                if (key === 'il') result.subjonctif[key] = withElision('que il', formText);
-                if (key === 'nous') result.subjonctif[key] = `que nous ${formText}`;
-                if (key === 'vous') result.subjonctif[key] = `que vous ${formText}`;
-                if (key === 'ils') result.subjonctif[key] = withElision('que ils', formText);
+                result.subjonctif_present[key] = withElision('que je', formText);
+                if (key === 'tu') result.subjonctif_present[key] = `que tu ${formText}`;
+                if (key === 'il') result.subjonctif_present[key] = withElision('que il', formText);
+                if (key === 'nous') result.subjonctif_present[key] = `que nous ${formText}`;
+                if (key === 'vous') result.subjonctif_present[key] = `que vous ${formText}`;
+                if (key === 'ils') result.subjonctif_present[key] = withElision('que ils', formText);
+              }
+              // 5. Subjonctif Imparfait
+              else if (tags.includes('imperfect') && tags.includes('subjunctive')) {
+                result.subjonctif_imparfait[key] = withElision('que je', formText);
+                if (key === 'tu') result.subjonctif_imparfait[key] = `que tu ${formText}`;
+                if (key === 'il') result.subjonctif_imparfait[key] = withElision('que il', formText);
+                if (key === 'nous') result.subjonctif_imparfait[key] = `que nous ${formText}`;
+                if (key === 'vous') result.subjonctif_imparfait[key] = `que vous ${formText}`;
+                if (key === 'ils') result.subjonctif_imparfait[key] = withElision('que ils', formText);
+              }
+              // 6. Conditionnel Présent
+              else if (tags.includes('conditional')) {
+                result.conditionnel_present[key] = withElision('je', formText);
+                if (key !== 'je') result.conditionnel_present[key] = `${key} ${formText}`;
               }
             }
           }
         });
+        result.subjonctif = result.subjonctif_present;
+        result.futur = result.futur_simple;
 
         if (result.present.je || result.present.nous) {
           console.log(`🟡 [Priority 2: Kaikki API Fallback] Successfully fetched 5-tense conjugations for "${cleanVerb}".`);

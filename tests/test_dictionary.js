@@ -280,6 +280,40 @@ async function runAllTests() {
     }
   });
 
+  // Tense Detection Tests (including 10 Special/Irregular Verbs)
+  const tenseTests = [
+    // Regular inflection patterns
+    { word: 'rappelleras', data: { definitions: ['second-person singular future of rappeler'] }, expected: 'futur_simple' },
+    { word: 'rappellerais', data: { definitions: ['first-person singular conditional of rappeler'] }, expected: 'conditionnel_present' },
+    { word: 'rappellasse', data: { definitions: ['first-person singular imperfect subjunctive of rappeler'] }, expected: 'subjonctif_imparfait' },
+    { word: 'rappellions', data: { definitions: ['first-person plural imperfect of rappeler'] }, expected: 'imparfait' },
+    { word: 'rappelé', data: { definitions: ['past participle of rappeler'] }, expected: 'passe_compose' },
+    { word: 'rappelle', data: { definitions: ['first-person singular present of rappeler'] }, expected: 'present' },
+
+    // 10 Special/Irregular Suppletive Verb Test Cases
+    { word: 'serai', data: {}, expected: 'futur_simple' },   // être (Futur simple)
+    { word: 'aurons', data: {}, expected: 'futur_simple' },  // avoir (Futur simple)
+    { word: 'eu', data: {}, expected: 'passe_compose' },     // avoir (Participle)
+    { word: 'été', data: {}, expected: 'passe_compose' },    // être (Participle)
+    { word: 'fasse', data: {}, expected: 'subjonctif_present' }, // faire (Subjonctif)
+    { word: 'irai', data: {}, expected: 'futur_simple' },    // aller (Futur simple)
+    { word: 'puisse', data: {}, expected: 'subjonctif_present' }, // pouvoir (Subjonctif)
+    { word: 'voudrais', data: {}, expected: 'conditionnel_present' },// vouloir (Conditional)
+    { word: 'saurons', data: {}, expected: 'futur_simple' }, // savoir (Futur simple)
+    { word: 'viendrez', data: {}, expected: 'futur_simple' } // venir (Futur simple)
+  ];
+
+  tenseTests.forEach(t => {
+    const res = detectFrenchQueryTense(t.word, t.data);
+    if (res === t.expected) {
+      passedCount++;
+    } else {
+      console.log(`   ❌ Tense Detection FAIL: ${t.word} -> Expected "${t.expected}", Got "${res}"`);
+      failedCount++;
+      suite3Passed = false;
+    }
+  });
+
   if (suite3Passed) console.log(`   ✅ Suite 3 Completed. All 35 Conjugation tables and 18 Priority 1 offline/pronominal conjugations passed.`);
 
   // -------------------------------------------------------------

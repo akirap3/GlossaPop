@@ -232,6 +232,35 @@ async function runLanguagesSuite() {
     }
   });
 
+  // -------------------------------------------------------------
+  // [SUB-SUITE 2.6] 10-Language Word Micro-Sensor (detectWordLanguage)
+  // -------------------------------------------------------------
+  console.log('\n▶ [2.6] Checking 10-Language Word Micro-Sensor (detectWordLanguage)');
+  const wordSensorTests = [
+    { word: 'たべもの', fallback: 'en', expected: 'ja' },
+    { word: 'ラーメン', fallback: 'en', expected: 'ja' },
+    { word: '안녕하세요', fallback: 'en', expected: 'ko' },
+    { word: 'groß', fallback: 'en', expected: 'de' },
+    { word: 'schön', fallback: 'en', expected: 'de' },
+    { word: 'español', fallback: 'en', expected: 'es' },
+    { word: 'français', fallback: 'en', expected: 'fr' },
+    { word: 's’appeler', fallback: 'en', expected: 'fr' },
+    { word: 'pão', fallback: 'en', expected: 'pt' },
+    { word: '繁體中文', fallback: 'en', expected: 'zh-TW' },
+    { word: 'hello', fallback: 'en', expected: 'en' }
+  ];
+
+  wordSensorTests.forEach((tc, idx) => {
+    const res = typeof detectWordLanguage === 'function' ? detectWordLanguage(tc.word, tc.fallback) : 'NOT_IMPLEMENTED';
+    if (res === tc.expected) {
+      console.log(`   ✅ PASS: Micro-Sensor Case ${idx + 1} ("${tc.word}") ➔ Detected "${res}"`);
+      passed++;
+    } else {
+      console.log(`   ❌ FAIL: Micro-Sensor Case ${idx + 1} ("${tc.word}") expected "${tc.expected}", got "${res}"`);
+      failed++;
+    }
+  });
+
   console.log('\n===============================================================');
   console.log(`📊 Categorized Suite 2 Summary: ${passed} PASSED / ${failed} FAILED out of ${passed + failed} Checks`);
   console.log('===============================================================');
@@ -240,3 +269,4 @@ async function runLanguagesSuite() {
 }
 
 runLanguagesSuite();
+

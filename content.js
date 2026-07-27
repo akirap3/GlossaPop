@@ -88,8 +88,9 @@ function showPopup(word, x, y) {
   initShadowDOM();
   const card = shadowRoot.querySelector('.glossapop-card');
   
-  // Sense webpage target language automatically
-  activeTargetLang = (typeof detectPageLanguage === 'function') ? detectPageLanguage(document) : 'en';
+  // Sense webpage target language and apply word micro-sensor
+  const sensedPageLang = (typeof detectPageLanguage === 'function') ? detectPageLanguage(document) : 'en';
+  activeTargetLang = (typeof detectWordLanguage === 'function') ? detectWordLanguage(word, sensedPageLang) : sensedPageLang;
   activeExplainLang = settings.explainLangA || 'zh-TW';
 
   // Position card
@@ -207,12 +208,19 @@ async function fetchAndDisplay(word, isInitial = false) {
     if (response && response.success) {
       const data = response.data;
       
-      // Update active target language and UI segments dynamically if detected
+      // Update active target language and UI select/pills dynamically if detected
       if (isInitial && data.detectedLang) {
         activeTargetLang = data.detectedLang;
-        const targetGroup = shadowRoot.querySelector('#target-lang-group');
-        if (targetGroup && typeof getLanguageLabel === 'function') {
-          targetGroup.textContent = getLanguageLabel(activeTargetLang);
+        const sourceSelect = shadowRoot.querySelector('#glossapop-source-select');
+        if (sourceSelect) {
+          sourceSelect.value = activeTargetLang;
+        }
+        const pillBar = shadowRoot.querySelector('.glossapop-quick-pills-bar');
+        if (pillBar) {
+          pillBar.querySelectorAll('.glossapop-source-pill').forEach(b => {
+            if (b.dataset.val === activeTargetLang) b.classList.add('active');
+            else b.classList.remove('active');
+          });
         }
       }
 

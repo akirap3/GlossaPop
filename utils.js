@@ -193,41 +193,58 @@ function getFrenchConjugations(verb, tense = 'present') {
         console.log(`🟢 [Priority 1: Offline LEFFF Engine] Conjugating "${verb}" (targetVerb: "${targetVerb}") via french-verbs library.`);
         const p = targetVerb === base ? prefix : '';
         
+        const isCompound = ['passe_compose', 'plus_que_parfait', 'passe_anterieur', 'futur_anterieur', 'subjonctif_passe', 'subjonctif_plus_que_parfait', 'conditionnel_passe', 'imperatif_passe'].includes(tense);
+        
+        if (isCompound) {
+          const pp = getConjugation(Lefff, targetVerb, 'PARTICIPE_PASSE', 0, {}, false);
+          const fullPp = p + pp;
+          const ETRE_VERBS = ['aller', 'venir', 'devenir', 'revenir', 'partir', 'sortir', 'naître', 'mourir', 'entrer', 'monter', 'descendre', 'tomber', 'rester', 'retourner'];
+          const auxVerb = (isPronominal || ETRE_VERBS.includes(v) || ETRE_VERBS.includes(base)) ? 'être' : 'avoir';
+          
+          let auxTenseMap = {
+            'passe_compose': 'present',
+            'plus_que_parfait': 'imparfait',
+            'passe_anterieur': 'passe_simple',
+            'futur_anterieur': 'futur_simple',
+            'subjonctif_passe': 'subjonctif_present',
+            'subjonctif_plus_que_parfait': 'subjonctif_imparfait',
+            'conditionnel_passe': 'conditionnel_present',
+            'imperatif_passe': 'imperatif_present'
+          };
+          const auxConj = getFrenchConjugations(auxVerb, auxTenseMap[tense]);
+          if (auxConj) {
+            if (tense === 'imperatif_passe') {
+              return {
+                je: '-',
+                tu: auxConj.tu + ' ' + fullPp,
+                il: '-',
+                nous: auxConj.nous + ' ' + fullPp,
+                vous: auxConj.vous + ' ' + fullPp,
+                ils: '-'
+              };
+            }
+            return {
+              je: auxConj.je + ' ' + fullPp,
+              tu: auxConj.tu + ' ' + fullPp,
+              il: auxConj.il + ' ' + fullPp,
+              nous: auxConj.nous + ' ' + fullPp,
+              vous: auxConj.vous + ' ' + fullPp,
+              ils: auxConj.ils + ' ' + fullPp
+            };
+          }
+        }
+
         let fvTense = null;
         if (tense === 'present') fvTense = 'PRESENT';
         else if (tense === 'imparfait') fvTense = 'IMPARFAIT';
-        else if (tense === 'futur_simple') fvTense = 'FUTUR';
-        else if (tense === 'subjonctif') fvTense = 'SUBJONCTIF_PRESENT';
-        else if (tense === 'passe_compose') fvTense = 'PASSE_COMPOSE';
-        
-        if (fvTense === 'PASSE_COMPOSE') {
-          if (isPronominal) {
-            const pc0 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 0, {}, true);
-            const pc1 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 1, {}, true);
-            const pc2 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 2, {}, true);
-            const pc3 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 3, {}, true);
-            const pc4 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 4, {}, true);
-            const pc5 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 5, {}, true);
-            return {
-              je: withElision('je', pc0),
-              tu: `tu ${pc1}`,
-              il: `il ${pc2}`,
-              nous: `nous ${pc3}`,
-              vous: `vous ${pc4}`,
-              ils: `ils ${pc5}`
-            };
-          } else {
-            const pp = getConjugation(Lefff, targetVerb, 'PARTICIPE_PASSE', 0, {}, false);
-            const fullPp = p + pp;
-            const ETRE_VERBS = ['aller', 'venir', 'devenir', 'revenir', 'partir', 'sortir', 'naître', 'mourir', 'entrer', 'monter', 'descendre', 'tomber', 'rester', 'retourner'];
-            const usesEtre = ETRE_VERBS.includes(v) || ETRE_VERBS.includes(base);
-            if (usesEtre) {
-              return { je: `je suis ${fullPp}`, tu: `tu es ${fullPp}`, il: `il est ${fullPp}`, nous: `nous sommes ${fullPp}`, vous: `vous êtes ${fullPp}`, ils: `ils sont ${fullPp}` };
-            } else {
-              return { je: `j’ai ${fullPp}`, tu: `tu as ${fullPp}`, il: `il a ${fullPp}`, nous: `nous avons ${fullPp}`, vous: `vous avez ${fullPp}`, ils: `ils ont ${fullPp}` };
-            }
-          }
-        }
+        else if (tense === 'passe_simple') fvTense = 'PASSE_SIMPLE';
+        else if (tense === 'futur_simple' || tense === 'futur') fvTense = 'FUTUR';
+        else if (tense === 'subjonctif' || tense === 'subjonctif_present') fvTense = 'SUBJONCTIF_PRESENT';
+        else if (tense === 'subjonctif_imparfait') fvTense = 'SUBJONCTIF_IMPARFAIT';
+        else if (tense === 'conditionnel_present') fvTense = 'CONDITIONNEL_PRESENT';
+        else if (tense === 'imperatif_present') fvTense = 'IMPERATIF_PRESENT';
+        else if (tense === 'participe_present') fvTense = 'PARTICIPE_PRESENT';
+        else if (tense === 'participe_passe') fvTense = 'PARTICIPE_PASSE';
 
         if (fvTense) {
           const c0 = p + getConjugation(Lefff, targetVerb, fvTense, 0, {}, isPronominal);
@@ -237,7 +254,7 @@ function getFrenchConjugations(verb, tense = 'present') {
           const c4 = p + getConjugation(Lefff, targetVerb, fvTense, 4, {}, isPronominal);
           const c5 = p + getConjugation(Lefff, targetVerb, fvTense, 5, {}, isPronominal);
 
-          if (tense === 'subjonctif') {
+          if (tense.startsWith('subjonctif')) {
             return {
               je: withElision('que je', c0),
               tu: `que tu ${c1}`,
@@ -246,6 +263,8 @@ function getFrenchConjugations(verb, tense = 'present') {
               vous: `que vous ${c4}`,
               ils: withElision('que ils', c5)
             };
+          } else if (tense === 'participe_present' || tense === 'participe_passe') {
+            return { je: c0, tu: c0, il: c0, nous: c0, vous: c0, ils: c0 };
           } else {
             return {
               je: withElision('je', c0),
@@ -263,29 +282,45 @@ function getFrenchConjugations(verb, tense = 'present') {
     }
   }
 
-  // 1. Passé Composé (Compound Past)
-  if (tense === 'passe_compose') {
+  // -----------------------------------------------------------------
+  // PRIORITY 1b: Algorithmic Fallback for 18 Tenses (Browser & Standalone)
+  // -----------------------------------------------------------------
+  
+  // 1. Compound Tenses (All 8 Compound Tenses)
+  const isCompoundAlg = ['passe_compose', 'plus_que_parfait', 'passe_anterieur', 'futur_anterieur', 'subjonctif_passe', 'subjonctif_plus_que_parfait', 'conditionnel_passe', 'imperatif_passe'].includes(tense);
+  if (isCompoundAlg) {
     const pp = getFrenchPastParticiple(v);
     const ETRE_VERBS = ['aller', 'venir', 'devenir', 'revenir', 'partir', 'sortir', 'naître', 'mourir', 'entrer', 'monter', 'descendre', 'tomber', 'rester', 'retourner'];
-    const usesEtre = ETRE_VERBS.includes(v) || ETRE_VERBS.includes(base);
-
-    if (usesEtre) {
+    const auxVerb = (isPronominal || ETRE_VERBS.includes(v) || ETRE_VERBS.includes(base)) ? 'être' : 'avoir';
+    let auxTenseMap = {
+      'passe_compose': 'present',
+      'plus_que_parfait': 'imparfait',
+      'passe_anterieur': 'passe_simple',
+      'futur_anterieur': 'futur_simple',
+      'subjonctif_passe': 'subjonctif_present',
+      'subjonctif_plus_que_parfait': 'subjonctif_imparfait',
+      'conditionnel_passe': 'conditionnel_present',
+      'imperatif_passe': 'imperatif_present'
+    };
+    const auxConj = getFrenchConjugations(auxVerb, auxTenseMap[tense]);
+    if (auxConj) {
+      if (tense === 'imperatif_passe') {
+        return {
+          je: '-',
+          tu: auxConj.tu + ' ' + pp,
+          il: '-',
+          nous: auxConj.nous + ' ' + pp,
+          vous: auxConj.vous + ' ' + pp,
+          ils: '-'
+        };
+      }
       return {
-        je: `je suis ${pp}`,
-        tu: `tu es ${pp}`,
-        il: `il est ${pp}`,
-        nous: `nous sommes ${pp}`,
-        vous: `vous êtes ${pp}`,
-        ils: `ils sont ${pp}`
-      };
-    } else {
-      return {
-        je: `j’ai ${pp}`,
-        tu: `tu as ${pp}`,
-        il: `il a ${pp}`,
-        nous: `nous avons ${pp}`,
-        vous: `vous avez ${pp}`,
-        ils: `ils ont ${pp}`
+        je: auxConj.je + ' ' + pp,
+        tu: auxConj.tu + ' ' + pp,
+        il: auxConj.il + ' ' + pp,
+        nous: auxConj.nous + ' ' + pp,
+        vous: auxConj.vous + ' ' + pp,
+        ils: auxConj.ils + ' ' + pp
       };
     }
   }
@@ -312,8 +347,41 @@ function getFrenchConjugations(verb, tense = 'present') {
     };
   }
 
-  // 3. Futur Simple (Simple Future)
-  if (tense === 'futur_simple') {
+  // 3. Passé Simple
+  if (tense === 'passe_simple') {
+    if (base === 'être') return { je: "je fus", tu: "tu fus", il: "il fut", nous: "nous fûmes", vous: "vous fûtes", ils: "ils furent" };
+    if (base === 'avoir') return { je: "j’eus", tu: "tu eus", il: "il eut", nous: "nous eûmes", vous: "vous eûtes", ils: "ils eurent" };
+    if (base === 'faire') return { je: "je fis", tu: "tu fis", il: "il fit", nous: "nous fîmes", vous: "vous fîtes", ils: "ils firent" };
+    if (base === 'aller') return { je: "j’allai", tu: "tu allas", il: "il alla", nous: "nous allâmes", vous: "vous allâtes", ils: "ils allèrent" };
+
+    const elerInfo = getFrenchElerEterStems(v);
+    const stem = elerInfo.isElerEter ? elerInfo.stemNormal + (v.endsWith('er') ? 'el' : 'et') : (v.endsWith('er') ? v.slice(0, -2) : v.slice(0, -2));
+    
+    if (v.endsWith('er')) {
+      const psStem = v.slice(0, -2);
+      return {
+        je: withElision('je', psStem + 'ai'),
+        tu: `tu ${psStem}as`,
+        il: `il ${psStem}a`,
+        nous: `nous ${psStem}âmes`,
+        vous: `vous ${psStem}âtes`,
+        ils: `ils ${psStem}èrent`
+      };
+    } else {
+      const psStem = v.slice(0, -2);
+      return {
+        je: withElision('je', psStem + 'is'),
+        tu: `tu ${psStem}is`,
+        il: `il ${psStem}it`,
+        nous: `nous ${psStem}îmes`,
+        vous: `vous ${psStem}îtes`,
+        ils: `ils ${psStem}irent`
+      };
+    }
+  }
+
+  // 4. Futur Simple (Simple Future)
+  if (tense === 'futur_simple' || tense === 'futur') {
     const BASE_FUTUR_STEMS = {
       'être': 'ser', 'avoir': 'aur', 'aller': 'ir', 'faire': 'fer',
       'pouvoir': 'pourr', 'vouloir': 'voudr', 'savoir': 'saur', 'voir': 'verr',
@@ -338,8 +406,8 @@ function getFrenchConjugations(verb, tense = 'present') {
     };
   }
 
-  // 4. Subjonctif Présent (Subjunctive Present)
-  if (tense === 'subjonctif') {
+  // 5. Subjonctif Présent
+  if (tense === 'subjonctif' || tense === 'subjonctif_present') {
     const BASE_SUBJ_IRREGULARS = {
       'être': { je: 'sois', tu: 'sois', il: 'soit', nous: 'soyons', vous: 'soyez', ils: 'soient' },
       'avoir': { je: 'aie', tu: 'aies', il: 'ait', nous: 'ayons', vous: 'ayez', ils: 'aient' },
@@ -392,6 +460,88 @@ function getFrenchConjugations(verb, tense = 'present') {
       vous: `que vous ${stem}iez`,
       ils: withElision('que ils', stem + 'ent')
     };
+  }
+
+  // 6. Subjonctif Imparfait
+  if (tense === 'subjonctif_imparfait') {
+    if (base === 'être') return { je: "que je fusse", tu: "que tu fusses", il: "qu’il fût", nous: "que nous fussions", vous: "que vous fussiez", ils: "qu’ils fussent" };
+    if (base === 'avoir') return { je: "que j’eusse", tu: "que tu eusses", il: "qu’il eût", nous: "que nous eussions", vous: "que vous eussiez", ils: "qu’ils eussent" };
+    
+    if (v.endsWith('er')) {
+      const stem = v.slice(0, -2);
+      return {
+        je: withElision('que je', stem + 'asse'),
+        tu: `que tu ${stem}asses`,
+        il: withElision('que il', stem + 'ât'),
+        nous: `que nous ${stem}assions`,
+        vous: `que vous ${stem}assiez`,
+        ils: withElision('que ils', stem + 'assent')
+      };
+    } else {
+      const stem = v.slice(0, -2);
+      return {
+        je: withElision('que je', stem + 'isse'),
+        tu: `que tu ${stem}isses`,
+        il: withElision('que il', stem + 'ît'),
+        nous: `que nous ${stem}issions`,
+        vous: `que vous ${stem}issiez`,
+        ils: withElision('que ils', stem + 'issent')
+      };
+    }
+  }
+
+  // 7. Conditionnel Présent
+  if (tense === 'conditionnel_present') {
+    const fut = getFrenchConjugations(v, 'futur_simple');
+    if (fut && fut.je) {
+      let stem = fut.je.replace(/^(j’|je\s*)/, '').replace(/ai$/, '');
+      return {
+        je: withElision('je', stem + 'ais'),
+        tu: `tu ${stem}ais`,
+        il: `il ${stem}ait`,
+        nous: `nous ${stem}ions`,
+        vous: `vous ${stem}iez`,
+        ils: `ils ${stem}aient`
+      };
+    }
+  }
+
+  // 8. Impératif Présent
+  if (tense === 'imperatif_present') {
+    if (base === 'être') return { je: '-', tu: '(tu) sois', il: '-', nous: '(nous) soyons', vous: '(vous) soyez', ils: '-' };
+    if (base === 'avoir') return { je: '-', tu: '(tu) aie', il: '-', nous: '(nous) ayons', vous: '(vous) ayez', ils: '-' };
+
+    const pres = getFrenchConjugations(v, 'present');
+    if (pres) {
+      let tuForm = pres.tu.replace(/^tu\s*/, '');
+      if (v.endsWith('er') && tuForm.endsWith('es')) {
+        tuForm = tuForm.slice(0, -1); // Drop silent 's' in -er imperative tu
+      }
+      return {
+        je: `-`,
+        tu: `(tu) ${tuForm}`,
+        il: `-`,
+        nous: `(nous) ${pres.nous.replace(/^nous\s*/, '')}`,
+        vous: `(vous) ${pres.vous.replace(/^vous\s*/, '')}`,
+        ils: `-`
+      };
+    }
+  }
+
+  // 9. Participe Présent
+  if (tense === 'participe_present') {
+    if (v === 'être') return { je: 'étant', tu: 'étant', il: 'étant', nous: 'étant', vous: 'étant', ils: 'étant' };
+    if (v === 'avoir') return { je: 'ayant', tu: 'ayant', il: 'ayant', nous: 'ayant', vous: 'ayant', ils: 'ayant' };
+    const pres = getFrenchConjugations(v, 'present');
+    let stem = (pres && pres.nous) ? pres.nous.replace(/^nous\s*/, '').replace(/ons$/, '') : v.slice(0, -2);
+    const pForm = stem + 'ant';
+    return { je: pForm, tu: pForm, il: pForm, nous: pForm, vous: pForm, ils: pForm };
+  }
+
+  // 10. Participe Passé
+  if (tense === 'participe_passe') {
+    const pp = getFrenchPastParticiple(v);
+    return { je: pp, tu: pp, il: pp, nous: pp, vous: pp, ils: pp };
   }
 
   // 5. Présent de l'Indicatif (Default Present Tense)
@@ -633,5 +783,179 @@ function detectPageLanguage(doc) {
 
   return 'en';
 }
+
+/**
+ * 10-Language Word Micro-Sensor
+ * Performs deterministic character-set scanning to detect word language.
+ */
+function detectWordLanguage(word, fallbackLang = 'en') {
+  if (!word) return fallbackLang;
+  const w = word.trim();
+  if (!w) return fallbackLang;
+
+  // 1. Japanese: Hiragana (\u3040-\u309F) or Katakana (\u30A0-\u30FF)
+  if (/[\u3040-\u309F\u30A0-\u30FF]/.test(w)) return 'ja';
+
+  // 2. Korean: Hangul Syllables (\uAC00-\uD7AF) or Jamo (\u3130-\u318F)
+  if (/[\uAC00-\uD7AF\u3130-\u318F]/.test(w)) return 'ko';
+
+  // 3. German: Eszett (ß) or German Umlauts
+  if (/[ß]/.test(w)) return 'de';
+
+  // 4. French: Distinct accents (œ, æ, ç, è, ê, ë), contractions (s', d'), or French conjugated verb suffixes
+  if (/[œæçèêë]/.test(w.toLowerCase()) || /^[sdSD]['’]/.test(w)) return 'fr';
+  if (/(?:eras|erai|erons|erez|eront|erais|erait|erions|eriez|eraient|assent|assions|assiez)$/i.test(w)) return 'fr';
+
+  // 5. Portuguese: Tildes (ã, õ)
+  if (/[ãõÃÕ]/.test(w)) return 'pt';
+
+  // 6. Spanish: Tilde ñ/Ñ, inverted punctuation ¿/¡
+  if (/[ñÑ¿¡]/.test(w)) return 'es';
+
+  // German/Spanish/French overlapping accents (ä, ö, ü, á, é, í, ó, ú)
+  if (/[äöüÄÖÜ]/.test(w)) return 'de';
+  if (/[áéíóúÁÉÍÓÚ]/.test(w)) return 'es';
+
+  // 7. CJK Hanzi (Chinese)
+  if (/[\u4E00-\u9FFF]/.test(w)) {
+    return fallbackLang === 'zh-CN' ? 'zh-CN' : 'zh-TW';
+  }
+
+  return fallbackLang || 'en';
+}
+
+/**
+ * Detects the conjugated tense of a French inflected verb query word.
+ * Returns one of: 'present', 'passe_compose', 'imparfait', 'futur_simple', 'subjonctif'.
+ */
+function detectFrenchQueryTense(word, data = {}) {
+  if (!word) return 'present';
+  const w = word.trim().toLowerCase();
+
+  // 1. Definition Text Signals (highest precision)
+  if (data && Array.isArray(data.definitions)) {
+    const defStr = data.definitions.join(' ').toLowerCase();
+    if ((defStr.includes('imperfect') || defStr.includes('imparfait')) && (defStr.includes('subjunctive') || defStr.includes('subjonctif'))) return 'subjonctif_imparfait';
+    if (defStr.includes('subjunctive') || defStr.includes('subjonctif')) return 'subjonctif_present';
+    if (defStr.includes('future') || defStr.includes('futur')) return 'futur_simple';
+    if (defStr.includes('imperfect') || defStr.includes('imparfait')) return 'imparfait';
+    if (defStr.includes('past participle') || defStr.includes('passé composé') || defStr.includes('compound past')) return 'passe_compose';
+  }
+
+  // 2. Exact Reverse LEFFF Table Lookup for Irregular Verbs (être, avoir, faire, aller, etc.)
+  if (typeof require !== 'undefined') {
+    try {
+      const { getConjugation } = require('french-verbs');
+      if (!_lefffDictCache) {
+        _lefffDictCache = require('french-verbs-lefff/dist/conjugations.json');
+      }
+      const Lefff = _lefffDictCache;
+      const targetVerb = data.lemmaInfo ? data.lemmaInfo.lemma : null;
+      
+      const tensesToCheck = [
+        { fv: 'FUTUR', id: 'futur_simple' },
+        { fv: 'SUBJONCTIF_PRESENT', id: 'subjonctif_present' },
+        { fv: 'IMPARFAIT', id: 'imparfait' },
+        { fv: 'PARTICIPE_PASSE', id: 'passe_compose' },
+        { fv: 'PASSE_COMPOSE', id: 'passe_compose' },
+        { fv: 'PRESENT', id: 'present' }
+      ];
+
+      const checkVerbs = targetVerb && Lefff[targetVerb] 
+        ? [targetVerb] 
+        : ['être', 'avoir', 'faire', 'pouvoir', 'vouloir', 'aller', 'voir', 'savoir', 'venir', 'devenir'];
+
+      for (const vCandidate of checkVerbs) {
+        if (Lefff[vCandidate]) {
+          for (const tObj of tensesToCheck) {
+            for (let pIdx = 0; pIdx < 6; pIdx++) {
+              try {
+                const cVal = getConjugation(Lefff, vCandidate, tObj.fv, pIdx, {}, false);
+                if (cVal && cVal.toLowerCase() === w) {
+                  return tObj.id;
+                }
+              } catch (e) {}
+            }
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 3. Morphological Suffix Signals
+  // Participe Présent: -ant
+  if (w.endsWith('ant') && !w.endsWith('er')) {
+    return 'participe_present';
+  }
+
+  // Subjonctif Imparfait: -asse, -asses, -ât, -assions, -assiez, -assent
+  if (/(?:asse|asses|ât|assions|assiez|assent)$/i.test(w)) {
+    return 'subjonctif_imparfait';
+  }
+
+  // Conditionnel Présent: -erais, -erait, -erions, -eriez, -eraient, -rais, -rait, -rions, -riez, -raient
+  if (/(?:erais|erait|erions|eriez|eraient|rais|rait|rions|riez|raient)$/i.test(w)) {
+    return 'conditionnel_present';
+  }
+
+  // Futur Simple: -erai, -eras, -era, -erons, -erez, -eront, -rai, -ras, -ra, -rons, -rez, -ront
+  if (/(?:eras|erai|erons|erez|eront|rai|ras|ra|rons|rez|ront)$/i.test(w)) {
+    return 'futur_simple';
+  }
+
+  // Imparfait: -ais, -ait, -ions, -iez, -aient
+  if (/(?:ais|ait|ions|iez|aient)$/i.test(w)) {
+    return 'imparfait';
+  }
+
+  // Passé composé (Past Participle endings)
+  if (/[é]s?$|[ui]s?$|[ui]t$/i.test(w) && !w.endsWith('er') && !w.endsWith('ir') && !w.endsWith('re')) {
+    return 'passe_compose';
+  }
+
+  return 'present';
+}
+
+const TENSE_PAGE_MAP = {
+  // Page 1: 直陳式 核心 (Indicatif Core)
+  'present': { pageIndex: 1, label: 'Présent', category: 'Indicatif' },
+  'passe_compose': { pageIndex: 1, label: 'Passé C.', category: 'Indicatif' },
+  'imparfait': { pageIndex: 1, label: 'Imparfait', category: 'Indicatif' },
+  'plus_que_parfait': { pageIndex: 1, label: 'Plus-que-parfait', category: 'Indicatif' },
+
+  // Page 2: 直陳式 歷史與將來 (Indicatif Advanced)
+  'passe_simple': { pageIndex: 2, label: 'Passé Simple', category: 'Indicatif' },
+  'passe_anterieur': { pageIndex: 2, label: 'Passé Antér.', category: 'Indicatif' },
+  'futur_simple': { pageIndex: 2, label: 'Futur', category: 'Indicatif' },
+  'futur_anterieur': { pageIndex: 2, label: 'Futur Antér.', category: 'Indicatif' },
+
+  // Page 3: 虛擬式 (Subjonctif)
+  'subjonctif_present': { pageIndex: 3, label: 'Subj. Présent', category: 'Subjonctif' },
+  'subjonctif_passe': { pageIndex: 3, label: 'Subj. Passé', category: 'Subjonctif' },
+  'subjonctif_imparfait': { pageIndex: 3, label: 'Subj. Imp.', category: 'Subjonctif' },
+  'subjonctif_plus_que_parfait': { pageIndex: 3, label: 'Subj. P.Q.P.', category: 'Subjonctif' },
+
+  // Page 4: 條件式與命令式 (Conditionnel & Impératif)
+  'conditionnel_present': { pageIndex: 4, label: 'Conditionnel', category: 'Conditionnel' },
+  'conditionnel_passe': { pageIndex: 4, label: 'Cond. Passé', category: 'Conditionnel' },
+  'imperatif_present': { pageIndex: 4, label: 'Impératif', category: 'Impératif' },
+  'imperatif_passe': { pageIndex: 4, label: 'Impér. Passé', category: 'Impératif' },
+
+  // Page 5: 分詞 (Participe)
+  'participe_present': { pageIndex: 5, label: 'Part. Présent', category: 'Participe' },
+  'participe_passe': { pageIndex: 5, label: 'Part. Passé', category: 'Participe' }
+};
+
+// Aliases
+TENSE_PAGE_MAP['subjonctif'] = TENSE_PAGE_MAP['subjonctif_present'];
+TENSE_PAGE_MAP['futur'] = TENSE_PAGE_MAP['futur_simple'];
+
+function getTensePageInfo(tenseId) {
+  if (!tenseId) return TENSE_PAGE_MAP['present'];
+  const tKey = tenseId.toLowerCase();
+  return TENSE_PAGE_MAP[tKey] || TENSE_PAGE_MAP['present'];
+}
+
+
 
 
