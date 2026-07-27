@@ -4,6 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusToast = document.getElementById('status');
   let toastTimeout = null;
 
+  // Set dynamic version text from manifest.json
+  try {
+    const manifest = chrome.runtime.getManifest();
+    const versionEl = document.getElementById('app-version');
+    if (versionEl && manifest && manifest.version) {
+      versionEl.textContent = `GlossaPop Version ${manifest.version} | Manifest V3`;
+    }
+  } catch (e) {}
+
   // 1. Retrieve saved values from storage to initialize UI elements
   chrome.storage.sync.get({
     defaultTargetLang: 'en',

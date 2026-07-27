@@ -52,6 +52,12 @@ const POPUP_CSS = `
   .glossapop-card {
     position: absolute;
     width: 320px;
+    min-width: 280px;
+    min-height: 200px;
+    max-width: 90vw;
+    max-height: 90vh;
+    resize: both;
+    overflow: auto;
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(20px) saturate(190%);
     -webkit-backdrop-filter: blur(20px) saturate(190%);
@@ -451,23 +457,26 @@ const POPUP_CSS = `
   }
   .glossapop-conj-item {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
     line-height: 1.35;
     cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 4px;
+    padding: 3px 6px;
+    border-radius: 6px;
     transition: background-color 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11.5px;
   }
   .glossapop-conj-item:hover {
-    background-color: rgba(0, 102, 204, 0.08);
-  }
-  .glossapop-conj-item span {
-    color: #8e8e93;
-    margin-right: 6px;
+    background-color: rgba(0, 102, 204, 0.12);
   }
   .glossapop-conj-item strong {
     color: #1c1c1e;
     font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Translation Text */
@@ -935,14 +944,14 @@ const UIComponents = {
   /**
    * Renders French Verb Conjugations with 5 Tenses
    */
-  renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = 'present') {
+  renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = null) {
     if (activeTargetLang === 'fr' && data.isVerb) {
       const verbToConjugate = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || queryWord);
       
       const isSubjunctiveQuery = (data.definitions && data.definitions.some(d => d.toLowerCase().includes('subjunctive'))) || 
                                 ['soient', 'sois', 'soit', 'soyons', 'soyez', 'fasse', 'fassent', 'puisse', 'puissent', 'aie', 'aies', 'ait', 'ayons', 'ayez', 'aient'].includes(queryWord.toLowerCase());
-      if (activeTense === 'present' && isSubjunctiveQuery) {
-        activeTense = 'subjonctif';
+      if (!activeTense) {
+        activeTense = isSubjunctiveQuery ? 'subjonctif' : 'present';
       }
 
       const conj = (data.apiConjugations && data.apiConjugations[activeTense]) ? data.apiConjugations[activeTense] : getFrenchConjugations(verbToConjugate, activeTense);
@@ -960,12 +969,12 @@ const UIComponents = {
           <div class="glossapop-conj-title">Conjugaison: ${escapeHtml(verbToConjugate)}</div>
           <div class="glossapop-tense-tabs">${tabsHtml}</div>
           <div class="glossapop-conj-grid">
-            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.je)}"><span>je</span> <strong>${escapeHtml(conj.je)}</strong></div>
-            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.nous)}"><span>nous</span> <strong>${escapeHtml(conj.nous)}</strong></div>
-            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.tu)}"><span>tu</span> <strong>${escapeHtml(conj.tu)}</strong></div>
-            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.vous)}"><span>vous</span> <strong>${escapeHtml(conj.vous)}</strong></div>
-            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.il)}"><span>il/elle</span> <strong>${escapeHtml(conj.il)}</strong></div>
-            <div class="glossapop-conj-item" style="cursor: pointer;" data-speak="${escapeHtml(conj.ils)}"><span>ils/elles</span> <strong>${escapeHtml(conj.ils)}</strong></div>
+            <div class="glossapop-conj-item" title="${escapeHtml(conj.je)}" data-speak="${escapeHtml(conj.je)}"><strong>${escapeHtml(conj.je)}</strong></div>
+            <div class="glossapop-conj-item" title="${escapeHtml(conj.nous)}" data-speak="${escapeHtml(conj.nous)}"><strong>${escapeHtml(conj.nous)}</strong></div>
+            <div class="glossapop-conj-item" title="${escapeHtml(conj.tu)}" data-speak="${escapeHtml(conj.tu)}"><strong>${escapeHtml(conj.tu)}</strong></div>
+            <div class="glossapop-conj-item" title="${escapeHtml(conj.vous)}" data-speak="${escapeHtml(conj.vous)}"><strong>${escapeHtml(conj.vous)}</strong></div>
+            <div class="glossapop-conj-item" title="${escapeHtml(conj.il)}" data-speak="${escapeHtml(conj.il)}"><strong>${escapeHtml(conj.il)}</strong></div>
+            <div class="glossapop-conj-item" title="${escapeHtml(conj.ils)}" data-speak="${escapeHtml(conj.ils)}"><strong>${escapeHtml(conj.ils)}</strong></div>
           </div>
         `;
 
@@ -1120,7 +1129,7 @@ function renderPopupFrame(shadowRoot, word, activeTargetLang, activeExplainLang,
 function renderLemma(lemmaRow, data, activeTargetLang) {
   UIComponents.renderLemma(lemmaRow, data, activeTargetLang);
 }
-function renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = 'present') {
+function renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense = null) {
   UIComponents.renderConjugations(conjBox, data, activeTargetLang, queryWord, activeTense);
 }
 function renderSynonyms(synonymsBox, data, onChipClick) {

@@ -175,7 +175,7 @@ function getFrenchConjugations(verb, tense = 'present') {
   // 2. Imparfait (Imperfect)
   if (tense === 'imparfait') {
     if (v === 'être') {
-      return { je: "j’étais", tu: "étais", il: "était", nous: "étions", vous: "étiez", ils: "étaient" };
+      return { je: "j’étais", tu: "tu étais", il: "il était", nous: "nous étions", vous: "vous étiez", ils: "ils étaient" };
     }
     const pres = getFrenchConjugations(v, 'present');
     let stem = '';
@@ -186,11 +186,11 @@ function getFrenchConjugations(verb, tense = 'present') {
     }
     return {
       je: withElision('je', stem + 'ais'),
-      tu: `${stem}ais`,
-      il: `${stem}ait`,
-      nous: `${stem}ions`,
-      vous: `${stem}iez`,
-      ils: `${stem}aient`
+      tu: `tu ${stem}ais`,
+      il: `il ${stem}ait`,
+      nous: `nous ${stem}ions`,
+      vous: `vous ${stem}iez`,
+      ils: `ils ${stem}aient`
     };
   }
 
@@ -207,11 +207,11 @@ function getFrenchConjugations(verb, tense = 'present') {
     }
     return {
       je: withElision('je', stem + 'ai'),
-      tu: `${stem}as`,
-      il: `${stem}a`,
-      nous: `${stem}ons`,
-      vous: `${stem}ez`,
-      ils: `${stem}ont`
+      tu: `tu ${stem}as`,
+      il: `il ${stem}a`,
+      nous: `nous ${stem}ons`,
+      vous: `vous ${stem}ez`,
+      ils: `ils ${stem}ont`
     };
   }
 
@@ -245,7 +245,7 @@ function getFrenchConjugations(verb, tense = 'present') {
     else if (v.endsWith('re')) stem = v.slice(0, -2);
     else {
       const pres = getFrenchConjugations(v, 'present');
-      stem = (pres && pres.ils) ? pres.ils.replace(/ent$/, '') : v;
+      stem = (pres && pres.ils) ? pres.ils.replace(/^ils\s*/, '').replace(/ent$/, '') : v;
     }
     
     return {
@@ -283,11 +283,11 @@ function getFrenchConjugations(verb, tense = 'present') {
     const b = BASE_PRESENT_IRREGULARS[base];
     return {
       je: withElision('je', prefix + b.je),
-      tu: prefix + b.tu,
-      il: prefix + b.il,
-      nous: prefix + b.nous,
-      vous: prefix + b.vous,
-      ils: prefix + b.ils
+      tu: `tu ${prefix}${b.tu}`,
+      il: `il ${prefix}${b.il}`,
+      nous: `nous ${prefix}${b.nous}`,
+      vous: `vous ${prefix}${b.vous}`,
+      ils: `ils ${prefix}${b.ils}`
     };
   }
   
@@ -297,11 +297,11 @@ function getFrenchConjugations(verb, tense = 'present') {
     const nousForm = v.endsWith('ger') ? stem + 'eons' : (v.endsWith('cer') ? stem.slice(0, -1) + 'çons' : stem + 'ons');
     return {
       je: withElision('je', stem + 'e'),
-      tu: stem + 'es',
-      il: stem + 'e',
-      nous: nousForm,
-      vous: stem + 'ez',
-      ils: stem + 'ent'
+      tu: `tu ${stem}es`,
+      il: `il ${stem}e`,
+      nous: `nous ${nousForm}`,
+      vous: `vous ${stem}ez`,
+      ils: `ils ${stem}ent`
     };
   }
   
@@ -310,11 +310,11 @@ function getFrenchConjugations(verb, tense = 'present') {
     const stem = v.slice(0, -2);
     return {
       je: withElision('je', stem + 'is'),
-      tu: stem + 'is',
-      il: stem + 'it',
-      nous: stem + 'issons',
-      vous: stem + 'issez',
-      ils: stem + 'issent'
+      tu: `tu ${stem}is`,
+      il: `il ${stem}it`,
+      nous: `nous ${stem}issons`,
+      vous: `vous ${stem}issez`,
+      ils: `ils ${stem}issent`
     };
   }
   
@@ -323,11 +323,11 @@ function getFrenchConjugations(verb, tense = 'present') {
     const stem = v.slice(0, -2);
     return {
       je: withElision('je', stem + 's'),
-      tu: stem + 's',
-      il: stem + 't',
-      nous: stem + 'ons',
-      vous: stem + 'ez',
-      ils: stem + 'ent'
+      tu: `tu ${stem}s`,
+      il: `il ${stem}t`,
+      nous: `nous ${stem}ons`,
+      vous: `vous ${stem}ez`,
+      ils: `ils ${stem}ent`
     };
   }
   
