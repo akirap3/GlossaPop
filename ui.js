@@ -1090,27 +1090,20 @@ const UIComponents = {
   /**
    * Renders External Reference Dictionary Links
    */
-  renderLinks(externalLinksBox, data, activeTargetLang, queryWord) {
+  renderLinks(externalLinksBox, data, activeTargetLang, queryWord, activeExplainLang = '') {
+    if (!externalLinksBox) return;
     const lookupWord = data.lemmaInfo ? data.lemmaInfo.lemma : (data.word || queryWord);
-    const encoded = encodeURIComponent(lookupWord);
-    
-    if (activeTargetLang === 'en') {
-      externalLinksBox.innerHTML = `
-        <span>Read more:</span>
-        <a href="https://dictionary.cambridge.org/dictionary/english/${encoded}" target="_blank" rel="noopener noreferrer">Cambridge</a>
-        <span class="glossapop-separator">|</span>
-        <a href="https://www.merriam-webster.com/dictionary/${encoded}" target="_blank" rel="noopener noreferrer">Merriam-Webster</a>
-      `;
-      externalLinksBox.style.display = 'flex';
-    } else if (activeTargetLang === 'fr') {
-      externalLinksBox.innerHTML = `
-        <span>Read more:</span>
-        <a href="https://www.larousse.fr/dictionnaires/francais/${encoded}" target="_blank" rel="noopener noreferrer">Larousse</a>
-        <span class="glossapop-separator">|</span>
-        <a href="https://www.wordreference.com/fren/${encoded}" target="_blank" rel="noopener noreferrer">WordReference</a>
-        <span class="glossapop-separator">|</span>
-        <a href="https://www.frdic.com/dicts/fr/${encoded}" target="_blank" rel="noopener noreferrer">法語助手</a>
-      `;
+    const links = (typeof getDynamicReferenceLinks === 'function') 
+      ? getDynamicReferenceLinks(lookupWord, activeTargetLang, activeExplainLang) 
+      : [];
+
+    if (links && links.length > 0) {
+      let html = `<span>Read more:</span>`;
+      links.forEach((link, idx) => {
+        if (idx > 0) html += `<span class="glossapop-separator">|</span>`;
+        html += `<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.name)}</a>`;
+      });
+      externalLinksBox.innerHTML = html;
       externalLinksBox.style.display = 'flex';
     } else {
       externalLinksBox.style.display = 'none';
@@ -1153,8 +1146,8 @@ function renderSynonyms(synonymsBox, data, onChipClick) {
 function renderExample(exampleBox, data, activeTargetLang) {
   UIComponents.renderExample(exampleBox, data, activeTargetLang);
 }
-function renderLinks(externalLinksBox, data, activeTargetLang, queryWord) {
-  UIComponents.renderLinks(externalLinksBox, data, activeTargetLang, queryWord);
+function renderLinks(externalLinksBox, data, activeTargetLang, queryWord, activeExplainLang = '') {
+  UIComponents.renderLinks(externalLinksBox, data, activeTargetLang, queryWord, activeExplainLang);
 }
 function showToastNotice(shadowRoot, message) {
   UIComponents.showToast(shadowRoot, message);

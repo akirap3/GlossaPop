@@ -266,7 +266,7 @@ async function fetchAndDisplay(word, isInitial = false) {
         renderConjugations(conjBox, data, activeTargetLang, word);
         if (synonymsBox) renderSynonyms(synonymsBox, data, (clickedChipWord) => fetchAndDisplay(clickedChipWord, false));
         renderExample(exampleBox, data, activeTargetLang);
-        renderLinks(externalLinksBox, data, activeTargetLang, word);
+        renderLinks(externalLinksBox, data, activeTargetLang, word, activeExplainLang);
 
         // 1. Render phonetics if available
         if (data.phonetic) {

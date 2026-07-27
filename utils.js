@@ -361,3 +361,77 @@ function getCEFRLevel(word, lang) {
   
   return colors[level] || colors['B1'];
 }
+
+/**
+ * Dynamic Language-Aware External Reference Links Generator
+ */
+function getDynamicReferenceLinks(word, lang, explainLang = '') {
+  const clean = (word || '').trim();
+  const encoded = encodeURIComponent(clean);
+  const l = (lang || 'en').toLowerCase();
+  const expL = (explainLang || '').toLowerCase();
+  const isChineseExplain = expL.startsWith('zh');
+
+  if (l === 'ja') {
+    return [
+      { name: 'Jisho', url: `https://jisho.org/search/${encoded}` },
+      { name: 'Weblio', url: `https://cjjc.weblio.jp/content/${encoded}` },
+      { name: 'OJAD', url: `https://www.gavo.t.u-tokyo.ac.jp/ojad/search/index/word:${encoded}` }
+    ];
+  }
+  if (l === 'fr') {
+    const frLinks = [
+      { name: 'Larousse', url: `https://www.larousse.fr/dictionnaires/francais/${encoded}` },
+      { name: 'WordReference', url: `https://www.wordreference.com/fren/${encoded}` },
+      { name: 'CNRTL', url: `https://www.cnrtl.fr/definition/${encoded}` }
+    ];
+    if (isChineseExplain) {
+      frLinks.push({ name: '法語助手', url: `https://www.frdic.com/dicts/fr/${encoded}` });
+    }
+    return frLinks;
+  }
+  if (l === 'es') {
+    return [
+      { name: 'SpanishDict', url: `https://www.spanishdict.com/translate/${encoded}` },
+      { name: 'RAE', url: `https://dle.rae.es/${encoded}` },
+      { name: 'WordReference', url: `https://www.wordreference.com/es/en/translation.asp?spen=${encoded}` }
+    ];
+  }
+  if (l === 'de') {
+    return [
+      { name: 'Duden', url: `https://www.duden.de/suchen/dudenonline/${encoded}` },
+      { name: 'DWDS', url: `https://www.dwds.de/wb/${encoded}` },
+      { name: 'Leo', url: `https://dict.leo.org/german-english/${encoded}` }
+    ];
+  }
+  if (l === 'ko') {
+    return [
+      { name: 'Naver', url: `https://dict.naver.com/search.nhn?query=${encoded}` },
+      { name: 'Daum', url: `https://dic.daum.net/search.do?q=${encoded}` }
+    ];
+  }
+  if (l === 'it') {
+    return [
+      { name: 'Treccani', url: `https://www.treccani.it/vocabolario/ricerca/${encoded}/` },
+      { name: 'WordReference', url: `https://www.wordreference.com/iten/${encoded}` }
+    ];
+  }
+  if (l === 'pt') {
+    return [
+      { name: 'Priberam', url: `https://dicionario.priberam.org/${encoded}` },
+      { name: 'WordReference', url: `https://www.wordreference.com/pten/${encoded}` }
+    ];
+  }
+  if (l === 'zh-tw' || l === 'zh-cn' || l === 'zh') {
+    return [
+      { name: 'MoeDict', url: `https://www.moedict.tw/${encoded}` },
+      { name: 'WordReference', url: `https://www.wordreference.com/zhen/${encoded}` }
+    ];
+  }
+  // Default English / Global fallback
+  return [
+    { name: 'Cambridge', url: `https://dictionary.cambridge.org/dictionary/english/${encoded}` },
+    { name: 'Oxford', url: `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded}` },
+    { name: 'Merriam-Webster', url: `https://www.merriam-webster.com/dictionary/${encoded}` }
+  ];
+}
