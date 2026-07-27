@@ -89,8 +89,8 @@ function showPopup(word, x, y) {
   const card = shadowRoot.querySelector('.glossapop-card');
   
   // Assign settings default languages
-  activeTargetLang = settings.defaultTargetLang;
-  activeExplainLang = settings.defaultExplainLang;
+  activeTargetLang = settings.sourceLangA || 'en';
+  activeExplainLang = settings.explainLangA || 'zh-TW';
 
   // Position card
   card.style.left = `${x}px`;
@@ -211,8 +211,18 @@ async function fetchAndDisplay(word, isInitial = false) {
         activeTargetLang = data.detectedLang;
         const targetGroup = shadowRoot.querySelector('#target-lang-group');
         if (targetGroup) {
-          targetGroup.querySelectorAll('.glossapop-segment-btn').forEach(btn => {
-            if (btn.dataset.val === activeTargetLang) {
+          const buttons = Array.from(targetGroup.querySelectorAll('.glossapop-segment-btn'));
+          let matchedBtn = buttons.find(btn => 
+            btn.dataset.val === activeTargetLang || 
+            activeTargetLang.startsWith(btn.dataset.val) || 
+            btn.dataset.val.startsWith(activeTargetLang)
+          );
+          if (!matchedBtn && buttons.length > 0) {
+            matchedBtn = buttons[0];
+            activeTargetLang = matchedBtn.dataset.val;
+          }
+          buttons.forEach(btn => {
+            if (btn === matchedBtn) {
               btn.classList.add('active');
             } else {
               btn.classList.remove('active');

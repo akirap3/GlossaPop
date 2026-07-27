@@ -79,15 +79,54 @@ function playGoogleNeuralTts(word, lang) {
 }
 
 /**
- * Local Web Speech synthesis with Intelligent HD Neural Voice prioritization
+ * Maps language codes (en, fr, es, de, ja, ko, it, pt, zh-TW, zh-CN) to SpeechVoice locales
  */
-function speakWordLocal(word, lang) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
+function getSpeechVoiceLocale(lang) {
+  const map = {
+    'en': 'en-US',
+    'fr': 'fr-FR',
+    'es': 'es-ES',
+    'de': 'de-DE',
+    'ja': 'ja-JP',
+    'ko': 'ko-KR',
+    'it': 'it-IT',
+    'pt': 'pt-PT',
+    'zh-TW': 'zh-TW',
+    'zh-CN': 'zh-CN',
+    'zh': 'zh-TW'
+  };
+  return map[lang] || `${lang}-${lang.toUpperCase()}`;
+}
 
-  const utterance = new SpeechSynthesisUtterance(word);
-  const langPrefix = lang === 'en' ? 'en' : 'fr';
-  utterance.lang = lang === 'en' ? 'en-US' : 'fr-FR';
+/**
+ * Maps language codes to UI display segment labels
+ */
+function getLanguageLabel(code) {
+  const labels = {
+    'en': 'EN',
+    'fr': 'FR',
+    'es': 'ES',
+    'de': 'DE',
+    'ja': 'JA',
+    'ko': 'KO',
+    'it': 'IT',
+    'pt': 'PT',
+    'zh-TW': '繁中',
+    'zh-CN': '簡中',
+    'zh': '繁中'
+  };
+  return labels[code] || (code ? code.toUpperCase() : 'EN');
+}
+
+/**
+ * Native SpeechSynthesis Local Voice Fallback
+ */
+function speakWordLocal(text, lang) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  const langPrefix = lang.split('-')[0];
+  utterance.lang = getSpeechVoiceLocale(lang);
 
   const voices = window.speechSynthesis.getVoices();
   const matchingVoices = voices.filter(v => v.lang.startsWith(langPrefix));

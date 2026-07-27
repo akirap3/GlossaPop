@@ -27,25 +27,30 @@ document.addEventListener('mouseup', (e) => {
 
   initShadowDOM();
 
-  if (settings.triggerMode === 'icon') {
-    const triggerIcon = shadowRoot.querySelector('.glossapop-trigger-icon');
-    
-    // Calculate float icon coordinates (bounded within visible viewport)
-    const viewportWidth = window.innerWidth;
-    const iconX = Math.min(rect.right + window.scrollX + 6, window.scrollX + viewportWidth - 36);
-    const iconY = rect.bottom + window.scrollY + 6;
+  const mode = (settings && settings.triggerMode === 'dblclick') ? 'dblclick' : 'icon';
 
-    triggerIcon.style.left = `${iconX}px`;
-    triggerIcon.style.top = `${iconY}px`;
-    
-    shadowRoot.querySelector('.glossapop-card').classList.remove('visible');
-    triggerIcon.classList.add('visible');
+  if (mode === 'icon') {
+    const triggerIcon = shadowRoot.querySelector('.glossapop-trigger-icon');
+    if (triggerIcon) {
+      // Calculate float icon coordinates (bounded within visible viewport)
+      const viewportWidth = window.innerWidth;
+      const iconX = Math.min(rect.right + window.scrollX + 6, window.scrollX + viewportWidth - 36);
+      const iconY = rect.bottom + window.scrollY + 6;
+
+      triggerIcon.style.left = `${iconX}px`;
+      triggerIcon.style.top = `${iconY}px`;
+      
+      const card = shadowRoot.querySelector('.glossapop-card');
+      if (card) card.classList.remove('visible');
+      triggerIcon.classList.add('visible');
+    }
   }
 });
 
 // Listen for double-click event (direct popup queries)
 document.addEventListener('dblclick', (e) => {
-  if (settings.triggerMode !== 'dblclick') return;
+  const mode = (settings && settings.triggerMode === 'dblclick') ? 'dblclick' : 'icon';
+  if (mode !== 'dblclick') return;
   if (hostElement && e.composedPath().includes(hostElement)) return;
 
   const selection = window.getSelection();

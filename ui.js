@@ -807,6 +807,11 @@ const UIComponents = {
     const cefr = isSentence ? null : getCEFRLevel(word, activeTargetLang);
     const cefrBadge = cefr ? `<span class="glossapop-cefr-badge cefr-${cefr.text.toLowerCase()}" title="${escapeHtml(cefr.label)}">${cefr.text}</span>` : '';
 
+    const sLangA = (typeof settings !== 'undefined' && settings.sourceLangA) ? settings.sourceLangA : 'en';
+    const sLangB = (typeof settings !== 'undefined' && settings.sourceLangB) ? settings.sourceLangB : 'fr';
+    const eLangA = (typeof settings !== 'undefined' && settings.explainLangA) ? settings.explainLangA : 'zh-TW';
+    const eLangB = (typeof settings !== 'undefined' && settings.explainLangB) ? settings.explainLangB : 'en';
+
     const card = shadowRoot.querySelector('.glossapop-card');
     card.innerHTML = `
       <div class="glossapop-header">
@@ -822,12 +827,12 @@ const UIComponents = {
       </div>
       <div class="glossapop-toggles">
         <div class="glossapop-segment" id="target-lang-group">
-          <button class="glossapop-segment-btn ${activeTargetLang === 'en' ? 'active' : ''}" data-val="en">EN</button>
-          <button class="glossapop-segment-btn ${activeTargetLang === 'fr' ? 'active' : ''}" data-val="fr">FR</button>
+          <button class="glossapop-segment-btn ${activeTargetLang === sLangA ? 'active' : ''}" data-val="${sLangA}">${getLanguageLabel(sLangA)}</button>
+          <button class="glossapop-segment-btn ${activeTargetLang === sLangB ? 'active' : ''}" data-val="${sLangB}">${getLanguageLabel(sLangB)}</button>
         </div>
         <div class="glossapop-segment" id="explain-lang-group">
-          <button class="glossapop-segment-btn ${activeExplainLang === 'zh' ? 'active' : ''}" data-val="zh">Chinese</button>
-          <button class="glossapop-segment-btn ${activeExplainLang === 'en' ? 'active' : ''}" data-val="en">English</button>
+          <button class="glossapop-segment-btn ${activeExplainLang === eLangA ? 'active' : ''}" data-val="${eLangA}">${getLanguageLabel(eLangA)}</button>
+          <button class="glossapop-segment-btn ${activeExplainLang === eLangB ? 'active' : ''}" data-val="${eLangB}">${getLanguageLabel(eLangB)}</button>
         </div>
       </div>
       <div class="glossapop-word-info">

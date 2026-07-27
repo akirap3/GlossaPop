@@ -250,7 +250,7 @@ async function autoDetectAndTranslate(word, target) {
         translation = googleData[0].filter(item => item && item[0]).map(item => item[0]).join('');
       }
       
-      const targetSourceLang = (detectedLang === 'fr' || detectedLang === 'en') ? detectedLang : 'en';
+      const targetSourceLang = detectedLang;
       
       let result = {
         word: cleanWord,

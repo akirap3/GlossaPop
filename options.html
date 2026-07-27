@@ -2,106 +2,175 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>GlossaPop - Settings Options</title>
+  <title>GlossaPop - Settings Dashboard</title>
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <div class="container">
     <div class="glass-card">
+      <!-- Header Area -->
       <div class="logo-area">
         <img class="logo-img" src="icons/logo-cat.png" alt="GlossaPop Logo">
         <div>
-          <h1>GlossaPop</h1>
-          <p class="subtitle">Word Translation Popup Options</p>
+          <h1>GlossaPop Settings Dashboard</h1>
+          <p class="subtitle">Personalize your lookup matrix, mouse trigger modes, and Google Drive cloud sync.</p>
         </div>
       </div>
 
-      <div class="settings-form">
-        <!-- Default Target Language -->
-        <div class="setting-section">
-          <h2>Default Target Language</h2>
-          <p class="section-desc">The default source language when looking up words.</p>
-          <div class="segmented-control">
-            <input type="radio" id="target-en" name="defaultTargetLang" value="en" checked>
-            <label for="target-en">English</label>
-            
-            <input type="radio" id="target-fr" name="defaultTargetLang" value="fr">
-            <label for="target-fr">Français (French)</label>
-            
-            <div class="segmented-slider"></div>
+      <!-- Balanced 2-Column Dashboard Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Left Column: 2x2 Multi-Language Matrix Card -->
+        <div class="setting-section card-box">
+          <div class="card-header-badge">
+            <h2>🌐 Multi-Language Preferences (2×2 Matrix)</h2>
+            <p class="section-desc">Customize your 2 lookup languages & 2 explanation languages for quick card header toggles.</p>
           </div>
-        </div>
-        <!-- Default Explanation Language -->
-        <div class="setting-section">
-          <h2>Default Explanation Language</h2>
-          <p class="section-desc">The target language used for translations and definitions.</p>
-          <div class="segmented-control">
-            <input type="radio" id="explain-zh" name="defaultExplainLang" value="zh">
-            <label for="explain-zh">Chinese</label>
-            
-            <input type="radio" id="explain-en" name="defaultExplainLang" value="en" checked>
-            <label for="explain-en">English</label>
-            
-            <div class="segmented-slider"></div>
-          </div>
-        </div>
 
-        <!-- Mouse Trigger Mechanism -->
-        <div class="setting-section">
-          <h2>Mouse Trigger Mode</h2>
-          <p class="section-desc">How to invoke the floating translation popup window.</p>
-          <div class="radio-card-group">
-            <label class="radio-card">
-              <input type="radio" name="triggerMode" value="dblclick">
-              <div class="card-content">
-                <span class="card-title">Double Click</span>
-                <span class="card-desc">Pop up explanations immediately below double-clicked words.</span>
-              </div>
-            </label>
-            
-            <label class="radio-card">
-              <input type="radio" name="triggerMode" value="icon" checked>
-              <div class="card-content">
-                <span class="card-title">Select Text to Show Icon</span>
-                <span class="card-desc">Show a floating magnifying glass icon near selected text; click it to open the lookup card.</span>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- Theme Mode -->
-        <div class="setting-section">
-          <h2>Theme Mode</h2>
-          <p class="section-desc">Choose the popup card appearance. Auto follows the system or page color scheme.</p>
-          <div class="segmented-control segmented-control-3">
-            <input type="radio" id="theme-auto" name="themeMode" value="auto" checked>
-            <label for="theme-auto">🌗 Auto</label>
-            
-            <input type="radio" id="theme-light" name="themeMode" value="light">
-            <label for="theme-light">☀️ Light</label>
-            
-            <input type="radio" id="theme-dark" name="themeMode" value="dark">
-            <label for="theme-dark">🌙 Dark</label>
-            
-            <div class="segmented-slider"></div>
-          </div>
-        </div>
-
-        <!-- Google Drive & Sheets Sync & CSV Export -->
-        <div class="setting-section">
-          <h2>📊 Google Drive & Sheets Sync</h2>
-          <p class="section-desc">Connect your Google account to automatically sync saved vocabulary words into your personal Google Sheet and export vocabulary CSVs.</p>
-          
-          <div class="cloud-status-box" style="background: rgba(255, 255, 255, 0.05); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); margin-top: 8px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-              <span id="google-auth-status" style="font-weight: 600; font-size: 13.5px; color: #e5e5ea;">⚪ Checking Connection...</span>
-              <button id="google-auth-btn" style="padding: 7px 16px; border-radius: 8px; border: none; font-size: 12.5px; font-weight: 600; cursor: pointer; background: #0a84ff; color: #ffffff; transition: all 0.2s;">Connect Google Account</button>
+          <div class="matrix-grid">
+            <div class="select-group">
+              <label class="select-label">
+                <span class="label-badge badge-blue">Lookup 1</span> Primary Source
+              </label>
+              <select id="sourceLangA" class="lang-select">
+                <option value="en">English (en)</option>
+                <option value="fr">French (fr)</option>
+                <option value="es">Spanish (es)</option>
+                <option value="de">German (de)</option>
+                <option value="ja">Japanese (ja)</option>
+                <option value="ko">Korean (ko)</option>
+                <option value="it">Italian (it)</option>
+                <option value="pt">Portuguese (pt)</option>
+                <option value="zh-TW">繁體中文 (zh-TW)</option>
+                <option value="zh-CN">簡體中文 (zh-CN)</option>
+              </select>
+              <span class="select-hint">Default lookup language for text queries</span>
             </div>
+
+            <div class="select-group">
+              <label class="select-label">
+                <span class="label-badge badge-purple">Lookup 2</span> Secondary Source
+              </label>
+              <select id="sourceLangB" class="lang-select">
+                <option value="en">English (en)</option>
+                <option value="fr" selected>French (fr)</option>
+                <option value="es">Spanish (es)</option>
+                <option value="de">German (de)</option>
+                <option value="ja">Japanese (ja)</option>
+                <option value="ko">Korean (ko)</option>
+                <option value="it">Italian (it)</option>
+                <option value="pt">Portuguese (pt)</option>
+                <option value="zh-TW">繁體中文 (zh-TW)</option>
+                <option value="zh-CN">簡體中文 (zh-CN)</option>
+              </select>
+              <span class="select-hint">Alternative lookup language for header toggle</span>
+            </div>
+
+            <div class="select-group">
+              <label class="select-label">
+                <span class="label-badge badge-green">Explain 1</span> Primary Target
+              </label>
+              <select id="explainLangA" class="lang-select">
+                <option value="zh-TW" selected>繁體中文 (zh-TW)</option>
+                <option value="zh-CN">簡體中文 (zh-CN)</option>
+                <option value="en">English (en)</option>
+                <option value="fr">French (fr)</option>
+                <option value="es">Spanish (es)</option>
+                <option value="de">German (de)</option>
+                <option value="ja">Japanese (ja)</option>
+                <option value="ko">Korean (ko)</option>
+                <option value="it">Italian (it)</option>
+                <option value="pt">Portuguese (pt)</option>
+              </select>
+              <span class="select-hint">Primary definition and translation target</span>
+            </div>
+
+            <div class="select-group">
+              <label class="select-label">
+                <span class="label-badge badge-orange">Explain 2</span> Secondary Target
+              </label>
+              <select id="explainLangB" class="lang-select">
+                <option value="en" selected>English (en)</option>
+                <option value="zh-TW">繁體中文 (zh-TW)</option>
+                <option value="zh-CN">簡體中文 (zh-CN)</option>
+                <option value="fr">French (fr)</option>
+                <option value="es">Spanish (es)</option>
+                <option value="de">German (de)</option>
+                <option value="ja">Japanese (ja)</option>
+                <option value="ko">Korean (ko)</option>
+                <option value="it">Italian (it)</option>
+                <option value="pt">Portuguese (pt)</option>
+              </select>
+              <span class="select-hint">Secondary definition and translation target</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Interaction & Appearance Card -->
+        <div class="setting-section card-box">
+          <div class="card-header-badge">
+            <h2>⚙️ Interaction & Appearance</h2>
+            <p class="section-desc">Configure popup trigger behaviors and appearance themes.</p>
+          </div>
+
+          <!-- Mouse Trigger Mode -->
+          <div class="sub-block">
+            <h3 class="sub-block-title">🖱️ Mouse Trigger Mode</h3>
+            <div class="radio-card-group">
+              <label class="radio-card">
+                <input type="radio" name="triggerMode" value="dblclick">
+                <div class="card-content">
+                  <span class="card-title">Double Click</span>
+                  <span class="card-desc">Pop up immediately below double-clicked words.</span>
+                </div>
+              </label>
+              
+              <label class="radio-card">
+                <input type="radio" name="triggerMode" value="icon" checked>
+                <div class="card-content">
+                  <span class="card-title">Select Text to Show Icon</span>
+                  <span class="card-desc">Show a floating magnifying glass icon near text selection.</span>
+                </div>
+              </label>            </div>
+          </div>
+
+          <!-- Theme Mode -->
+          <div class="sub-block" style="margin-top: 14px;">
+            <h3 class="sub-block-title">🌗 Appearance Theme</h3>
+            <div class="segmented-control segmented-control-3">
+              <input type="radio" id="theme-auto" name="themeMode" value="auto" checked>
+              <label for="theme-auto">🌗 Auto</label>
+              
+              <input type="radio" id="theme-light" name="themeMode" value="light">
+              <label for="theme-light">☀️ Light</label>
+              
+              <input type="radio" id="theme-dark" name="themeMode" value="dark">
+              <label for="theme-dark">🌙 Dark</label>
+              
+              <div class="segmented-slider"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Full-Width Section: Google Drive & Sheets Sync -->
+        <div class="setting-section card-box full-width-section">
+          <div class="sync-header">
+            <div>
+              <h2>📊 Google Drive & Sheets Synchronization</h2>
+              <p class="section-desc" style="margin: 0;">Connect your Google account to automatically sync saved vocabulary into your personal Google Sheet and export CSVs.</p>
+            </div>
+            <div>
+              <button id="google-auth-btn" class="auth-btn-main">Connect Google Account</button>
+            </div>
+          </div>
+          
+          <div class="cloud-status-strip">
+            <span id="google-auth-status" class="auth-status-text">⚪ Checking Connection...</span>
             
-            <div id="sheets-actions" style="display: none; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.12);">
-              <button id="sync-words-btn" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #30d158; background: rgba(48, 209, 88, 0.18); color: #30d158; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;">🔄 Sync Vocabulary Cache</button>
-              <button id="export-anki-en-btn" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #64d2ff; background: rgba(100, 210, 255, 0.18); color: #64d2ff; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;">📥 Export English CSV</button>
-              <button id="export-anki-fr-btn" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #bf5af2; background: rgba(191, 90, 242, 0.18); color: #bf5af2; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;">📥 Export French CSV</button>
+            <div id="sheets-actions" class="sheets-actions-group">
+              <button id="sync-words-btn" class="action-sub-btn btn-green">🔄 Sync Vocabulary Cache</button>
+              <button id="export-anki-en-btn" class="action-sub-btn btn-blue">📥 Export English CSV</button>
+              <button id="export-anki-fr-btn" class="action-sub-btn btn-purple">📥 Export French CSV</button>
             </div>
           </div>
         </div>

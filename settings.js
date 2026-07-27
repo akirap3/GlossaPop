@@ -1,8 +1,10 @@
 // settings.js - Manages Chrome Storage configs sync and configurations update
 
 let settings = {
-  defaultTargetLang: 'en',
-  defaultExplainLang: 'en',
+  sourceLangA: 'en',
+  sourceLangB: 'fr',
+  explainLangA: 'zh-TW',
+  explainLangB: 'en',
   triggerMode: 'icon',
   themeMode: 'auto'
 };
@@ -11,11 +13,16 @@ let settings = {
 async function loadSettings() {
   return new Promise((resolve) => {
     chrome.storage.sync.get({
-      defaultTargetLang: 'en',
-      defaultExplainLang: 'en',
+      sourceLangA: 'en',
+      sourceLangB: 'fr',
+      explainLangA: 'zh-TW',
+      explainLangB: 'en',
       triggerMode: 'icon',
       themeMode: 'auto'
     }, (items) => {
+      if (!['icon', 'dblclick'].includes(items.triggerMode)) {
+        items.triggerMode = 'icon';
+      }
       settings = items;
       resolve();
     });

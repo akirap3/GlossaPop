@@ -14,22 +14,27 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {}
 
   // 1. Retrieve saved values from storage to initialize UI elements
+  const sourceLangA = document.getElementById('sourceLangA');
+  const sourceLangB = document.getElementById('sourceLangB');
+  const explainLangA = document.getElementById('explainLangA');
+  const explainLangB = document.getElementById('explainLangB');
+
   chrome.storage.sync.get({
-    defaultTargetLang: 'en',
-    defaultExplainLang: 'en',
+    sourceLangA: 'en',
+    sourceLangB: 'fr',
+    explainLangA: 'zh-TW',
+    explainLangB: 'en',
     triggerMode: 'icon',
     themeMode: 'auto'
   }, (items) => {
-    // Target Language Selection
-    const targetRadio = document.querySelector(`input[name="defaultTargetLang"][value="${items.defaultTargetLang}"]`);
-    if (targetRadio) targetRadio.checked = true;
-
-    // Explanation Language Selection
-    const explainRadio = document.querySelector(`input[name="defaultExplainLang"][value="${items.defaultExplainLang}"]`);
-    if (explainRadio) explainRadio.checked = true;
+    if (sourceLangA) sourceLangA.value = items.sourceLangA;
+    if (sourceLangB) sourceLangB.value = items.sourceLangB;
+    if (explainLangA) explainLangA.value = items.explainLangA;
+    if (explainLangB) explainLangB.value = items.explainLangB;
 
     // Trigger Mode Selection
-    const triggerRadio = document.querySelector(`input[name="triggerMode"][value="${items.triggerMode}"]`);
+    const validTriggerMode = ['icon', 'dblclick'].includes(items.triggerMode) ? items.triggerMode : 'icon';
+    const triggerRadio = document.querySelector(`input[name="triggerMode"][value="${validTriggerMode}"]`);
     if (triggerRadio) triggerRadio.checked = true;
 
     // Theme Mode Selection
@@ -51,18 +56,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1500);
   }
 
+  // Monitor select dropdown changes to auto-save values instantly
+  [sourceLangA, sourceLangB, explainLangA, explainLangB].forEach(selectEl => {
+    if (selectEl) {
+      selectEl.addEventListener('change', () => {
+        chrome.storage.sync.set({
+          sourceLangA: sourceLangA ? sourceLangA.value : 'en',
+          sourceLangB: sourceLangB ? sourceLangB.value : 'fr',
+          explainLangA: explainLangA ? explainLangA.value : 'zh-TW',
+          explainLangB: explainLangB ? explainLangB.value : 'en'
+        }, () => showStatusToast());
+      });
+    }
+  });
+
   // 3. Monitor radio changes to auto-save values instantly
   const inputs = document.querySelectorAll('input[type="radio"]');
   inputs.forEach(input => {
     input.addEventListener('change', () => {
-      const defaultTargetLang = document.querySelector('input[name="defaultTargetLang"]:checked').value;
-      const defaultExplainLang = document.querySelector('input[name="defaultExplainLang"]:checked').value;
       const triggerMode = document.querySelector('input[name="triggerMode"]:checked').value;
       const themeMode = document.querySelector('input[name="themeMode"]:checked').value;
 
       chrome.storage.sync.set({
-        defaultTargetLang,
-        defaultExplainLang,
         triggerMode,
         themeMode
       }, () => {
