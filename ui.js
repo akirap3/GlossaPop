@@ -830,8 +830,6 @@ const UIComponents = {
     const cefr = isSentence ? null : getCEFRLevel(word, activeTargetLang);
     const cefrBadge = cefr ? `<span class="glossapop-cefr-badge cefr-${cefr.text.toLowerCase()}" title="${escapeHtml(cefr.label)}">${cefr.text}</span>` : '';
 
-    const sLangA = (typeof settings !== 'undefined' && settings.sourceLangA) ? settings.sourceLangA : 'en';
-    const sLangB = (typeof settings !== 'undefined' && settings.sourceLangB) ? settings.sourceLangB : 'fr';
     const eLangA = (typeof settings !== 'undefined' && settings.explainLangA) ? settings.explainLangA : 'zh-TW';
     const eLangB = (typeof settings !== 'undefined' && settings.explainLangB) ? settings.explainLangB : 'en';
 

@@ -1,0 +1,28 @@
+{
+  "name": "glossapop",
+  "version": "1.0.0",
+  "description": "A modern, ultra-high-performance Chrome Extension built with Manifest V3 for floating dictionary popups and language learning. Highlight or double-click any word on a webpage to instantly look up definitions in your preferred explanation languages, featuring IPA phonetics, multi-tier audio pronunciations, 5-tense French conjugations, example sentences, dynamic reference links, Google Drive & Sheets cloud synchronization, and complete Shadow DOM style isolation.",
+  "main": "audio.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akirap3/GlossaPop.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/akirap3/GlossaPop/issues"
+  },
+  "homepage": "https://github.com/akirap3/GlossaPop#readme",
+  "dependencies": {
+    "french-verbs": "^5.4.0",
+    "french-verbs-lefff": "^3.4.0"
+  }
+}

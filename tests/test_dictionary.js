@@ -241,7 +241,46 @@ async function runAllTests() {
       }
     });
   });
-  if (suite3Passed) console.log(`   ✅ Suite 3 Completed. All 35 Conjugation tables (5 tenses x 7 verbs) passed.`);
+
+  // Priority 1 Offline french-verbs package tests (rappeler, appeler, jeter, acheter, geler, s'appeler, devenir)
+  const elerTests = [
+    { verb: 'rappeler', tense: 'present', key: 'je', expected: 'j’rappelle' },
+    { verb: 'rappeler', tense: 'present', key: 'tu', expected: 'tu rappelles' },
+    { verb: 'rappeler', tense: 'present', key: 'il', expected: 'il rappelle' },
+    { verb: 'rappeler', tense: 'present', key: 'nous', expected: 'nous rappelons' },
+    { verb: 'rappeler', tense: 'present', key: 'vous', expected: 'vous rappelez' },
+    { verb: 'rappeler', tense: 'present', key: 'ils', expected: 'ils rappellent' },
+    { verb: 'rappeler', tense: 'futur_simple', key: 'je', expected: 'j’rappellerai' },
+    { verb: 'rappeler', tense: 'futur_simple', key: 'nous', expected: 'nous rappellerons' },
+    { verb: 'rappeler', tense: 'subjonctif', key: 'je', expected: 'que j’rappelle' },
+    { verb: 'rappeler', tense: 'subjonctif', key: 'nous', expected: 'que nous rappelions' },
+    { verb: 'jeter', tense: 'present', key: 'je', expected: 'je jette' },
+    { verb: 'jeter', tense: 'present', key: 'nous', expected: 'nous jetons' },
+    { verb: 'jeter', tense: 'futur_simple', key: 'je', expected: 'je jetterai' },
+    { verb: 'acheter', tense: 'present', key: 'je', expected: 'j’achète' },
+    { verb: 'geler', tense: 'present', key: 'je', expected: 'je gèle' },
+    { verb: "s’appeler", tense: 'present', key: 'je', expected: "je m’appelle" },
+    { verb: "s’appeler", tense: 'present', key: 'nous', expected: 'nous nous appelons' },
+    { verb: 'devenir', tense: 'passe_compose', key: 'je', expected: 'je suis devenu' }
+  ];
+
+  elerTests.forEach(t => {
+    const conj = getFrenchConjugations(t.verb, t.tense);
+    const match = conj && (
+      conj[t.key] === t.expected ||
+      conj[t.key] === t.expected.replace('’', "'") ||
+      conj[t.key] === t.expected.replace('j’', 'je ')
+    );
+    if (match) {
+      passedCount++;
+    } else {
+      console.log(`   ❌ Priority 1 Offline Engine FAIL: ${t.verb} (${t.tense}.${t.key}) -> Expected "${t.expected}", Got "${conj ? conj[t.key] : 'null'}"`);
+      failedCount++;
+      suite3Passed = false;
+    }
+  });
+
+  if (suite3Passed) console.log(`   ✅ Suite 3 Completed. All 35 Conjugation tables and 18 Priority 1 offline/pronominal conjugations passed.`);
 
   // -------------------------------------------------------------
   // SUITE 4: Inflected Form Base Lemma & French IPA Resolution Suite

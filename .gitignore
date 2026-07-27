@@ -1,3 +1,25 @@
+# Operating System & System files
 .DS_Store
+Thumbs.db
+*.tag
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Release Zips & Build Archives
+*.zip
+GlossaPop_WebStore_*.zip
+
+# Documentation & Metadata
 CHROMEWEBSTORE.md
-GlossaPop.zip
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+

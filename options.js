@@ -14,21 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {}
 
   // 1. Retrieve saved values from storage to initialize UI elements
-  const sourceLangA = document.getElementById('sourceLangA');
-  const sourceLangB = document.getElementById('sourceLangB');
   const explainLangA = document.getElementById('explainLangA');
   const explainLangB = document.getElementById('explainLangB');
 
   chrome.storage.sync.get({
-    sourceLangA: 'en',
-    sourceLangB: 'fr',
     explainLangA: 'zh-TW',
     explainLangB: 'en',
     triggerMode: 'icon',
     themeMode: 'auto'
   }, (items) => {
-    if (sourceLangA) sourceLangA.value = items.sourceLangA;
-    if (sourceLangB) sourceLangB.value = items.sourceLangB;
     if (explainLangA) explainLangA.value = items.explainLangA;
     if (explainLangB) explainLangB.value = items.explainLangB;
 

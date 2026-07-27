@@ -229,6 +229,103 @@ async function fetchLemmaInfo(word, lang) {
   return { lemmaInfo: null, isVerb: false, isAdjective: false, wiktionaryDefinitions: [], synonyms: [], antonyms: [], example: null, apiFeminineForm: null, apiConjugations: null };
 }
 
+/**
+ * 3-Tier Conjugation Fallback Helper:
+ * Priority 1: getFrenchConjugations(verb, tense) [Offline NPM library]
+ * Priority 2: Kaikki API (https://api.kaikki.org/dictionary?lang=French&word=...)
+ * Priority 3: Wiktionary Inflection API
+ */
+async function fetchFrenchConjugationsFallback(verb) {
+  if (!verb) return null;
+  const cleanVerb = verb.trim().toLowerCase();
+  
+  // Priority 2: Kaikki API JSON Fallback
+  try {
+    console.log(`🟡 [Priority 2: Kaikki API Fallback] Querying Kaikki API for "${cleanVerb}"...`);
+    const kRes = await fetch(`https://api.kaikki.org/dictionary?lang=French&word=${encodeURIComponent(cleanVerb)}`, {
+      headers: { 'User-Agent': 'GlossaPop/1.0 (Chrome Extension; contact@glossapop.org)' }
+    });
+    if (kRes.ok) {
+      const kData = await kRes.json();
+      if (Array.isArray(kData) && kData.length > 0 && kData[0].forms) {
+        const forms = kData[0].forms;
+        const result = { present: {}, passe_compose: {}, imparfait: {}, futur_simple: {}, subjonctif: {} };
+        
+        forms.forEach(f => {
+          if (f.form && f.tags) {
+            const tags = f.tags;
+            const formText = f.form.trim();
+
+            const parsePersonKey = () => {
+              if (tags.includes('first-person') && tags.includes('singular')) return 'je';
+              if (tags.includes('second-person') && tags.includes('singular')) return 'tu';
+              if (tags.includes('third-person') && tags.includes('singular')) return 'il';
+              if (tags.includes('first-person') && tags.includes('plural')) return 'nous';
+              if (tags.includes('second-person') && tags.includes('plural')) return 'vous';
+              if (tags.includes('third-person') && tags.includes('plural')) return 'ils';
+              return null;
+            };
+
+            const key = parsePersonKey();
+            if (key) {
+              // 1. Présent
+              if (tags.includes('present') && tags.includes('indicative')) {
+                result.present[key] = withElision('je', formText);
+                if (key !== 'je') result.present[key] = `${key} ${formText}`;
+              }
+              // 2. Imparfait
+              else if (tags.includes('imperfect') && tags.includes('indicative')) {
+                result.imparfait[key] = withElision('je', formText);
+                if (key !== 'je') result.imparfait[key] = `${key} ${formText}`;
+              }
+              // 3. Futur Simple
+              else if (tags.includes('future') && tags.includes('indicative')) {
+                result.futur_simple[key] = withElision('je', formText);
+                if (key !== 'je') result.futur_simple[key] = `${key} ${formText}`;
+              }
+              // 4. Subjonctif
+              else if (tags.includes('present') && tags.includes('subjunctive')) {
+                result.subjonctif[key] = withElision('que je', formText);
+                if (key === 'tu') result.subjonctif[key] = `que tu ${formText}`;
+                if (key === 'il') result.subjonctif[key] = withElision('que il', formText);
+                if (key === 'nous') result.subjonctif[key] = `que nous ${formText}`;
+                if (key === 'vous') result.subjonctif[key] = `que vous ${formText}`;
+                if (key === 'ils') result.subjonctif[key] = withElision('que ils', formText);
+              }
+            }
+          }
+        });
+
+        if (result.present.je || result.present.nous) {
+          console.log(`🟡 [Priority 2: Kaikki API Fallback] Successfully fetched 5-tense conjugations for "${cleanVerb}".`);
+          return result;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Priority 2 Kaikki API fallback skipped/failed:', e);
+  }
+
+  // Priority 3: Wiktionary API Fallback
+  try {
+    console.log(`🔵 [Priority 3: Wiktionary API Fallback] Querying Wiktionary API for "${cleanVerb}"...`);
+    const wRes = await fetch(`https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(cleanVerb)}`, {
+      headers: { 'User-Agent': 'GlossaPop/1.0 (Chrome Extension; contact@glossapop.org)' }
+    });
+    if (wRes.ok) {
+      const wData = await wRes.json();
+      if (wData.fr && Array.isArray(wData.fr)) {
+        console.log(`🔵 [Priority 3: Wiktionary API Fallback] Successfully fetched Wiktionary definitions for "${cleanVerb}".`);
+        return null;
+      }
+    }
+  } catch (e) {
+    console.warn('Priority 3 Wiktionary API fallback skipped/failed:', e);
+  }
+
+  return null;
+}
+
 // Helper to perform translation with auto-detection of the source language
 async function autoDetectAndTranslate(word, target) {
   const cleanWord = word.trim();

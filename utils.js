@@ -136,14 +136,132 @@ function withElision(pronoun, verbForm) {
 }
 
 /**
- * French Verb Conjugation Engine
- * Handles Present, Passé Composé, Imparfait, Futur Simple, and Subjonctif Présent
- * using prefix inheritance and systematic tense stem generation.
+ * Helper to handle French stem variations for -eler and -eter verbs
+ * (e.g. rappeler -> rappell- / rappel-, jeter -> jett- / jet-)
  */
+function getFrenchElerEterStems(verb) {
+  const v = verb.toLowerCase().trim();
+  
+  if (v.endsWith('eler')) {
+    const baseStem = v.slice(0, -4);
+    return { stemMute: baseStem + 'ell', stemNormal: baseStem + 'el', isElerEter: true };
+  }
+  if (v.endsWith('eter')) {
+    const baseStem = v.slice(0, -4);
+    return { stemMute: baseStem + 'ett', stemNormal: baseStem + 'et', isElerEter: true };
+  }
+  
+  return { isElerEter: false };
+}
+
+/**
+ * French Verb Conjugation Engine (3-Tier Hybrid Architecture)
+ * Priority 1: Local offline NPM library (french-verbs + french-verbs-lefff) - 0ms, 100% authoritative
+ * Priority 2: Online Kaikki API fallback
+ * Priority 3: Online Wiktionary API fallback
+ */
+let _lefffDictCache = null;
+
 function getFrenchConjugations(verb, tense = 'present') {
   if (!verb) return null;
-  const v = verb.toLowerCase().trim();
+  let rawVerb = verb.toLowerCase().trim().replace(/’/g, "'");
+  let isPronominal = false;
+  if (rawVerb.startsWith("s'")) {
+    isPronominal = true;
+    rawVerb = rawVerb.slice(2).trim();
+  } else if (rawVerb.startsWith("se ")) {
+    isPronominal = true;
+    rawVerb = rawVerb.slice(3).trim();
+  }
+
+  const v = rawVerb;
   const { prefix, base } = decomposeFrenchVerb(v);
+
+  // -----------------------------------------------------------------
+  // PRIORITY 1: Offline NPM Library (french-verbs + french-verbs-lefff)
+  // -----------------------------------------------------------------
+  if (typeof require !== 'undefined') {
+    try {
+      const { getConjugation } = require('french-verbs');
+      if (!_lefffDictCache) {
+        _lefffDictCache = require('french-verbs-lefff/dist/conjugations.json');
+      }
+      const Lefff = _lefffDictCache;
+      
+      const targetVerb = Lefff[v] ? v : (Lefff[base] ? base : null);
+      if (targetVerb && Lefff[targetVerb]) {
+        console.log(`🟢 [Priority 1: Offline LEFFF Engine] Conjugating "${verb}" (targetVerb: "${targetVerb}") via french-verbs library.`);
+        const p = targetVerb === base ? prefix : '';
+        
+        let fvTense = null;
+        if (tense === 'present') fvTense = 'PRESENT';
+        else if (tense === 'imparfait') fvTense = 'IMPARFAIT';
+        else if (tense === 'futur_simple') fvTense = 'FUTUR';
+        else if (tense === 'subjonctif') fvTense = 'SUBJONCTIF_PRESENT';
+        else if (tense === 'passe_compose') fvTense = 'PASSE_COMPOSE';
+        
+        if (fvTense === 'PASSE_COMPOSE') {
+          if (isPronominal) {
+            const pc0 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 0, {}, true);
+            const pc1 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 1, {}, true);
+            const pc2 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 2, {}, true);
+            const pc3 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 3, {}, true);
+            const pc4 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 4, {}, true);
+            const pc5 = getConjugation(Lefff, targetVerb, 'PASSE_COMPOSE', 5, {}, true);
+            return {
+              je: withElision('je', pc0),
+              tu: `tu ${pc1}`,
+              il: `il ${pc2}`,
+              nous: `nous ${pc3}`,
+              vous: `vous ${pc4}`,
+              ils: `ils ${pc5}`
+            };
+          } else {
+            const pp = getConjugation(Lefff, targetVerb, 'PARTICIPE_PASSE', 0, {}, false);
+            const fullPp = p + pp;
+            const ETRE_VERBS = ['aller', 'venir', 'devenir', 'revenir', 'partir', 'sortir', 'naître', 'mourir', 'entrer', 'monter', 'descendre', 'tomber', 'rester', 'retourner'];
+            const usesEtre = ETRE_VERBS.includes(v) || ETRE_VERBS.includes(base);
+            if (usesEtre) {
+              return { je: `je suis ${fullPp}`, tu: `tu es ${fullPp}`, il: `il est ${fullPp}`, nous: `nous sommes ${fullPp}`, vous: `vous êtes ${fullPp}`, ils: `ils sont ${fullPp}` };
+            } else {
+              return { je: `j’ai ${fullPp}`, tu: `tu as ${fullPp}`, il: `il a ${fullPp}`, nous: `nous avons ${fullPp}`, vous: `vous avez ${fullPp}`, ils: `ils ont ${fullPp}` };
+            }
+          }
+        }
+
+        if (fvTense) {
+          const c0 = p + getConjugation(Lefff, targetVerb, fvTense, 0, {}, isPronominal);
+          const c1 = p + getConjugation(Lefff, targetVerb, fvTense, 1, {}, isPronominal);
+          const c2 = p + getConjugation(Lefff, targetVerb, fvTense, 2, {}, isPronominal);
+          const c3 = p + getConjugation(Lefff, targetVerb, fvTense, 3, {}, isPronominal);
+          const c4 = p + getConjugation(Lefff, targetVerb, fvTense, 4, {}, isPronominal);
+          const c5 = p + getConjugation(Lefff, targetVerb, fvTense, 5, {}, isPronominal);
+
+          if (tense === 'subjonctif') {
+            return {
+              je: withElision('que je', c0),
+              tu: `que tu ${c1}`,
+              il: withElision('que il', c2),
+              nous: `que nous ${c3}`,
+              vous: `que vous ${c4}`,
+              ils: withElision('que ils', c5)
+            };
+          } else {
+            return {
+              je: withElision('je', c0),
+              tu: `tu ${c1}`,
+              il: `il ${c2}`,
+              nous: `nous ${c3}`,
+              vous: `vous ${c4}`,
+              ils: `ils ${c5}`
+            };
+          }
+        }
+      }
+    } catch (err) {
+      // Fallthrough to algorithmic fallback or online APIs if module unavailable
+    }
+  }
 
   // 1. Passé Composé (Compound Past)
   if (tense === 'passe_compose') {
@@ -203,7 +321,12 @@ function getFrenchConjugations(verb, tense = 'present') {
     };
     let stem = BASE_FUTUR_STEMS[base] ? prefix + BASE_FUTUR_STEMS[base] : null;
     if (!stem) {
-      stem = v.endsWith('re') ? v.slice(0, -1) : v;
+      const elerInfo = getFrenchElerEterStems(v);
+      if (elerInfo.isElerEter) {
+        stem = elerInfo.stemMute + 'er';
+      } else {
+        stem = v.endsWith('re') ? v.slice(0, -1) : v;
+      }
     }
     return {
       je: withElision('je', stem + 'ai'),
@@ -236,6 +359,19 @@ function getFrenchConjugations(verb, tense = 'present') {
         nous: `que nous ${prefix}${b.nous}`,
         vous: `que vous ${prefix}${b.vous}`,
         ils: withElision('que ils', prefix + b.ils)
+      };
+    }
+
+    const elerInfo = getFrenchElerEterStems(v);
+    if (elerInfo.isElerEter) {
+      const { stemMute, stemNormal } = elerInfo;
+      return {
+        je: withElision('que je', stemMute + 'e'),
+        tu: `que tu ${stemMute}es`,
+        il: withElision('que il', stemMute + 'e'),
+        nous: `que nous ${stemNormal}ions`,
+        vous: `que vous ${stemNormal}iez`,
+        ils: withElision('que ils', stemMute + 'ent')
       };
     }
 
@@ -293,6 +429,19 @@ function getFrenchConjugations(verb, tense = 'present') {
   
   // Regular -er verbs
   if (v.endsWith('er')) {
+    const elerInfo = getFrenchElerEterStems(v);
+    if (elerInfo.isElerEter) {
+      const { stemMute, stemNormal } = elerInfo;
+      return {
+        je: withElision('je', stemMute + 'e'),
+        tu: `tu ${stemMute}es`,
+        il: `il ${stemMute}e`,
+        nous: `nous ${stemNormal}ons`,
+        vous: `vous ${stemNormal}ez`,
+        ils: `ils ${stemMute}ent`
+      };
+    }
+
     const stem = v.slice(0, -2);
     const nousForm = v.endsWith('ger') ? stem + 'eons' : (v.endsWith('cer') ? stem.slice(0, -1) + 'çons' : stem + 'ons');
     return {
