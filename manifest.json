@@ -5,7 +5,6 @@
   "description": "Floating translation popup for English and French. Supports audio, IPA phonetics, and bilingual explanation toggles.",
   "permissions": [
     "storage",
-    "activeTab",
     "identity"
   ],
   "host_permissions": [
