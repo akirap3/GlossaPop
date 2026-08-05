@@ -21,14 +21,17 @@ function escapeHtml(str) {
  * Linguistic Helper: French Adjective & Noun Feminization Engine
  * Applies systematic French phonological/orthographic suffix mutation rules.
  */
-function getFrenchFeminineForm(word) {
+function getFrenchFeminineForm(word, apiForms = null) {
   if (!word) return null;
   const w = word.toLowerCase().trim();
   
-  // Invariant adjectives ending in 'e' remain unchanged
-  if (w.endsWith('e')) return w;
-  
-  // Irregular Suppletive Forms (Mandatory linguistic exceptions)
+  // 1. If API forms array is provided from Wiktionary/Kaikki JSON, extract exact feminine headword form
+  if (Array.isArray(apiForms)) {
+    const femMatch = apiForms.find(f => f && (f.tags?.includes('feminine') || f.label?.includes('feminine')));
+    if (femMatch && femMatch.form) return femMatch.form.toLowerCase().trim();
+  }
+
+  // 2. Irregular Suppletive Forms (Mandatory linguistic exceptions)
   const SUPPLETIVE_FEMININE = {
     'beau': 'belle',
     'nouveau': 'nouvelle',
@@ -43,8 +46,13 @@ function getFrenchFeminineForm(word) {
     'grec': 'grecque'
   };
   if (SUPPLETIVE_FEMININE[w]) return SUPPLETIVE_FEMININE[w];
-  
-  // Systematic Phonological & Orthographic Suffix Rules
+
+  // 3. Invariant adjectives ending in 'e' remain unchanged
+  if (w.endsWith('e')) return w;
+
+  // 4. Systematic Phonological & Orthographic Suffix Rules
+  if (w.endsWith('eau')) return w.slice(0, -3) + 'elle';
+  if (w.endsWith('ou')) return w.slice(0, -2) + 'olle';
   if (w.endsWith('ien')) return w.slice(0, -3) + 'ienne';
   if (w.endsWith('en')) return w.slice(0, -2) + 'enne';
   if (w.endsWith('on')) return w.slice(0, -2) + 'onne';
@@ -65,22 +73,16 @@ function getFrenchFeminineForm(word) {
  * Deconstructs compound verbs into [prefix, baseVerb] to allow prefix inheritance.
  * Example: 'devenir' -> ['de', 'venir'], 'comprendre' -> ['com', 'prendre']
  */
-const BASE_IRREGULAR_VERBS = [
-  'être', 'avoir', 'aller', 'faire', 'dire', 'pouvoir', 'vouloir', 
-  'savoir', 'voir', 'devoir', 'venir', 'prendre', 'mettre', 'partir', 
-  'sortir', 'lire', 'écrire', 'ouvrir', 'offrir', 'naître', 'mourir', 'boire', 'recevoir'
-];
-
 const KNOWN_PREFIXES = ['de', 're', 'com', 'app', 'sur', 'inter', 'pre', 'dis', 'con', 'trans', 'dé'];
 
 function decomposeFrenchVerb(verb) {
   const v = verb.toLowerCase().trim();
-  if (BASE_IRREGULAR_VERBS.includes(v)) return { prefix: '', base: v };
+  const Lefff = getLefffDict();
   
   for (const prefix of KNOWN_PREFIXES) {
     if (v.startsWith(prefix)) {
       const baseCandidate = v.slice(prefix.length);
-      if (BASE_IRREGULAR_VERBS.includes(baseCandidate) || baseCandidate.endsWith('er') || baseCandidate.endsWith('ir') || baseCandidate.endsWith('re')) {
+      if ((Lefff && Lefff[baseCandidate]) || baseCandidate.endsWith('er') || baseCandidate.endsWith('ir') || baseCandidate.endsWith('re')) {
         return { prefix, base: baseCandidate };
       }
     }
@@ -89,23 +91,22 @@ function decomposeFrenchVerb(verb) {
 }
 
 /**
- * French Past Participle Engine
+ * French Past Participle Engine (Uses 7,826 LEFFF Database)
  */
 function getFrenchPastParticiple(verb) {
   const v = verb.toLowerCase().trim();
   const { prefix, base } = decomposeFrenchVerb(v);
   
-  const BASE_PARTICIPLES = {
-    'être': 'été', 'avoir': 'eu', 'faire': 'fait', 'dire': 'dit',
-    'pouvoir': 'pu', 'vouloir': 'voulu', 'savoir': 'su', 'voir': 'vu',
-    'devoir': 'dû', 'venir': 'venu', 'prendre': 'pris', 'mettre': 'mis',
-    'partir': 'parti', 'sortir': 'sorti', 'lire': 'lu', 'écrire': 'écrit',
-    'aller': 'allé', 'ouvrir': 'ouvert', 'offrir': 'offert',
-    'naître': 'né', 'mourir': 'mort', 'boire': 'bu', 'recevoir': 'reçu'
-  };
-  
-  if (BASE_PARTICIPLES[base]) {
-    return prefix + BASE_PARTICIPLES[base];
+  const Lefff = getLefffDict();
+  if (Lefff && _frenchVerbsModuleCache) {
+    try {
+      const { getConjugation } = _frenchVerbsModuleCache;
+      const targetVerb = Lefff[v] ? v : (Lefff[base] ? base : null);
+      if (targetVerb && Lefff[targetVerb]) {
+        const p = targetVerb === base ? prefix : '';
+        return p + getConjugation(Lefff, targetVerb, 'PARTICIPE_PASSE', 0, {}, false);
+      }
+    } catch (e) {}
   }
   
   // Regular verb participle endings
@@ -185,14 +186,17 @@ let _frenchVerbsModuleCache = null;
 
 function getLefffDict() {
   if (_lefffDictCache) return _lefffDictCache;
-  if (typeof require !== 'undefined') {
+  if (typeof window !== 'undefined' && window.Lefff) {
+    _lefffDictCache = window.Lefff;
+    if (window.frenchVerbs) _frenchVerbsModuleCache = window.frenchVerbs;
+  } else if (typeof global !== 'undefined' && global.Lefff) {
+    _lefffDictCache = global.Lefff;
+    if (global.frenchVerbs) _frenchVerbsModuleCache = global.frenchVerbs;
+  } else if (typeof require !== 'undefined') {
     try {
       _lefffDictCache = require('french-verbs-lefff/dist/conjugations.json');
       _frenchVerbsModuleCache = require('french-verbs');
     } catch (e) {}
-  } else if (typeof window !== 'undefined' && window.Lefff) {
-    _lefffDictCache = window.Lefff;
-    if (window.frenchVerbs) _frenchVerbsModuleCache = window.frenchVerbs;
   }
   return _lefffDictCache;
 }
@@ -562,29 +566,15 @@ function getFrenchConjugations(verb, tense = 'present') {
     return { je: pp, tu: pp, il: pp, nous: pp, vous: pp, ils: pp };
   }
 
-  // 5. Présent de l'Indicatif (Default Present Tense)
-  const BASE_PRESENT_IRREGULARS = {
+  // 5. Présent de l'Indicatif (Default Present Tense Fallback)
+  // Basic auxiliary roots
+  const CORE_AUXILIARIES = {
     'être': { je: 'suis', tu: 'es', il: 'est', nous: 'sommes', vous: 'êtes', ils: 'sont' },
-    'avoir': { je: 'ai', tu: 'as', il: 'a', nous: 'avons', vous: 'avez', ils: 'ont' },
-    'aller': { je: 'vais', tu: 'vas', il: 'va', nous: 'allons', vous: 'allez', ils: 'vont' },
-    'faire': { je: 'fais', tu: 'fais', il: 'fait', nous: 'faisons', vous: 'faites', ils: 'font' },
-    'dire': { je: 'dis', tu: 'dis', il: 'dit', nous: 'disons', vous: 'dites', ils: 'disent' },
-    'pouvoir': { je: 'peux', tu: 'peux', il: 'peut', nous: 'pouvons', vous: 'pouvez', ils: 'peuvent' },
-    'vouloir': { je: 'veux', tu: 'veux', il: 'veut', nous: 'voulons', vous: 'voulez', ils: 'veulent' },
-    'savoir': { je: 'sais', tu: 'sais', il: 'sait', nous: 'savons', vous: 'savez', ils: 'savent' },
-    'voir': { je: 'vois', tu: 'vois', il: 'voit', nous: 'voyons', vous: 'voyez', ils: 'voient' },
-    'devoir': { je: 'dois', tu: 'dois', il: 'doit', nous: 'devons', vous: 'devez', ils: 'doivent' },
-    'venir': { je: 'viens', tu: 'viens', il: 'vient', nous: 'venons', vous: 'venez', ils: 'viennent' },
-    'prendre': { je: 'prends', tu: 'prends', il: 'prend', nous: 'prenons', vous: 'prenez', ils: 'prennent' },
-    'mettre': { je: 'mets', tu: 'mets', il: 'met', nous: 'mettons', vous: 'mettez', ils: 'mettent' },
-    'partir': { je: 'pars', tu: 'pars', il: 'part', nous: 'partons', vous: 'partez', ils: 'partent' },
-    'sortir': { je: 'sors', tu: 'sors', il: 'sort', nous: 'sortons', vous: 'sortez', ils: 'sortent' },
-    'lire': { je: 'lis', tu: 'lis', il: 'lit', nous: 'lisons', vous: 'lisez', ils: 'lisent' },
-    'écrire': { je: 'écris', tu: 'écris', il: 'écrit', nous: 'écrivons', vous: 'écrivez', ils: 'écrivent' }
+    'avoir': { je: 'ai', tu: 'as', il: 'a', nous: 'avons', vous: 'avez', ils: 'ont' }
   };
   
-  if (BASE_PRESENT_IRREGULARS[base]) {
-    const b = BASE_PRESENT_IRREGULARS[base];
+  if (CORE_AUXILIARIES[base]) {
+    const b = CORE_AUXILIARIES[base];
     return {
       je: withElision('je', prefix + b.je),
       tu: `tu ${prefix}${b.tu}`,
@@ -595,7 +585,7 @@ function getFrenchConjugations(verb, tense = 'present') {
     };
   }
   
-  // Regular -er verbs
+  // Regular -er verbs (Group 1)
   if (v.endsWith('er')) {
     const elerInfo = getFrenchElerEterStems(v);
     if (elerInfo.isElerEter) {
@@ -621,8 +611,8 @@ function getFrenchConjugations(verb, tense = 'present') {
       ils: `ils ${stem}ent`
     };
   }
-  
-  // Regular -ir verbs (finir type)
+
+  // Regular -ir verbs (Group 2, finir type)
   if (v.endsWith('ir')) {
     const stem = v.slice(0, -2);
     return {
@@ -635,7 +625,7 @@ function getFrenchConjugations(verb, tense = 'present') {
     };
   }
   
-  // Generic regular -re verbs
+  // Regular -re verbs (Group 3, vendre type)
   if (v.endsWith('re')) {
     const stem = v.slice(0, -2);
     return {
@@ -881,7 +871,7 @@ function detectFrenchQueryTense(word, data = {}) {
 
       const checkVerbs = (targetVerb && Lefff[targetVerb]) 
         ? [targetVerb] 
-        : BASE_IRREGULAR_VERBS;
+        : ['faire', 'pouvoir', 'vouloir', 'savoir', 'aller', 'être', 'avoir', 'voir', 'devoir', 'venir', 'prendre', 'mettre', 'dire'];
 
       for (const vCandidate of checkVerbs) {
         if (Lefff[vCandidate]) {

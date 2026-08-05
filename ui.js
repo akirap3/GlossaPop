@@ -327,6 +327,12 @@ const POPUP_CSS = `
     justify-content: space-between;
     margin-bottom: 6px;
   }
+  .glossapop-word-title-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 260px;
+  }
   .glossapop-word {
     font-size: 18px;
     font-weight: 700;
@@ -335,7 +341,36 @@ const POPUP_CSS = `
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 260px;
+    max-width: 240px;
+  }
+  .glossapop-word[contenteditable="true"] {
+    outline: none;
+    border-radius: 4px;
+    padding: 0 4px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+  }
+  .glossapop-word[contenteditable="true"]:hover {
+    background-color: rgba(0, 102, 204, 0.08);
+    cursor: text;
+  }
+  .glossapop-word[contenteditable="true"]:focus {
+    background-color: rgba(0, 102, 204, 0.12);
+    box-shadow: 0 0 0 1.5px #0066cc;
+    cursor: text;
+  }
+  .glossapop-edit-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 11px;
+    opacity: 0.55;
+    padding: 1px 3px;
+    transition: opacity 0.2s, transform 0.2s;
+    line-height: 1;
+  }
+  .glossapop-edit-btn:hover {
+    opacity: 1;
+    transform: scale(1.15);
   }
   
   .glossapop-word-audio-group {
@@ -1014,7 +1049,7 @@ const UIComponents = {
   /**
    * Renders the popup card's container frame and binds segmented toggle events
    */
-  renderFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange) {
+  renderFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange, onWordEdit) {
     const wordCount = word.split(/\s+/).filter(Boolean).length;
     const isSentence = wordCount > 4;
     const displayWord = isSentence ? (word.length > 30 ? word.substring(0, 27) + '...' : word) : word;
@@ -1066,7 +1101,11 @@ const UIComponents = {
         <button class="glossapop-source-pill ${activeTargetLang === 'en' ? 'active' : ''}" data-val="en">EN</button>
       </div>
       <div class="glossapop-word-info">
-        <h3 class="glossapop-word" title="${escapeHtml(word)}">${escapeHtml(displayWord)}${cefrBadge}</h3>
+        <div class="glossapop-word-title-container">
+          <h3 class="glossapop-word" contenteditable="true" spellcheck="false" title="Click to edit word/sentence and press Enter to re-query">${escapeHtml(displayWord)}</h3>
+          <button class="glossapop-edit-btn" title="Edit and re-query word">✏️</button>
+          ${cefrBadge}
+        </div>
         <div class="glossapop-word-audio-group" style="display:none;">
           <span class="glossapop-phonetic"></span>
           <button class="glossapop-speak-btn" title="Pronounce">
@@ -1092,6 +1131,51 @@ const UIComponents = {
     // Make popup card draggable via header drag handle
     const headerEl = card.querySelector('.glossapop-header');
     this.makeCardDraggable(card, headerEl);
+
+    // Word Title Inline Editing Event Handler (Enter or Blur auto-query)
+    const wordTitleEl = card.querySelector('.glossapop-word');
+    const editBtn = card.querySelector('.glossapop-edit-btn');
+
+    let initialEditingWord = (word || '').trim();
+
+    const triggerWordReQuery = () => {
+      if (!wordTitleEl) return;
+      let editedWord = (wordTitleEl.textContent || '').trim();
+      editedWord = editedWord.replace(/\s*(A1|A2|B1|B2|C1|C2)$/i, '').trim();
+      if (editedWord && editedWord !== initialEditingWord && onWordEdit) {
+        initialEditingWord = editedWord;
+        wordTitleEl.blur();
+        onWordEdit(editedWord);
+      }
+    };
+
+    if (wordTitleEl) {
+      wordTitleEl.addEventListener('focus', () => {
+        let current = (wordTitleEl.textContent || '').trim();
+        initialEditingWord = current.replace(/\s*(A1|A2|B1|B2|C1|C2)$/i, '').trim();
+      });
+
+      wordTitleEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          triggerWordReQuery();
+        }
+      });
+
+      wordTitleEl.addEventListener('blur', () => {
+        triggerWordReQuery();
+      });
+    }
+
+    if (editBtn) {
+      editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (wordTitleEl) {
+          wordTitleEl.focus();
+        }
+      });
+    }
 
     // Theme Mode Cycle Toggle: auto → light → dark → auto
     const themeBtn = card.querySelector('#glossapop-theme-cycle');
@@ -1482,8 +1566,8 @@ const UIComponents = {
 };
 
 // Aliases for Backward Compatibility
-function renderPopupFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange) {
-  UIComponents.renderFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange);
+function renderPopupFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange, onWordEdit) {
+  UIComponents.renderFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange, onWordEdit);
 }
 function renderLemma(lemmaRow, data, activeTargetLang) {
   UIComponents.renderLemma(lemmaRow, data, activeTargetLang);

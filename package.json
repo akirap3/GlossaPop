@@ -7,7 +7,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:bundle": "node scripts/build_french_verbs_bundle.js",
+    "test": "node tests/test_french_dormir.js && node tests/test_editable_word.js && node tests/test_draggable_card.js && node tests/test_sheets_languages.js && node tests/test_utils_refactor.js && node tests/test_languages.js && node tests/test_ui_options.js && node tests/test_auth.js && node tests/test_dictionary.js && node tests/test_fallback_chain.js && node tests/test_all_18_tenses.js"
   },
   "repository": {
     "type": "git",

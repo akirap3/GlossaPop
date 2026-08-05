@@ -106,11 +106,15 @@ function showPopup(word, x, y) {
     hideAll, 
     (newTarget) => {
       activeTargetLang = newTarget;
-      fetchAndDisplay(word, false);
+      fetchAndDisplay(currentWord || word, false);
     },
     (newExplain) => {
       activeExplainLang = newExplain;
-      fetchAndDisplay(word, false);
+      fetchAndDisplay(currentWord || word, false);
+    },
+    (editedWord) => {
+      currentWord = editedWord;
+      fetchAndDisplay(editedWord, false);
     }
   );
 
@@ -229,13 +233,32 @@ async function fetchAndDisplay(word, isInitial = false) {
         }
       }
 
-      // Update card title heading for secondary in-card queries
+      // Update card title heading & CEFR badge for secondary in-card queries
       if (!isInitial) {
+        const titleContainer = shadowRoot.querySelector('.glossapop-word-title-container');
         const titleEl = shadowRoot.querySelector('.glossapop-word');
         if (titleEl) {
-          const cefr = getCEFRLevel(word, activeTargetLang);
-          const cefrBadge = cefr ? `<span class="glossapop-cefr-badge" style="color:${cefr.color}; background:${cefr.bg};" title="${escapeHtml(cefr.label)}">${cefr.text}</span>` : '';
-          titleEl.innerHTML = `${escapeHtml(word)}${cefrBadge}`;
+          const wordCount = word.split(/\s+/).filter(Boolean).length;
+          const isSentence = wordCount > 4;
+          const displayWord = isSentence ? (word.length > 30 ? word.substring(0, 27) + '...' : word) : word;
+          titleEl.textContent = displayWord;
+
+          if (titleContainer) {
+            let badgeEl = titleContainer.querySelector('.glossapop-cefr-badge');
+            const cefr = isSentence ? null : getCEFRLevel(word, activeTargetLang);
+            if (cefr) {
+              if (!badgeEl) {
+                badgeEl = document.createElement('span');
+                titleContainer.appendChild(badgeEl);
+              }
+              badgeEl.className = `glossapop-cefr-badge cefr-${cefr.text.toLowerCase()}`;
+              badgeEl.title = cefr.label;
+              badgeEl.textContent = cefr.text;
+              if (badgeEl.removeAttribute) badgeEl.removeAttribute('style');
+            } else if (badgeEl) {
+              badgeEl.remove();
+            }
+          }
         }
       }
 
