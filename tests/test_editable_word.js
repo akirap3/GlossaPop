@@ -171,7 +171,7 @@ const cardEl = singleMockCard;
 const wordTitleEl = cardEl.querySelector('.glossapop-word');
 
 assertTest('Word title element should have contenteditable="true"', wordTitleEl && wordTitleEl.getAttribute('contenteditable') === 'true');
-assertTest('Edit button icon ✏️ present in frame', /glossapop-edit-btn/i.test(cardEl.innerHTML) || /✏️/.test(cardEl.innerHTML));
+assertTest('Pencil edit button removed and title has text cursor hover affordance', !/glossapop-edit-btn/i.test(cardEl.innerHTML) && !/✏️/.test(cardEl.innerHTML));
 
 // -------------------------------------------------------------
 // [2] Test Keydown Enter Event Triggers Re-Query Clean Word

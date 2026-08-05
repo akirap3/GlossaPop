@@ -342,35 +342,24 @@ const POPUP_CSS = `
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 240px;
+    cursor: text;
   }
   .glossapop-word[contenteditable="true"] {
     outline: none;
     border-radius: 4px;
-    padding: 0 4px;
-    transition: background-color 0.2s, box-shadow 0.2s;
+    padding: 1px 4px;
+    transition: all 0.2s ease;
   }
   .glossapop-word[contenteditable="true"]:hover {
     background-color: rgba(0, 102, 204, 0.08);
     cursor: text;
+    text-decoration: underline dashed rgba(0, 102, 204, 0.45);
   }
   .glossapop-word[contenteditable="true"]:focus {
     background-color: rgba(0, 102, 204, 0.12);
     box-shadow: 0 0 0 1.5px #0066cc;
     cursor: text;
-  }
-  .glossapop-edit-btn {
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-size: 11px;
-    opacity: 0.55;
-    padding: 1px 3px;
-    transition: opacity 0.2s, transform 0.2s;
-    line-height: 1;
-  }
-  .glossapop-edit-btn:hover {
-    opacity: 1;
-    transform: scale(1.15);
+    text-decoration: none;
   }
   
   .glossapop-word-audio-group {
@@ -1103,7 +1092,6 @@ const UIComponents = {
       <div class="glossapop-word-info">
         <div class="glossapop-word-title-container">
           <h3 class="glossapop-word" contenteditable="true" spellcheck="false" title="Click to edit word/sentence and press Enter to re-query">${escapeHtml(displayWord)}</h3>
-          <button class="glossapop-edit-btn" title="Edit and re-query word">✏️</button>
           ${cefrBadge}
         </div>
         <div class="glossapop-word-audio-group" style="display:none;">
@@ -1134,7 +1122,6 @@ const UIComponents = {
 
     // Word Title Inline Editing Event Handler (Enter or Blur auto-query)
     const wordTitleEl = card.querySelector('.glossapop-word');
-    const editBtn = card.querySelector('.glossapop-edit-btn');
 
     let initialEditingWord = (word || '').trim();
 
@@ -1165,15 +1152,6 @@ const UIComponents = {
 
       wordTitleEl.addEventListener('blur', () => {
         triggerWordReQuery();
-      });
-    }
-
-    if (editBtn) {
-      editBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (wordTitleEl) {
-          wordTitleEl.focus();
-        }
       });
     }
 
