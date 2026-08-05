@@ -87,6 +87,12 @@ const POPUP_CSS = `
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .glossapop-header.dragging {
+    cursor: grabbing;
   }
   .glossapop-brand {
     display: flex;
@@ -939,6 +945,73 @@ const POPUP_CSS = `
  */
 const UIComponents = {
   /**
+   * Binds smooth mouse dragging handlers to the popup card
+   */
+  makeCardDraggable(card, headerEl) {
+    if (!card || !headerEl || !headerEl.style) return;
+    
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let initialLeft = 0;
+    let initialTop = 0;
+
+    headerEl.style.cursor = 'grab';
+
+    const onMouseDown = (e) => {
+      if (e.target && e.target.closest && e.target.closest('button, select, input, a')) {
+        return;
+      }
+
+      isDragging = true;
+      headerEl.style.cursor = 'grabbing';
+      headerEl.classList.add('dragging');
+
+      startX = e.clientX;
+      startY = e.clientY;
+
+      const rect = card.getBoundingClientRect();
+      const scrollX = (typeof window !== 'undefined' && window.scrollX) ? window.scrollX : 0;
+      const scrollY = (typeof window !== 'undefined' && window.scrollY) ? window.scrollY : 0;
+      initialLeft = parseFloat(card.style.left) || rect.left + scrollX;
+      initialTop = parseFloat(card.style.top) || rect.top + scrollY;
+
+      if (e.preventDefault) e.preventDefault();
+      if (e.stopPropagation) e.stopPropagation();
+
+      const doc = (card.ownerDocument && card.ownerDocument.defaultView) ? card.ownerDocument : document;
+      doc.addEventListener('mousemove', onMouseMove);
+      doc.addEventListener('mouseup', onMouseUp);
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+
+      const newLeft = initialLeft + deltaX;
+      const newTop = initialTop + deltaY;
+
+      card.style.left = `${newLeft}px`;
+      card.style.top = `${newTop}px`;
+    };
+
+    const onMouseUp = () => {
+      if (isDragging) {
+        isDragging = false;
+        headerEl.style.cursor = 'grab';
+        headerEl.classList.remove('dragging');
+        const doc = (card.ownerDocument && card.ownerDocument.defaultView) ? card.ownerDocument : document;
+        doc.removeEventListener('mousemove', onMouseMove);
+        doc.removeEventListener('mouseup', onMouseUp);
+      }
+    };
+
+    headerEl.addEventListener('mousedown', onMouseDown);
+  },
+
+  /**
    * Renders the popup card's container frame and binds segmented toggle events
    */
   renderFrame(shadowRoot, word, activeTargetLang, activeExplainLang, hideAll, onTargetChange, onExplainChange) {
@@ -1015,6 +1088,10 @@ const UIComponents = {
 
     // Bind Event Handlers via Delegation
     card.querySelector('.glossapop-close-btn').addEventListener('click', hideAll);
+
+    // Make popup card draggable via header drag handle
+    const headerEl = card.querySelector('.glossapop-header');
+    this.makeCardDraggable(card, headerEl);
 
     // Theme Mode Cycle Toggle: auto → light → dark → auto
     const themeBtn = card.querySelector('#glossapop-theme-cycle');

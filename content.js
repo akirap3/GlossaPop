@@ -145,10 +145,15 @@ function showPopup(word, x, y) {
     let newTop = y;
 
     if (cardRect.right > viewportWidth) {
-      newLeft = Math.max(10, viewportWidth - cardRect.width - 20 + window.scrollX);
+      newLeft = Math.max(10 + window.scrollX, window.scrollX + viewportWidth - cardRect.width - 20);
     }
     if (cardRect.bottom > viewportHeight) {
-      newTop = Math.max(10, y - cardRect.height - 30);
+      const topAboveSelection = y - cardRect.height - 30;
+      if (topAboveSelection > window.scrollY) {
+        newTop = topAboveSelection;
+      } else {
+        newTop = Math.max(window.scrollY + 10, window.scrollY + viewportHeight - cardRect.height - 20);
+      }
     }
     
     card.style.left = `${newLeft}px`;
