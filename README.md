@@ -26,8 +26,8 @@ A modern, ultra-high-performance Chrome Extension built with Manifest V3 for flo
   - **Traditional Chinese**: MoeDict (教育部重編國語辭典), WordReference
   - **English**: Cambridge, Oxford, Merriam-Webster
 
-### 🇫🇷 Complete 18-Tense French Conjugation Engine (5-Page Pager)
-- **0ms Authoritative LEFFF Database**: Powered by `french-verbs` + `french-verbs-lefff` with 7,000+ verbs for instantaneous offline lookup, complemented by a complete pure-browser algorithmic engine.
+### 🇫🇷 Complete 18-Tense French Conjugation Engine (7,826 Verbs Offline Bundle)
+- **7,826 Verbs LEFFF Standalone Browser Bundle (`lib/french-verbs-bundle.js`)**: Powered by `french-verbs` + `french-verbs-lefff` with 7,826 human-curated French verbs compiled into an offline browser bundle for 0ms 100% authoritative verb conjugations (e.g. *dormir* ➔ *je dors*, *tu dors*, *il dort*, *nous dormons*, *vous dormez*, *ils dorment*; and irregular derivatives like *endormir*, *pressentir*).
 - **5-Page Tabbed Conjugation Pager (`‹ Page X/5 ›`)**:
   - **Page 1/5 (Indicatif Core)**: Présent, Passé C., Imparfait, Plus-que-p.
   - **Page 2/5 (Indicatif Advanced)**: Passé S., Passé Ant., Futur, Futur Ant.
@@ -37,7 +37,17 @@ A modern, ultra-high-performance Chrome Extension built with Manifest V3 for flo
 - **Linguistically Accurate Compound Tenses & Formatting**:
   - Full auxiliary verb (*avoir* / *être*) resolution for compound tenses (*j’avais rappelé*, *que j’eusse rappelé*, *j’aurais rappelé*).
   - Exact Subjunctive elision formatting (`que je`, `qu’il`, `que nous`...).
-  - Priority 1 LEFFF reverse table indexing for suppletive irregular verbs (*être*, *avoir*, *faire*, *pouvoir*, *vouloir*, *aller*, *voir*, *savoir*, *venir*...).
+  - Multi-tier resolution (Priority 1: 7,826 LEFFF bundle ➔ Priority 2: Kaikki API ➔ Priority 3: Wiktionary REST API ➔ Priority 4: Regular suffix rules).
+
+### ✏️ Interactive Inline Word Editing & Draggable Popup Card
+- **Inline Word & Sentence Editing (`contenteditable="true"`)**:
+  - Hovering mouse over the word title displays an editing text cursor (`cursor: text`), light blue background highlight (`rgba(0, 102, 204, 0.08)`), and subtle dashed underline (`underline dashed`) as an intuitive visual affordance.
+  - Pressing `Enter` or clicking outside (`blur`) automatically cleans accidental level suffixes and triggers an instant re-query for the edited word.
+  - Dynamically updates secondary in-card CEFR badges (e.g., updating level badge from C1 to A1 upon editing word from *maisons* to *il*).
+- **Draggable Popup Card (`makeCardDraggable`)**:
+  - Drag card anywhere on the screen by dragging the top header bar (`cursor: grab` / `cursor: grabbing`).
+  - Interactive header elements (close button, theme toggle, save button) automatically cancel drag motion to ensure seamless button clicks.
+  - Viewport boundary safety handler automatically flips popup position above text selections when selected near the bottom edge of the browser viewport.
 
 ### ☁️ 10-Language Google Drive & Sheets Cloud Synchronization
 - **1-Click Vocabulary Saving (`☆ Save` ➔ `★ Saved`)**: Save words directly to your personal Google Sheet with a single click.
@@ -88,7 +98,7 @@ GlossaPop/
 ├── bg-sheets.js       # 10-language Google Drive & Sheets API v4 engine, OAuth refresh & CSV export
 ├── utils.js           # Shared utilities (18-tense conjugation engine, LEFFF helper, language micro-sensor)
 ├── audio.js           # Front-end audio pronouncer (Human MP3, Google TTS, Web Speech)
-├── ui.js              # Scoped CSS styles tag, 5-page pager UI, and glassmorphic card templates
+├── ui.js              # Scoped CSS styles tag, 5-page pager UI, draggable card & editable word title
 ├── settings.js        # Syncs and loads configuration options using chrome.storage.sync
 ├── events.js          # Cursor mouseup selections, double-clicks, and click-outside dismissal
 ├── content.js         # Main coordinator initializing Shadow DOM hosts and routing events
@@ -96,7 +106,16 @@ GlossaPop/
 ├── options.css        # Premium dark glassmorphism responsive styling for settings panel
 ├── options.js         # Settings manager handling Google OAuth connection and options
 ├── icons/             # Extension icons and circular mascot logos
-├── tests/             # Categorized automated verification test suites (295+ checks)
+├── lib/               # Pre-compiled 7,826 French verbs standalone browser bundle
+│   └── french-verbs-bundle.js
+├── scripts/           # Build pipeline generator for compiling French verbs bundle
+│   └── build_french_verbs_bundle.js
+├── src/               # Entry source file for esbuild bundle generation
+│   └── french-verbs-entry.js
+├── tests/             # Categorized automated verification test suites (330+ checks)
+│   ├── test_french_dormir.js    # 7,826 LEFFF bundle integration & prefix verb test suite
+│   ├── test_editable_word.js    # Inline editable word title, hover text cursor & blur test suite
+│   ├── test_draggable_card.js   # Draggable popup card header handle & viewport clamping test suite
 │   ├── test_sheets_languages.js # 10-language Google Sheets title mapping & dynamic tab tests
 │   ├── test_utils_refactor.js   # Morphological engine, LEFFF helper & browser fallback tests
 │   ├── test_all_18_tenses.js    # 18-tense verb engine & 5-page pagination index tests
@@ -134,25 +153,27 @@ Visit the official [GlossaPop Chrome Web Store Page](https://chromewebstore.goog
 3. Click the floating magnifying glass icon (or double-click if configured) to open the dictionary card.
 4. Click **`☆ Save`** to save the word directly to your Google Sheet (`★ Saved`).
 5. Click the speaker icon to play natural audio pronunciation.
-6. Use the header language select dropdown or quick-switch pills (`[ FR ]`, `[ ES ]`, `[ DE ]`, `[ JA ]`, `[ EN ]`) to switch source languages.
-7. Open **Extension Options** by right-clicking the GlossaPop extension icon and selecting **Options**. Here you can manage Google Cloud Sync, toggle appearance themes, and export Anki CSV files per language.
+6. Hover over the word title in the card header (displays text editing cursor & dashed underline) to click and edit any word or sentence, then press `Enter` or click elsewhere to re-query.
+7. Drag the card header bar (`cursor: grab`) to move the popup anywhere on the screen.
+8. Use the header language select dropdown or quick-switch pills (`[ FR ]`, `[ ES ]`, `[ DE ]`, `[ JA ]`, `[ EN ]`) to switch source languages.
+9. Open **Extension Options** by right-clicking the GlossaPop extension icon and selecting **Options**. Here you can manage Google Cloud Sync, toggle appearance themes, and export Anki CSV files per language.
 
 ---
 
 ## 🧪 Automated Testing
 
-GlossaPop includes a comprehensive 295+ check categorized automated test suite built on Node.js:
+GlossaPop includes a comprehensive 330+ check categorized automated test suite built on Node.js:
 
 ```bash
-# Run all 8 categorized test suites
-node tests/test_sheets_languages.js && node tests/test_utils_refactor.js && node tests/test_languages.js && node tests/test_ui_options.js && node tests/test_auth.js && node tests/test_dictionary.js && node tests/test_fallback_chain.js && node tests/test_all_18_tenses.js
+# Run all 11 categorized test suites
+npm test
 ```
 
 ---
 
 ## 🛠️ APIs & Technologies Used
 
-- **French Verb Morphology Engine**: [french-verbs](https://www.npmjs.com/package/french-verbs) & [french-verbs-lefff](https://www.npmjs.com/package/french-verbs-lefff) (7,000+ verbs offline database)
+- **French Verb Morphology Engine**: [french-verbs](https://www.npmjs.com/package/french-verbs) & [french-verbs-lefff](https://www.npmjs.com/package/french-verbs-lefff) (7,826 verbs offline database)
 - **Google Drive API v3 & Sheets API v4**: 10-language real-time cloud sync & spreadsheet management (`https://www.googleapis.com/auth/drive.file`)
 - **English Queries**: [Free Dictionary API](https://dictionaryapi.dev/)
 - **French & Multilingual Queries**: [Wiktionary REST API](https://en.wiktionary.org/api/rest_v1/page/definition/) & [Wiktionary HTML API](https://en.wiktionary.org/api/rest_v1/page/html/)
