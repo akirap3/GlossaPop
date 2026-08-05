@@ -39,7 +39,7 @@ global.document = {
 global.chrome = {
   runtime: {
     getURL: (path) => path,
-    getManifest: () => ({ version: '1.0.7' })
+    getManifest: () => ({ version: '1.0.8' })
   },
   storage: {
     sync: {
